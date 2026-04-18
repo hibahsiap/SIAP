@@ -4,7 +4,7 @@ import { MessageSquare, BarChart2, Users, Ticket, Share2, Settings, LogOut } fro
 
 export default function Sidebar() {
   return (
-    <aside className="w-[260px] bg-[#223354] text-gray-300 flex flex-col h-screen sticky top-0">
+    <aside className="w-65 bg-[#223354] text-gray-300 flex flex-col h-screen sticky top-0">
       {/* Bagian Logo */}
       <div className="p-6 flex items-center gap-3">
         {/* Ganti '/logo.png' dengan nama file logomu di folder public */}

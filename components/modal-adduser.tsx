@@ -35,7 +35,7 @@ export default function ModalAddUser() {
       </DialogTrigger>
 
       {/* Isi dari Modal (Pop-up) */}
-      <DialogContent className="sm:max-w-[450px] p-6 bg-white rounded-xl">
+      <DialogContent className="sm:max-w-112.5 p-6 bg-white rounded-xl">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-xl font-bold text-[#1a233a]">Add User Account</DialogTitle>
         </DialogHeader>
