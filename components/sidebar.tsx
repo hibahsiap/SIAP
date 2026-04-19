@@ -19,7 +19,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 h-screen bg-[#1e293b] text-white flex flex-col p-4 border-r border-slate-700">
+    <aside className="w-64 h-screen sticky top-0 bg-[#1e293b] text-white flex flex-col p-4 border-r border-slate-700">
       {/* Logo & Branding */}
       <div className="flex items-center gap-3 mb-10 px-2">
         <div className="flex items-center justify-center w-12 h-12 bg-white rounded-xl p-1.5 shadow-md">
