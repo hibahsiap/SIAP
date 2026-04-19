@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import {
   Select,
@@ -27,6 +28,7 @@ export default function ModalEditUser() {
       <DialogContent className="sm:max-w-112.5 p-6 bg-white rounded-xl">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-xl font-bold text-[#1a233a]">Edit User Account</DialogTitle>
+          <DialogDescription className="sr-only">Fill out this form to add a new user to the system.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -61,14 +63,10 @@ export default function ModalEditUser() {
         </div>
 
         <div className="flex gap-3 mt-8">
-          <Button 
-            onClick={closeEditModal} 
-            variant="outline" 
-            className="flex-1 bg-gray-100 hover:bg-gray-200 border-0 text-[#1a233a] font-bold"
-          >
+          <Button onClick={closeEditModal} variant="outline" className="flex-1 bg-gray-100 hover:bg-gray-200 border-0 text-[#1a233a] font-bold">
             CANCEL
           </Button>
-          <Button className="flex-1 bg-[#1a233a] hover:bg-[#1a233a]/90 text-white font-bold">
+          <Button onClick={closeEditModal} className="flex-1 bg-[#1a233a] hover:bg-[#1a233a]/90 text-white font-bold">
             SAVE CHANGES
           </Button>
         </div>

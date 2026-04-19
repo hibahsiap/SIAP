@@ -1,17 +1,17 @@
 import Link from "next/link";
-import Image from "next/image";
+import Image from "next/image"; 
 import { MessageSquare, BarChart2, Users, Ticket, Share2, Settings, LogOut } from "lucide-react";
 
 export default function Sidebar() {
   return (
-    <aside className="w-65 bg-[#223354] text-gray-300 flex flex-col h-screen sticky top-0">
-      {/* Bagian Logo */}
+    <aside className="w-[260px] bg-[#223354] text-gray-300 flex flex-col h-screen sticky top-0">
+      
+      {/* Logo */}
       <div className="p-6 flex items-center gap-3">
-        {/* Ganti '/logo.png' dengan nama file logomu di folder public */}
-        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden">
-             {/* Jika belum ada logo, teks 'S' ini akan muncul. Nanti uncomment tag <Image> di bawah kalau logonya sudah ada */}
-             <span className="text-[#223354] font-bold text-xl">S</span>
-             {/* <Image src="/logo.png" alt="Logo SIAP" width={40} height={40} className="object-contain" /> */}
+        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden p-1">
+
+          <Image src="/LogoSIAP.png" alt="Logo SIAP" width={40} height={40} className="object-contain" priority/>
+          
         </div>
         <div>
           <h1 className="font-bold text-white text-lg leading-tight tracking-wide">SIAP</h1>
@@ -29,9 +29,8 @@ export default function Sidebar() {
         </Link>
         
         {/* Menu Aktif */}
-        <Link href="/usermanagement" className="flex items-center gap-3 px-4 py-3 rounded-md bg-white/10 text-white transition-colors relative">
+        <Link href="/admin/usermanagement" className="flex items-center gap-3 px-4 py-3 rounded-md bg-white/10 text-white transition-colors relative">
           <Users className="w-4 h-4" /> User Management
-          {/* Garis putih di sebelah kiri (Indikator aktif) */}
           <div className="absolute right-0 top-0 bottom-0 w-1 bg-white rounded-l-md" />
         </Link>
         
