@@ -2,9 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import ModalAddUser from "@/components/modal-adduser" 
-import ModalEditUser from "@/components/modal-edituser"
-import ModalDeleteUser from "@/components/modal-deleteuser"
+import UserModals from "@/components/crud-modal"
 import { useUserStore } from "@/store/useUserStore"
 import {
   Table,
@@ -151,9 +149,7 @@ export default function UserManagementPage() {
           </div>
         </div>
       </div>
-      <ModalAddUser />
-      <ModalEditUser />
-      <ModalDeleteUser />
+      <UserModals />
     </div>
   );
 }
