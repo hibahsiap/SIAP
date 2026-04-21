@@ -21,15 +21,22 @@ const Login = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 
+    const [formData, setFormData] = useState({
+        email: "",
+        password: ""
+    });
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        console.log("Logging in with:", formData);
 
         const isValid = true; 
 
         if (isValid) {
             router.push("/dashboard/usermanagement");
-            } else {
+        } else {
             alert("Login Gagal!");
             setLoading(false);
         }
@@ -55,10 +62,22 @@ const Login = () => {
                     <p className="text-[#75777F] text-xs font-light ">Please enter your credentials to access the portal dashboard.</p>
                 </div>
                 <form onSubmit={handleSubmit} className="w-full flex-col flex gap-6">
-                    <div className="flex flex-col gap-4 ">
-                        <Field icon={<IoPersonCircleOutline size={13}/>} title={field.title} placeholder={field.placeholder} />
+                    <div className="flex flex-col gap-4">
+                        <Field 
+                            icon={<IoPersonCircleOutline size={13}/>} 
+                            title="Email" 
+                            placeholder="Enter your email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        />
 
-                        <FieldPassword title={"Password"} placeholder={"Enter your password"} setIcon={true} />
+                        <FieldPassword 
+                            title="Password" 
+                            placeholder="Enter your password" 
+                            setIcon={true}
+                            value={formData.password} 
+                            onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                        />
                     </div>
                     <ButtonClick name={loading ? "Processing...": "Login"} disabled={loading}/>
                 </form>

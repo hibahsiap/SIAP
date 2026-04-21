@@ -12,14 +12,14 @@ export default function Sidebar() {
     { name: 'Inbox', icon: <Inbox size={20} />, href: '/inbox' },
     { name: 'Kanban', icon: <Kanban size={20} />, href: '/kanban' },
     { name: 'Reports', icon: <FileText size={20} />, href: '/reports' },
-    { name: 'User Management', icon: <Users size={20} />, href: '/users' },
+    { name: 'User Management', icon: <Users size={20} />, href: '/dashboard/usermanagement' },
     { name: 'Tickets', icon: <Ticket size={20} />, href: '/tickets' },
     { name: 'Public Aspirations', icon: <MessageSquare size={20} />, href: '/aspirations' },
     { name: 'Social Media', icon: <Share2 size={20} />, href: '/social-media' },
   ];
 
   return (
-    <aside className="w-64 h-screen bg-[#1e293b] text-white flex flex-col p-4 border-r border-slate-700">
+    <aside className="w-64 h-screen sticky top-0 bg-[#1e293b] text-white flex flex-col p-4 border-r border-slate-700">
       {/* Logo & Branding */}
       <div className="flex items-center gap-3 mb-10 px-2">
         <div className="flex items-center justify-center w-12 h-12 bg-white rounded-xl p-1.5 shadow-md">
@@ -64,7 +64,7 @@ export default function Sidebar() {
         <Link href="/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-700/50 rounded-xl transition-all text-slate-300">
           <Settings size={20} /> <span className="text-sm">Settings</span>
         </Link>
-        <Link href="/admin" className="flex items-center justify-between px-4 py-3 hover:bg-slate-700/50 rounded-xl transition-all text-slate-300">
+        <Link href="/dashboard/profile" className="flex items-center justify-between px-4 py-3 hover:bg-slate-700/50 rounded-xl transition-all text-slate-300">
           <div className="flex items-center gap-3">
             <User size={20} /> <span className="text-sm">Admin</span>
           </div>
