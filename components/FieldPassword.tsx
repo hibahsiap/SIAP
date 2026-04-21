@@ -1,18 +1,18 @@
 "use client";
 
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 
 interface FieldPasswordProps {
-    title: string,
-    placeholder: string,
-    setIcon: boolean
+    title: string;
+    placeholder: string;
+    setIcon: boolean;
+    value: string; 
+    onChange: (e: ChangeEvent<HTMLInputElement>) => void; 
 }
 
-const FieldPassword = ({title, placeholder, setIcon}: FieldPasswordProps) => {
-
+const FieldPassword = ({ title, placeholder, setIcon, value, onChange }: FieldPasswordProps) => {
     const [isVisible, setIsVisible] = useState(false);
-    const [value, setValue] = useState("");
 
     const toggleVisibility = () => setIsVisible(!isVisible);
 
@@ -23,12 +23,13 @@ const FieldPassword = ({title, placeholder, setIcon}: FieldPasswordProps) => {
                 <h1 className="font-semibold text-[12px] uppercase">{title}</h1>
             </label>
             <div className="relative">
-                <input type={isVisible ? "text" : "password"}
-                id={title} 
-                placeholder={placeholder} 
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className={`border border-[#D2D2D2] rounded-lg px-4 py-3 text-xs w-full transition-all focus:outline-none ${
+                <input 
+                    type={isVisible ? "text" : "password"}
+                    id={title} 
+                    placeholder={placeholder} 
+                    value={value}
+                    onChange={onChange}
+                    className={`border border-[#D2D2D2] rounded-lg px-4 py-3 text-xs w-full transition-all focus:outline-none focus:border-[#1D2F58] ${
                         value ? "text-black" : "text-[#6B7280]"
                     }`}
                 />
@@ -36,7 +37,7 @@ const FieldPassword = ({title, placeholder, setIcon}: FieldPasswordProps) => {
                 <button 
                     type="button"
                     onClick={toggleVisibility}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280]"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1D2F58]"
                 >
                     {isVisible ? <EyeOff size={13} /> : <Eye size={13} />}
                 </button>
