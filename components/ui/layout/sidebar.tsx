@@ -1,59 +1,54 @@
-import Link from "next/link";
-import Image from "next/image"; 
-import { MessageSquare, BarChart2, Users, Ticket, Share2, Settings, LogOut } from "lucide-react";
+'use client';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { SIDEBAR_MENU } from '@/constants/sidebar-menu';
+import { SidebarItem } from './sidebar-item';
+import { Settings, User, LogOut } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
+  const pathname = usePathname();
+  const menuItems = SIDEBAR_MENU[role];
+
   return (
-    <aside className="w-[260px] bg-[#223354] text-gray-300 flex flex-col h-screen sticky top-0">
-      
-      {/* Logo */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden p-1">
-
-          <Image src="/LogoSIAP.png" alt="Logo SIAP" width={40} height={40} className="object-contain" priority/>
-          
+    <aside className="w-64 h-screen bg-[#1e293b] text-white flex flex-col p-4 border-r border-slate-700">
+      {/* Branding */}
+      <div className="flex items-center gap-3 mb-10 px-2">
+        <div className="w-12 h-12 bg-white rounded-xl p-1.5 flex items-center justify-center">
+           <Image 
+             src="/images/logo-siap.png" 
+             alt="Logo SIAP" 
+             width={38} 
+             height={38} 
+             className="object-contain"
+             priority
+           />
         </div>
         <div>
-          <h1 className="font-bold text-white text-lg leading-tight tracking-wide">SIAP</h1>
-          <p className="text-[9px] text-gray-400 font-medium tracking-wider">SISTEM INFORMASI ADUAN<br/>PUBLIK</p>
+          <h1 className="font-bold text-lg">SIAP</h1>
+          <p className="text-[10px] text-slate-400 uppercase">Sistem Informasi Aduan Publik</p>
         </div>
       </div>
 
-      {/* Menu Navigasi */}
-      <nav className="flex-1 px-4 mt-6 space-y-1 text-sm font-medium">
-        <Link href="#" className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-white/5 transition-colors">
-          <MessageSquare className="w-4 h-4" /> Inbox
-        </Link>
-        <Link href="#" className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-white/5 transition-colors">
-          <BarChart2 className="w-4 h-4" /> Reports
-        </Link>
-        
-        {/* Menu Aktif */}
-        <Link href="/admin/usermanagement" className="flex items-center gap-3 px-4 py-3 rounded-md bg-white/10 text-white transition-colors relative">
-          <Users className="w-4 h-4" /> User Management
-          <div className="absolute right-0 top-0 bottom-0 w-1 bg-white rounded-l-md" />
-        </Link>
-        
-        <Link href="#" className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-white/5 transition-colors">
-          <Ticket className="w-4 h-4" /> Tickets
-        </Link>
-        <Link href="#" className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-white/5 transition-colors">
-          <Share2 className="w-4 h-4" /> Social Media
-        </Link>
+      {/* Dynamic Navigation */}
+      <nav className="flex-1 space-y-1">
+        {menuItems.map((item) => (
+          <SidebarItem 
+            key={item.href} 
+            {...item} 
+            isActive={pathname === item.href} 
+          />
+        ))}
       </nav>
 
-      {/* Menu Bawah */}
-      <div className="p-4 space-y-1 text-sm font-medium">
-        <Link href="#" className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-white/5 transition-colors">
-          <Settings className="w-4 h-4" /> Settings
-        </Link>
-        <Link href="#" className="flex items-center justify-between px-4 py-3 rounded-md hover:bg-white/5 transition-colors">
+      {/* Bottom Actions */}
+      <div className="border-t border-slate-700 pt-4 space-y-1">
+        <SidebarItem name="Settings" href={`/${role}/settings`} icon={<Settings size={20} />} isActive={pathname.includes('settings')} />
+        <div className="flex items-center justify-between px-4 py-3 text-slate-300">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-white text-xs">A</div>
-            <span>Admin</span>
+            <User size={20} /> <span className="text-sm font-medium capitalize">{role}</span>
           </div>
-          <LogOut className="w-4 h-4" />
-        </Link>
+          <LogOut size={20} className="cursor-pointer" />
+        </div>
       </div>
     </aside>
   );

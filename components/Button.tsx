@@ -1,16 +1,24 @@
+
 interface ButtonClickProps {
     name: string,
     type?: "submit" | "reset" | "button",
     className?: string,
-    disabled?: boolean
+    disabled?: boolean,
+    onClick?: () => void,
+    icon?: any,
 }
 
-const ButtonClick = ({name, type = "submit", className="", disabled}: ButtonClickProps) => {
+const ButtonClick = ({name, type = "submit", className="", disabled, onClick, icon}: ButtonClickProps) => {
+    const buttonStyle = className ? className : "bg-linear-to-br from-[#1D2F58] to-[#041942] text-white font-medium"
+    // const Icon = icon;
     return (
         <button 
-            type={type} 
-            className={`bg-linear-to-br from-[#1D2F58] to-[#041942] rounded-lg w-full text-white font-medium text-[10px] tracking-widest uppercase py-3 disabled:bg-gray-400 disabled:cursor-not-allowed ${className}`}
+            type={type}
+            disabled={disabled} 
+            onClick={onClick}
+            className={` rounded-lg w-full text-[10px] tracking-widest uppercase py-3 disabled:bg-gray-400 disabled:cursor-not-allowed ${buttonStyle} flex items-center justify-center gap-1`}
         >
+            {icon && icon}
             {name}
         </button>
     )
