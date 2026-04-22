@@ -12,6 +12,9 @@ export interface TableRowData {
   role?: 'ADMIN' | 'OPD' | 'STAFF';
   category?: string;
   nameOPD?: string;
+  totalTickets?: number;
+  solvedTickets?: number;
+  averageSolvingTime?: string;
   // ... tambahkan properti lain sesuai kebutuhan API
 }
 

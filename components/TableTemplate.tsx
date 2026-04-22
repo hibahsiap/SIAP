@@ -20,24 +20,25 @@ interface TableTemplateProps {
     columns: ColumnDefinition[],
     // data: any[],
     data: TableRowData[];
+    position?: string;
     // renderCell: (item: any, columnKey: string) => ReactNode;
 }
 
-const TableTemplate = ({columns, data}: TableTemplateProps) => {
+const TableTemplate = ({columns, data, position}: TableTemplateProps) => {
     return (
         <div>
             <Table>
                 <TableHeader className="bg-[#F3F3F3]">
                     <TableRow>
                         {columns.map((col) => (
-                            <TableHead key={col.key} className="uppercase text-[#546064] font-semibold tracking-wide h-12">{col.header}</TableHead>
+                            <TableHead key={col.key} className={`uppercase text-[#546064] font-semibold tracking-wide h-12 ${position}`}>{col.header}</TableHead>
                         ))}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {data.length > 0 ? (
                         data.map((row, rowIndex) => (
-                            <TableRow key={rowIndex} className="border-b border-[#546064] text-[#041942] capitalize text-[14px] h-16">
+                            <TableRow key={rowIndex} className={`border-b border-[#e7e6e6] text-[#041942] capitalize text-[14px] h-16 ${position}`}>
                                 {columns.map((col) => (
                                     <TableCell key={col.key}>
                                         {col.cell ? col.cell(row[col.key as keyof TableRowData], row) : row[col.key as keyof TableRowData]}
