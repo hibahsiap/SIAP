@@ -1,4 +1,7 @@
+import { BarChartData } from "@/components/BarChartData";
 import CardStats from "@/components/CardStats";
+import { GroupChart } from "@/components/GroupChart";
+import { PieChartData } from "@/components/PieChartData";
 import SearchField from "@/components/SearchField";
 import TableTemplate, { ColumnDefinition } from "@/components/TableTemplate";
 import { formatNameCell, TableRowData } from "@/constants/tableFormats";
@@ -27,8 +30,6 @@ const stats = [
 ]
 
 export default function Reports() {
-
-    // Definisi Kolom khusus untuk halaman issue category
     const userColumns: ColumnDefinition[] = [
         { 
         header: "NAME OPD", 
@@ -38,17 +39,6 @@ export default function Reports() {
         { header: "TOTAL TICKETS", key: "totalTickets" },
         { header: "SOLVED TICKETS", key: "solvedTickets" },
         { header: "AVERAGE SOLVING TIME", key: "averageSolvingTime" },
-        // // { 
-        // // header: "ROLE", 
-        // // key: "role", 
-        // // cell: (value) => formatRoleCell(value) 
-        // // },
-        // { 
-        // header: "ACTIONS", 
-        // key: "actions", 
-        // className: "text-right",
-        // cell: (_, rowData) => formatActionCell(rowData, handleEdit, handleDelete)
-        // },
     ];
 
      // contoh
@@ -59,12 +49,12 @@ export default function Reports() {
     ];
 
     return (
-        <div className="bg-red-500 flex flex-col gap-3 px-2">
-            <div className="bg-green-400 flex flex-row items-center justify-between py-1">
+        <div className="flex flex-col gap-5 px-2">
+            <div className="flex flex-row items-center justify-between py-1">
                 <h1 className="font-bold text-3xl text-[#041942]">Report</h1>
                 <SearchField placeholder="search" className="w-60"/>
             </div>
-            <div className="bg-blue-400 grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-4 gap-4">
                 {stats.map((stat, index) => {
                     return (
                         <CardStats 
@@ -76,6 +66,11 @@ export default function Reports() {
                         />
                     )
                 })}
+            </div>
+            <div className="grid grid-cols-[1fr_245px_245px] gap-4">
+                <GroupChart/>
+                <PieChartData/>
+                <BarChartData/>
             </div>
             <div className="border border-[#D2D2D2] p-4 rounded-[15px] flex flex-col items-end gap-4 bg-white">
                 <SearchField placeholder="search" className="w-60"/>
