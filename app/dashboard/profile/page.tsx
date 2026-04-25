@@ -1,17 +1,21 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { ActivityLog } from "@/components/activity-log";
 import Field from "@/components/Field";
 import FieldPassword from "@/components/FieldPassword";
 import { ProfileStore } from "@/components/ProfileStore";
-import { useState } from "react";
+import ToastFrame from "@/components/ToastFrame";
+import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
-import { ActivityLog } from "@/components/activity-log";
+import { useState } from "react";
 
 export default function ProfilePage() {
   const { name, email, opd, role, updateProfile, addLog } = ProfileStore();
   
   const [formData, setFormData] = useState({ name, email, opd, role, password: "", confirmPassword: "" });
+
+  const [triggerToast, setTriggerToast] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(true);
 
   const handleSave = () => {
   // Update profil
@@ -26,11 +30,18 @@ export default function ProfilePage() {
       date: now.toLocaleDateString(),
     });
 
-    alert("Profil berhasil diperbarui!");
+    // alert("Profil berhasil diperbarui!");
+    setTriggerToast(false); // Reset dulu
+    setIsSuccess(true);     // Set status sukses
+    setTimeout(() => setTriggerToast(true), 10); // Jalankan toast
   };
 
   const handleCancel = () => {
     setFormData({ name, email, opd, role, password: "", confirmPassword: "" });
+
+    setTriggerToast(false); // Reset dulu
+    setIsSuccess(false);    // Set status error/cancel
+    setTimeout(() => setTriggerToast(true), 10); // Jalankan toast
   };
 
   return (
@@ -102,21 +113,32 @@ export default function ProfilePage() {
             />
             
             <div className="flex gap-4 pt-4 justify-end">
-              <Button 
-                variant="secondary" 
-                size="lg"
-                className="w-32"
-                onClick={handleCancel}
-              >
-                Cancel
-              </Button>
-              <Button 
-                size="lg" 
-                className="w-32 bg-[#1D2F58] hover:bg-[#041942]" 
-                onClick={handleSave}
-              >
-                Save Changes
-              </Button>
+              <>
+                <Button 
+                  variant="secondary" 
+                  size="lg"
+                  className="w-32"
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </Button>
+              </>
+              <>
+                <Button 
+                  size="lg" 
+                  className="w-32 bg-[#1D2F58] hover:bg-[#041942]" 
+                  onClick={handleSave}
+                >
+                  Save Changes
+                </Button>
+                {triggerToast && (
+                  <ToastFrame 
+                    isSuccess={isSuccess} 
+                    id="Budi P-0012" 
+                    process={isSuccess ? "updated" : undefined} 
+                  />
+                )}
+              </>
             </div>
           </div>
         </div>
