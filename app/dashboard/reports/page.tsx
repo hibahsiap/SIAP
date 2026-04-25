@@ -10,6 +10,8 @@ const stats = [
     {
         title: "total tickets",
         number: 16709,
+        trend: true,
+        numberTrend: 3,
     },
     {
         title: "solved this month",
@@ -20,6 +22,8 @@ const stats = [
     {
         title: "total tickets refused",
         number: 25,
+        trend: false,
+        numberTrend: 2,
     },
     {
         title: "success rate",
