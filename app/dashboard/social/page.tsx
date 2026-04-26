@@ -6,20 +6,23 @@ import { InteractionTabs } from "@/components/InteractionTabs";
 import { TimeRange } from "@/components/TimeRange";
 import { Pagination } from "@/components/Paginations";
 import { Plus, Trash2 } from "lucide-react";
+import { InteractionStore } from "@/components/InteractionStore";
+import CreateDeleteModals from "@/components/CreateDelete";
 
 export default function SocialInteractionsPage() {
   const [activeTab, setActiveTab] = useState('comments');
   const [selectedRange, setSelectedRange] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const { openCreateTicketModal, openDeleteModal } = InteractionStore();
 
   // Data Dummy
   const commentsData = [
-    { time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
-    { time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "1", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
   ];
 
   const mentionsData = [
-    { time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "excanggga.dev" },
+    { id: "3", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "excanggga.dev" },
   ];
 
   const itemsPerPage = 5; 
@@ -46,10 +49,14 @@ export default function SocialInteractionsPage() {
     { 
       header: "Actions", 
       key: "actions",
-      cell: () => (
-        <div className="flex gap-4">
-          <button className="text-gray-500 hover:text-blue-900"><Plus size={18}/></button>
-          <button className="text-gray-500 hover:text-red-600"><Trash2 size={18}/></button>
+      cell: (row: any) => (
+        <div className="flex gap-2">
+          <button onClick={() => openCreateTicketModal(row, activeTab as 'comments' | 'mentions')}>
+            <Plus size={16}/>
+          </button>
+          <button onClick={() => openDeleteModal(row, activeTab as 'comments' | 'mentions')}>
+            <Trash2 size={16}/>
+          </button>
         </div>
       )
     }
@@ -91,6 +98,7 @@ export default function SocialInteractionsPage() {
                 columns={columns} 
                 data={currentData} 
             />
+            <CreateDeleteModals />
             </div>
         </div>
         
