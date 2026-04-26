@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff } from "lucide-react"
 import { useUserStore } from "@/store/useUserStore"
-import CustomModal from "@/components/custom-modal"
+import { useTaskStore } from "@/store/useTaskStore"
+import CustomModal from "@/components/CustomModal"
 
 const FormField = ({ label, placeholder, type = "text", defaultValue = "" }: any) => (
   <div className="space-y-1.5">
@@ -23,6 +24,7 @@ export default function UserModals() {
     selectedUser
   } = useUserStore()
 
+  const { isAddTaskModalOpen, closeAddTaskModal } = useTaskStore();
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
@@ -111,6 +113,50 @@ export default function UserModals() {
             </div>
           </>
         )}
+      </CustomModal>
+
+      {/* MODAL ADD NEW TASK */}
+      <CustomModal isOpen={isAddTaskModalOpen} onClose={closeAddTaskModal} title="Add New Task">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+          <FormField label="Task Name" placeholder="Laporan Kemajuan..." />
+          <FormField label="OPD" placeholder="Dinas Sosial" />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Status</label>
+              <Select>
+                <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900"><SelectValue placeholder="On Hold" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="on-hold">On Hold</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Priority</label>
+              <Select>
+                <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900"><SelectValue placeholder="Low" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Start Date" type="date" />
+            <FormField label="Due Date" type="date" />
+          </div>
+
+          <FormField label="Pesan Aspirasi" placeholder="Tulis deskripsi tugas..." isTextarea={true} />
+        </div>
+        
+        <div className="flex gap-3 mt-6">
+          <Button onClick={closeAddTaskModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold">CANCEL</Button>
+          <Button onClick={closeAddTaskModal} className="flex-1 bg-[#1D2F58] hover:bg-[#041942] text-white font-bold">CREATE TASK</Button>
+        </div>
       </CustomModal>
     </>
   )

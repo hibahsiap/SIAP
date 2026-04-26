@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import UserModals from "@/components/crud-modal"
+import UserModals from "@/components/CrudModal"
 import { useUserStore } from "@/store/useUserStore"
 import {
   Table,
