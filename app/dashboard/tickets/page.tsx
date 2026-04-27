@@ -1,9 +1,14 @@
 "use client";
 
-import React from 'react';
-import Header from '@/components/Header';
+import React, { useState, useMemo } from 'react';
+import Header from '@/components/Header'; 
 import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
-import { Type, ArrowUpRight, Sun, Circle, ChevronDown, Calendar, CalendarDays, MessageSquare, CircleChevronDown } from 'lucide-react';
+import EmptyState from '@/components/EmptyState';
+import SearchEmptyState from '@/components/SearchEmpty';
+import DeleteAlertModal from '@/components/DeleteModal';
+import { ArrowUpRight, Loader, CircleChevronDown, Calendar, Trash2, Edit2, Forward } from 'lucide-react';
+import { useTaskStore } from '@/store/useTaskStore';
+import { pendingTickets, allTickets, aspirationTickets } from '@/constants/ticketsDummy';
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
@@ -35,73 +40,142 @@ const getBadge = (text: string, type: 'issue' | 'priority') => {
   return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[text]}`}>{text}</span>;
 };
 
-const columns: ColumnDefinition[] = [
-  { 
-    header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, 
-    key: "taskName", 
-    cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block text-left">{val}</span> 
-  },
-  { header: <><ArrowUpRight className="w-4 h-4"/> OPD</>, key: "opd" },
-  { header: <><Sun className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
-  { header: <><CircleChevronDown className="w-4 h-4"/> Issue Type</>, key: "issueType", cell: (val) => getBadge(val, 'issue') },
-  { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
-  { header: <><Calendar className="w-4 h-4"/> Star Date</>, key: "startDate" },
-  { header: <><CalendarDays className="w-4 h-4"/> Due Date</>, key: "dueDate" },
-  { 
-    header: "Pesan Aspirasi", 
-    key: "message", 
-    cell: (val) => <span className="block min-w-[250px] max-w-[550px] text-[12px] font-normal leading-relaxed whitespace-normal normal-case text-justify text-[#1D2F58]">{val}</span> 
-  },
-];
-
-const data = [
-  {
-    id: 1,
-    taskName: "Laporan Kemajuan dan Keuangan",
-    opd: "Dinas Sosial",
-    status: "On Hold",
-    issueType: "Social",
-    priority: "Low",
-    startDate: "Januari, 9 2026",
-    dueDate: "April, 20 2026",
-    message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit.",
-  },
-  {
-    id: 2,
-    taskName: "Laporan Kemajuan dan Keuangan",
-    opd: "Dinas Sosial",
-    status: "In Progress",
-    issueType: "Health",
-    priority: "High",
-    startDate: "Januari, 9 2026",
-    dueDate: "April, 20 2026",
-    message: "Lorem ipsum dolor sit amet consectetur. Pulvinar suspendisse est egestas amet pretium tincidunt nunc.",
-  },
-  {
-    id: 3,
-    taskName: "Laporan Kemajuan dan Keuangan",
-    opd: "Dinas Sosial",
-    status: "Done",
-    issueType: "Traffic",
-    priority: "Low",
-    startDate: "Januari, 9 2026",
-    dueDate: "April, 20 2026",
-    message: "Lorem ipsum dolor sit amet consectetur. Pharetra quis faucibus facilisis et egestas eget tellus. Ipsum pellentesque volutpat gravida enim et morbi tempus.",
-  },
-];
+type TabCategory = 'pending' | 'all' | 'aspirations';
 
 export default function TicketsPage() {
+  const [activeTab, setActiveTab] = useState<TabCategory>('pending');
+  const [searchQuery, setSearchQuery] = useState("");
+  const { openEditModal, openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
+
+  const currentData = useMemo(() => {
+    if (activeTab === 'pending') return pendingTickets;
+    if (activeTab === 'all') return allTickets;
+    return aspirationTickets;
+  }, [activeTab]);
+
+  // Logika Pencarian
+  const filteredData = useMemo(() => {
+    return currentData.filter((item: any) => {
+      const searchStr = searchQuery.toLowerCase();
+      const searchField = item.taskName || item.pengirim || "";
+      return searchField.toLowerCase().includes(searchStr);
+    });
+  }, [currentData, searchQuery]);
+
+  // Kolom dibuat dinamis berdasarkan Tab yang aktif
+  const columns = useMemo<ColumnDefinition[]>(() => {
+    const messageColumn = { 
+      header: "Pesan Aspirasi", 
+      key: "message", 
+      cell: (val: string) => (
+        <span className="block w-full min-w-[250px] whitespace-normal break-words text-[12px] font-normal leading-relaxed text-justify text-[#1D2F58]">
+          {val}
+        </span> 
+      )
+    };
+
+    if (activeTab === 'pending') {
+      return [
+        { header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, key: "taskName", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
+        { header: <><ArrowUpRight className="w-4 h-4"/> OPD</>, key: "opd" },
+        { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
+        { header: <><CircleChevronDown className="w-4 h-4"/> Issue Type</>, key: "issueType", cell: (val) => getBadge(val, 'issue') },
+        { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
+        messageColumn,
+        { header: "Actions", key: "action", cell: (_, row) => (
+            <div className="flex items-center justify-center gap-4">
+              <button onClick={() => openEditModal(row)} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
+              <button className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Forward className="w-4 h-4" /></button>
+            </div>
+          )
+        }
+      ];
+    } else if (activeTab === 'all') {
+      return [
+        { header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, key: "taskName", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
+        { header: <><ArrowUpRight className="w-4 h-4"/> OPD</>, key: "opd" },
+        { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
+        { header: <><CircleChevronDown className="w-4 h-4"/> Issue Type</>, key: "issueType", cell: (val) => getBadge(val, 'issue') },
+        { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
+        { header: <><Calendar className="w-4 h-4"/> Star date</>, key: "startDate" },
+        { header: <><Calendar className="w-4 h-4"/> Due date</>, key: "dueDate" },
+        messageColumn
+      ];
+    } else {
+      return [
+        { header: "Pengirim", key: "pengirim", cell: (val) => <span className="whitespace-normal min-w-[100px] inline-block font-bold">{val}</span> },
+        { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
+        { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
+        messageColumn,
+        { header: "Action", key: "action", cell: (_, row) => (
+            <button onClick={() => openDeleteModal(row)} className="text-gray-400 hover:text-red-500 transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )
+        }
+      ];
+    }
+  }, [activeTab, openEditModal, openDeleteModal]);
+
   return (
-    <div className="flex-1 w-full h-full p-6 md:p-8 bg-white">
-      <div className="w-full mx-auto space-y-12">
+    <div className="flex-1 w-full max-w-full h-full p-6 md:p-8 bg-[#F8F9FA] min-h-screen">
 
-        <Header />
+      <div className="w-full mx-auto bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
 
-        <div className="overflow-x-auto shadow-sm w-full">
-          <TableTemplate2 columns={columns} data={data as any} />
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+          <div className="flex gap-2">
+            {[
+              { id: 'pending', label: 'Pending Review' },
+              { id: 'all', label: 'All Tickets' },
+              { id: 'aspirations', label: 'Aspirations' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id as TabCategory);
+                  setSearchQuery(""); 
+                }}
+                className={`px-5 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200 ${
+                  activeTab === tab.id 
+                    ? "bg-[#1D2F58] text-white shadow-md" 
+                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="w-full lg:w-auto flex-1">
+             <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> 
+          </div>
+        </div>
+
+        {/* --- AREA KONTEN --- */}
+        <div className="w-full pt-2">
+          {filteredData.length > 0 ? (
+            <div className="overflow-x-auto w-full">
+              <TableTemplate2 columns={columns} data={filteredData as any} />
+            </div>
+          ) : searchQuery !== "" ? (
+            <SearchEmptyState type={activeTab} />
+          ) : (
+            <EmptyState 
+              title={`There is currently no data available`} 
+              description="Please add new data to see it displayed here." 
+            />
+          )}
         </div>
 
       </div>
+
+      <DeleteAlertModal 
+        isOpen={isDeleteModalOpen} 
+        onClose={closeDeleteModal} 
+        onConfirm={() => { closeDeleteModal(); }} 
+        itemName={activeTab === 'aspirations' ? "aspiration message" : "task"} 
+      />
+      
     </div>
   );
 }

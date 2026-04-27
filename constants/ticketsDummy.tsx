@@ -1,0 +1,17 @@
+export const pendingTickets = [
+{ id: 1, taskName: "Laporan Kemajuan dan Keuangan", opd: "Dinas Sosial", status: "On Hold", issueType: "Social", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit." },
+{ id: 2, taskName: "Laporan Kemajuan dan Keuangan", opd: "Dinas Sosial", status: "On Hold", issueType: "Social", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit." },
+{ id: 3, taskName: "Laporan Kemajuan dan Keuangan", opd: "Dinas Sosial", status: "On Hold", issueType: "Social", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit." },
+];
+
+export const allTickets = [
+  { id: 4, taskName: "Laporan Kemajuan dan Keuangan", opd: "Dinas Sosial", status: "On Hold", issueType: "Social", priority: "Low", startDate: "Januari, 9 2026", dueDate: "April, 20 2026", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur." },
+  { id: 5, taskName: "Laporan Kemajuan dan Keuangan", opd: "Dinas Sosial", status: "In Progress", issueType: "Health", priority: "High", startDate: "Januari, 9 2026", dueDate: "April, 20 2026", message: "Lorem ipsum dolor sit amet consectetur. Pulvinar suspendisse est egestas amet pretium tincidunt nunc." },
+  { id: 6, taskName: "Laporan Kemajuan dan Keuangan", opd: "Dinas Sosial", status: "Done", issueType: "Traffic", priority: "Low", startDate: "Januari, 9 2026", dueDate: "April, 20 2026", message: "Lorem ipsum dolor sit amet consectetur. Pharetra quis faucibus facilisis et egestas eget tellus. Ipsum pellentesque volutpat gravida enim et morbi tempus." },
+];
+
+export const aspirationTickets = [
+  { id: 7, pengirim: "Wahyu", status: "On Hold", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur." },
+  { id: 8, pengirim: "Budi", status: "On Hold", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur." },
+  { id: 9, pengirim: "Parjo", status: "On Hold", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur." },
+];
