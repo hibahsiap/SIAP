@@ -7,7 +7,7 @@ import { TimeRange } from "@/components/TimeRange";
 import { Pagination } from "@/components/Paginations";
 import { Plus, Trash2 } from "lucide-react";
 import { InteractionStore } from "@/components/InteractionStore";
-import CreateDeleteModals from "@/components/CreateDelete";
+import CreateDeleteModals from "@/components/SocialModal";
 
 export default function SocialInteractionsPage() {
   const [activeTab, setActiveTab] = useState('comments');

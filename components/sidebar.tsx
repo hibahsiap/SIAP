@@ -40,7 +40,7 @@ export default function Sidebar() {
         </div>
 
         {/* Menu Lainnya */}
-        <Link href="/tickets" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><Ticket size={20} /> <span className="font-medium text-sm">Tickets</span></Link>
+        <Link href="/dashboard/tickets" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><Ticket size={20} /> <span className="font-medium text-sm">Tickets</span></Link>
         <Link href="/dashboard/reports" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><FileText size={20} /> <span className="font-medium text-sm">Reports</span></Link>
         <Link href="/dashboard/usermanagement" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><Users size={20} /> <span className="font-medium text-sm">User Management</span></Link>
       </nav>

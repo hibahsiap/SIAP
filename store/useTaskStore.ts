@@ -1,11 +1,27 @@
 import { create } from 'zustand';
+
+export type Task = any; 
+
 interface TaskState {
-  isAddTaskModalOpen: boolean;
-  openAddTaskModal: () => void;
-  closeAddTaskModal: () => void;
+  // State Edit
+  isEditModalOpen: boolean;
+  selectedTask: Task | null;
+  openEditModal: (task: Task) => void;
+  closeEditModal: () => void;
+
+  // State Delete
+  isDeleteModalOpen: boolean;
+  openDeleteModal: (task: Task) => void;
+  closeDeleteModal: () => void;
 }
+
 export const useTaskStore = create<TaskState>((set) => ({
-  isAddTaskModalOpen: false,
-  openAddTaskModal: () => set({ isAddTaskModalOpen: true }),
-  closeAddTaskModal: () => set({ isAddTaskModalOpen: false }),
+  isEditModalOpen: false,
+  selectedTask: null,
+  openEditModal: (task) => set({ isEditModalOpen: true, selectedTask: task }),
+  closeEditModal: () => set({ isEditModalOpen: false, selectedTask: null }),
+
+  isDeleteModalOpen: false,
+  openDeleteModal: (task) => set({ isDeleteModalOpen: true, selectedTask: task }),
+  closeDeleteModal: () => set({ isDeleteModalOpen: false, selectedTask: null }),
 }));
