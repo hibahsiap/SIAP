@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+SIAP --- Sistem Informasi Aspirasi Publik
+=======================================
 
-## Getting Started
+Frontend dashboard untuk pengelolaan aspirasi publik, tiket pengaduan, laporan, dan monitoring media sosial. Sistem ini digunakan untuk mendukung koordinasi antara Admin dan OPD (Organisasi Perangkat Daerah) dalam menangani aspirasi masyarakat secara terstruktur.
 
-First, run the development server:
+* * * * *
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Deskripsi Proyek
+----------------
+
+SIAP merupakan aplikasi web berbasis dashboard yang berfungsi sebagai pusat pengelolaan aspirasi publik dari berbagai kanal. Sistem ini dirancang untuk:
+
+-   menerima dan memantau aspirasi masyarakat,
+
+-   mengelola tiket pengaduan,
+
+-   menyajikan laporan dan analisis data,
+
+-   mendukung koordinasi tindak lanjut antara Admin dan OPD.
+
+Aplikasi memiliki dua peran utama:
+
+### Admin
+
+Berfokus pada pengelolaan data, pengguna, tiket, serta monitoring media sosial.
+
+### OPD
+
+Berfokus pada tindak lanjut aspirasi publik dan pengelolaan tugas operasional.
+
+* * * * *
+
+Fitur Utama
+-----------
+
+### Admin
+
+-   Inbox aspirasi dan komunikasi masuk
+
+-   Laporan dan analisis data
+
+-   Manajemen pengguna dan hak akses
+
+-   Pengelolaan tiket pengaduan
+
+-   Monitoring media sosial
+
+### OPD
+
+-   Inbox aspirasi sesuai bidang terkait
+
+-   Kanban untuk manajemen tugas
+
+-   Laporan progres dan kinerja
+
+-   Tindak lanjut tiket pengaduan
+
+-   Daftar aspirasi publik yang ditangani
+
+### Komponen Sistem
+
+-   Dashboard interaktif dengan visualisasi data
+
+-   Tabel data, pencarian, paginasi, dan modal
+
+-   Sistem notifikasi
+
+-   Dukungan tema light dan dark mode
+
+* * * * *
+
+Tech Stack
+------------------------
+
+| Kategori | Teknologi |
+| --- | --- |
+| Framework | Next.js 16 (App Router) |
+| Bahasa | TypeScript 5 |
+| UI Library | React 19, shadcn/ui, Radix UI |
+| Styling | Tailwind CSS 4 |
+| State Management | Zustand |
+| Visualisasi Data | Recharts |
+| Animasi | Framer Motion |
+| Ikon | Lucide React, React Icons |
+| Notifikasi | Sonner |
+| Linting | ESLint 9 |
+
+* * * * *
+
+Instalasi
+---------
+
+### Prasyarat
+
+-   Node.js versi 18.18 atau lebih baru
+
+-   npm, yarn, pnpm, atau bun
+
+### Clone Repository
+
+```
+git clone https://github.com/hibahsiap/SIAP.git
+cd SIAP
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Install Dependencies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
 
-## Learn More
+### Menjalankan Development Server
 
-To learn more about Next.js, take a look at the following resources:
+```
+npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Aplikasi akan berjalan pada:
 
-## Deploy on Vercel
+```
+http://localhost:3000
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+dan otomatis mengarahkan pengguna ke halaman login.
+
+### Build Production
+
+```
+npm run build
+npm run start
+
+```
+
+### Linting
+
+```
+npm run lint
+
+```
+
+* * * * *
+
+Script yang Tersedia
+--------------------
+
+| Perintah | Fungsi |
+| --- | --- |
+| `npm run dev` | Menjalankan development server |
+| `npm run build` | Build aplikasi production |
+| `npm run start` | Menjalankan production server |
+| `npm run lint` | Menjalankan proses linting |
+
+* * * * *
+
+Lisensi
+-------
+
+Proyek ini bersifat privat dan digunakan untuk kebutuhan internal. Penggunaan lebih lanjut memerlukan izin dari pemilik repository.
