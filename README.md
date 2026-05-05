@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="https://ik.imagekit.io/hnndhr/SIAP/Logo.png" alt="SIAP Logo" width="120" style="border-radius: 20px;" />
+  <img src="https://ik.imagekit.io/hnndhr/SIAP/Logo.png" alt="SIAP Logo" width="80" style="border-radius: 20px;" />
 
   # SIAP - Sistem Informasi Aspirasi Publik
-  **Frontend dashboard untuk pengelolaan aspirasi publik, tiket pengaduan, laporan, dan monitoring media sosial.**
+  **Dashboard pengelolaan aspirasi publik, tiket pengaduan, laporan, dan monitoring media sosial.**
 
   [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
   [![React](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)](https://react.dev/)
