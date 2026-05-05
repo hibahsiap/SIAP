@@ -1,6 +1,5 @@
-```markdown
 <div align="center">
-  <img src="https://placehold.co/150x150/4f46e5/ffffff?text=Logo+SIAP" alt="SIAP Logo" width="120" style="border-radius: 20px;" />
+  <img src="https://ik.imagekit.io/hnndhr/SIAP/Logo.png" alt="SIAP Logo" width="120" style="border-radius: 20px;" />
 
   # SIAP - Sistem Informasi Aspirasi Publik
   **Frontend dashboard untuk pengelolaan aspirasi publik, tiket pengaduan, laporan, dan monitoring media sosial.**
@@ -15,7 +14,7 @@
 
 ---
 
-![Dashboard Preview](https://placehold.co/1000x450/f3f4f6/1f2937?text=🖼️+Masukkan+Screenshot+Dashboard+Utama+Di+Sini)
+![Dashboard Preview](https://ik.imagekit.io/hnndhr/SIAP/Admin%20-%20Inbox.png)
 
 ## Deskripsi Proyek
 
@@ -35,7 +34,7 @@ Aplikasi ini memiliki dua peran utama dengan pembagian fokus yang jelas:
 ### Admin
 Berfokus pada pengelolaan data, pengguna, tiket, serta monitoring media sosial.
 
-![Admin View](https://placehold.co/800x350/e0e7ff/3730a3?text=🖼️+Screenshot+Halaman+Admin)
+![Admin View](https://ik.imagekit.io/hnndhr/SIAP/Admin%20-%20Report.png)
 
 - **Inbox Aspirasi:** Mengelola komunikasi dan pesan masuk.
 - **Laporan & Analisis Data:** Visualisasi data pengaduan.
@@ -46,7 +45,7 @@ Berfokus pada pengelolaan data, pengguna, tiket, serta monitoring media sosial.
 ### OPD (Organisasi Perangkat Daerah)
 Berfokus pada tindak lanjut aspirasi publik dan pengelolaan tugas operasional.
 
-![OPD View](https://placehold.co/800x350/dcfce7/166534?text=🖼️+Screenshot+Halaman+OPD)
+![OPD View](https://ik.imagekit.io/hnndhr/SIAP/OPD%20-%20Kanban.png)
 
 - **Inbox Khusus Bidang:** Aspirasi yang sudah disaring sesuai tupoksi.
 - **Kanban Board:** Manajemen tugas yang interaktif.
@@ -125,7 +124,6 @@ Berikut adalah perintah singkat yang dapat digunakan melalui terminal:
 | `npm run start` | Menjalankan *production server* |
 | `npm run lint` | Menjalankan proses *linting* kode |
 
----
 
 ## Lisensi
 
