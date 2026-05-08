@@ -4,9 +4,11 @@ import { Inbox, MessageSquareText, MessageSquare, Kanban, FileText, Ticket, Sett
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { SIDEBAR_MENU } from '@/constants/sidebar-menu';
 
-export default function Sidebar() {
+export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
   const pathname = usePathname();
+  const menuItems = SIDEBAR_MENU[role];
 
   return (
     <aside className="w-64 h-screen sticky top-0 bg-[#1e293b] text-white flex flex-col p-4 border-r border-slate-700">
