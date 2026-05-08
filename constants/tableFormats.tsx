@@ -4,7 +4,7 @@ import { IoPencil, IoTrash } from "react-icons/io5";
 
 // Tipe data untuk struktur data yang dikirim dari API
 export interface TableRowData {
-  initials: ReactNode;
+  initials?: ReactNode;
   id: string;
   name?: string;
   avatarUrl?: string; // Jika ada foto profile
