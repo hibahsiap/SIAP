@@ -9,12 +9,12 @@ import { IoPersonCircleOutline } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const field = 
-  {
+const field =
+{
     title: 'Email',
     placeholder: "Enter your email"
 
-  }
+}
 
 const Login = () => {
 
@@ -32,10 +32,10 @@ const Login = () => {
 
         console.log("Logging in with:", formData);
 
-        const isValid = true; 
+        const isValid = true;
 
         if (isValid) {
-            router.push("/dashboard/usermanagement");
+            router.push("/dashboard/user-management");
         } else {
             alert("Login Gagal!");
             setLoading(false);
@@ -63,23 +63,23 @@ const Login = () => {
                 </div>
                 <form onSubmit={handleSubmit} className="w-full flex-col flex gap-6">
                     <div className="flex flex-col gap-4">
-                        <Field 
-                            icon={<IoPersonCircleOutline size={13}/>} 
-                            title="Email" 
+                        <Field
+                            icon={<IoPersonCircleOutline size={13} />}
+                            title="Email"
                             placeholder="Enter your email"
                             value={formData.email}
-                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         />
 
-                        <FieldPassword 
-                            title="Password" 
-                            placeholder="Enter your password" 
+                        <FieldPassword
+                            title="Password"
+                            placeholder="Enter your password"
                             setIcon={true}
-                            value={formData.password} 
-                            onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         />
                     </div>
-                    <ButtonClick name={loading ? "Processing...": "Login"} disabled={loading}/>
+                    <ButtonClick name={loading ? "Processing..." : "Login"} disabled={loading} />
                 </form>
                 <div className="flex flex-col gap-1 text-center text-[10px] font-light text-[#75777F]">
                     <p>By logging in, you agree to the <Link href={'#'} className="underline font-medium text-[#546064]">Terms of Service</Link> and <Link href={'#'} className="underline font-medium text-[#546064]">Privacy Policy.</Link></p>
