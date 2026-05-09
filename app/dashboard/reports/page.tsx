@@ -1,3 +1,5 @@
+"use client"
+
 import { BarChartData } from "@/components/BarChartData";
 import CardStats from "@/components/CardStats";
 import { GroupChart } from "@/components/GroupChart";
@@ -56,7 +58,9 @@ export default function Reports() {
         <div className="flex flex-col gap-5 px-2">
             <div className="flex flex-row items-center justify-between py-1">
                 <h1 className="font-bold text-3xl text-[#041942]">Report</h1>
-                <SearchField placeholder="search" className="w-60"/>
+                <SearchField placeholder="search" className="w-60" value={""} onChange={function (val: string): void {
+                    throw new Error("Function not implemented.");
+                } }/>
             </div>
             <div className="grid grid-cols-4 gap-4">
                 {stats.map((stat, index) => {
@@ -77,7 +81,9 @@ export default function Reports() {
                 <BarChartData/>
             </div>
             <div className="border border-[#D2D2D2] p-4 rounded-[15px] flex flex-col items-end gap-4 bg-white">
-                <SearchField placeholder="search" className="w-60"/>
+                <SearchField placeholder="search" className="w-60" value={""} onChange={function (val: string): void {
+                    throw new Error("Function not implemented.");
+                } }/>
                 <div className="w-full">
                     <TableTemplate columns={userColumns} data={userData} position="text-center"/>
                 </div>
