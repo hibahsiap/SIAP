@@ -123,58 +123,6 @@ export default function TicketsPage() {
 
   return (
     <div className="flex-1 w-full max-w-full h-full">
-{/* bg-[#F8F9FA] */}
-      {/* <div className="w-full mx-auto bg-white p-6 rounded-2xl shadow-sm border border-gray-100"> */}
-
-        {/* <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
-          <div className="flex gap-2">
-            {[
-              { id: 'kanban', label: 'Kanban' },
-              { id: 'pending', label: 'Pending Review' },
-              { id: 'all', label: 'All Tickets' },
-              { id: 'aspirations', label: 'Aspirations' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id as TabCategory);
-                  setSearchQuery(""); 
-                }}
-                className={`px-5 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200 ${
-                  activeTab === tab.id 
-                    ? "bg-[#1D2F58] text-white shadow-md" 
-                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="w-full lg:w-auto flex-1">
-             <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> 
-          </div>
-        </div> */}
-
-        {/* --- AREA KONTEN --- */}
-        {/* <div className="w-full pt-2">
-          {filteredData.length > 0 ? (
-            <div className="overflow-x-auto w-full">
-              <TableTemplate2 columns={columns} data={filteredData as any} />
-            </div>
-          ) : searchQuery !== "" ? (
-            <SearchEmptyState type={activeTab} />
-          ) : (
-            <EmptyState 
-              title={`There is currently no data available`} 
-              description="Please add new data to see it displayed here." 
-            />
-          )}
-        </div> */}
-
-        
-
-      {/* </div> */}
 
       {/* --- TABS & SEARCH HEADER --- */}
       <div className="flex flex-row justify-center items-center gap-4 py-4 mb-4">
