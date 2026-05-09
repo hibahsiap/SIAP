@@ -25,35 +25,48 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1">
-        {/* Inbox dengan Submenu */}
-        <div className="space-y-1">
-          <Link href="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === '/dashboard' ? 'bg-slate-700/80' : 'hover:bg-slate-700/50'}`}>
-            <Inbox size={20} /> <span className="font-medium text-sm">Inbox</span>
-          </Link>
-          {/* Submenu Chat & Comments */}
-          <div className="pl-1 space-y-1 border-l ml-6 border-slate-600">
-            <Link href="/dashboard/chat" className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${pathname === '/inbox/chat' ? 'text-white' : 'text-slate-400 hover:text-white'}`}>
-              <MessageSquare size={16} /> Chat
-            </Link>
-            <Link href="/dashboard/social" className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${pathname === '/dashboard/social' ? 'bg-slate-700/80 text-white' : 'text-slate-400 hover:text-white'}`}>
-              <MessageSquareText size={16} /> Comments
-            </Link>
-          </div>
-        </div>
 
-        {/* Menu Lainnya */}
-        <Link href="/dashboard/tickets" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><Ticket size={20} /> <span className="font-medium text-sm">Tickets</span></Link>
-        <Link href="/dashboard/reports" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><FileText size={20} /> <span className="font-medium text-sm">Reports</span></Link>
-        <Link href="/dashboard/user-management" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><Users size={20} /> <span className="font-medium text-sm">User Management</span></Link>
+        {/* Inbox dengan Submenu */}
+        {role === 'admin' && (
+          <div className="space-y-1">
+            <Link href="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === '/dashboard' ? 'bg-slate-700/80' : 'hover:bg-slate-700/50'}`}>
+              <Inbox size={20} /> <span className="font-medium text-sm">Inbox</span>
+            </Link>
+            {/* Submenu Chat & Comments */}
+            <div className="pl-1 space-y-1 border-l ml-6 border-slate-600">
+              <Link href="/dashboard/chat" className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${pathname === '/inbox/chat' ? 'text-white' : 'text-slate-400 hover:text-white'}`}>
+                <MessageSquare size={16} /> Chat
+              </Link>
+              <Link href="/dashboard/social" className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${pathname === '/dashboard/social' ? 'bg-slate-700/80 text-white' : 'text-slate-400 hover:text-white'}`}>
+                <MessageSquareText size={16} /> Comments
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {menuItems.map((item) => (
+          <Link href={item.href} key={item.name} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50">{item.icon} <span className="font-medium text-sm">{item.name}</span></Link>
+        ))}
       </nav>
 
       {/* Bottom Actions */}
       <div className="border-t border-slate-700 pt-4 space-y-1">
-        <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-700/50 rounded-xl"><Settings size={20} /> <span className="text-sm">Settings</span></Link>
-        <Link href="/dashboard/profile" className="flex items-center justify-between px-4 py-3 hover:bg-slate-700/50 rounded-xl">
-          <div className="flex items-center gap-3"><User size={20} /> <span className="text-sm">Admin</span></div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-        </Link>
+        {role === 'admin' ? (
+          <>
+            <Link href="/admin/dashboard/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-700/50 rounded-xl"><Settings size={20} /> <span className="text-sm">Settings</span></Link>
+            <Link href="/admin/dashboard/profile" className="flex items-center justify-between px-4 py-3 hover:bg-slate-700/50 rounded-xl">
+              <div className="flex items-center gap-3"><User size={20} /> <span className="text-sm">Admin</span></div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+            </Link>
+          </>
+        ) :
+        (
+          <Link href="/opd/dashboard/profile" className="flex items-center justify-between px-4 py-3 hover:bg-slate-700/50 rounded-xl">
+            <div className="flex items-center gap-3"><User size={20} /> <span className="text-sm">OPD</span></div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+          </Link>
+        )
+        }
       </div>
     </aside>
   );
