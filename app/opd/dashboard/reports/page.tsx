@@ -42,11 +42,7 @@ export default function Reports() {
 
     const userColumns: ColumnDefinition[] = [
         { 
-        header: "NAME OPD", 
-        key: "name", 
-        cell: (_, rowData) => formatNameCell(rowData as TableRowData) ,
-        className: "text-left"
-        },
+        header: "CATEGORIES", key: "category", className: "text-left font-medium"},
         { header: "TOTAL TICKETS", key: "totalTickets" },
         { header: "SOLVED TICKETS", key: "solvedTickets" },
         { header: "AVERAGE SOLVING TIME", key: "averageSolvingTime" },
@@ -54,9 +50,9 @@ export default function Reports() {
 
      // contoh
     const userData: TableRowData[] = [
-        { id: "1", name: "Sekretaris Daerah", totalTickets: 187, solvedTickets: 112, averageSolvingTime: "1d 4h 11m"},
-        { id: "2", name: "Dinas Sosial", totalTickets: 152, solvedTickets: 75, averageSolvingTime: "1d 2h 11m"},
-        { id: "3", name: "Dinas Kependudukan", totalTickets: 101, solvedTickets: 98, averageSolvingTime: "0d 20h 42m"},
+        { id: "1", category: "Dana Hibah dan Bansos", totalTickets: 187, solvedTickets: 112, averageSolvingTime: "1d 4h 11m"},
+        { id: "2", category: "Kebencanaan", totalTickets: 152, solvedTickets: 75, averageSolvingTime: "1d 2h 11m"},
+        { id: "3", category: "Jalan Raya dan Penerangan", totalTickets: 101, solvedTickets: 98, averageSolvingTime: "0d 20h 42m"},
     ];
 
     const timeOptions = [
