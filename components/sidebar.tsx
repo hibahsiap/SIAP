@@ -29,15 +29,15 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
         {/* Inbox dengan Submenu */}
         {role === 'admin' && (
           <div className="space-y-1">
-            <Link href="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === '/dashboard' ? 'bg-slate-700/80' : 'hover:bg-slate-700/50'}`}>
+            <Link href="/admin/dashboard/chat" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === '/dashboard' ? 'bg-slate-700/80' : 'hover:bg-slate-700/50'}`}>
               <Inbox size={20} /> <span className="font-medium text-sm">Inbox</span>
             </Link>
             {/* Submenu Chat & Comments */}
             <div className="pl-1 space-y-1 border-l ml-6 border-slate-600">
-              <Link href="/dashboard/chat" className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${pathname === '/inbox/chat' ? 'text-white' : 'text-slate-400 hover:text-white'}`}>
+              <Link href="/admin/dashboard/chat" className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${pathname === '/inbox/chat' ? 'text-white' : 'text-slate-400 hover:text-white'}`}>
                 <MessageSquare size={16} /> Chat
               </Link>
-              <Link href="/dashboard/social" className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${pathname === '/dashboard/social' ? 'bg-slate-700/80 text-white' : 'text-slate-400 hover:text-white'}`}>
+              <Link href="/admin/dashboard/comments" className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${pathname === '/dashboard/social' ? 'bg-slate-700/80 text-white' : 'text-slate-400 hover:text-white'}`}>
                 <MessageSquareText size={16} /> Comments
               </Link>
             </div>

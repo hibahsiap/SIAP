@@ -6,7 +6,9 @@ import { GroupChart } from "@/components/GroupChart";
 import { PieChartData } from "@/components/PieChartData";
 import SearchField from "@/components/SearchField";
 import TableTemplate, { ColumnDefinition } from "@/components/TableTemplate";
+import { TimeRange } from "@/components/TimeRange";
 import { formatNameCell, TableRowData } from "@/constants/tableFormats";
+import { useState } from "react";
 
 const stats = [
     {
@@ -36,11 +38,13 @@ const stats = [
 ]
 
 export default function Reports() {
+    const [selectedRange, setSelectedRange] = useState('all');
+
     const userColumns: ColumnDefinition[] = [
         { 
         header: "NAME OPD", 
         key: "name", 
-        cell: (_, rowData) => formatNameCell(rowData) 
+        cell: (_, rowData) => formatNameCell(rowData as TableRowData) 
         },
         { header: "TOTAL TICKETS", key: "totalTickets" },
         { header: "SOLVED TICKETS", key: "solvedTickets" },
@@ -54,13 +58,23 @@ export default function Reports() {
         { id: "3", name: "Dinas Kependudukan", totalTickets: 101, solvedTickets: 98, averageSolvingTime: "0d 20h 42m"},
     ];
 
+    const timeOptions = [
+        { value: 'all', label: 'All Time' },
+        { value: 'today', label: 'Today' },
+        { value: 'week', label: 'This Week' },
+        { value: 'month', label: 'This Month' },
+        { value: 'custom', label: 'Custom Range' },
+    ];
+
     return (
         <div className="flex flex-col gap-5 px-2">
             <div className="flex flex-row items-center justify-between py-1">
                 <h1 className="font-bold text-3xl text-[#041942]">Report</h1>
-                <SearchField placeholder="search" className="w-60" value={""} onChange={function (val: string): void {
-                    throw new Error("Function not implemented.");
-                } }/>
+                <TimeRange
+                    options={timeOptions}
+                    value={selectedRange}
+                    onChange={setSelectedRange}
+                />
             </div>
             <div className="grid grid-cols-4 gap-4">
                 {stats.map((stat, index) => {
