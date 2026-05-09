@@ -6,11 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Field from "@/components/Field";
+import DeleteModal from "@/components/DeleteModal";
 
 export default function SocialTicketModal() {
-  const { isCreateTicketModalOpen, closeCreateTicketModal, selectedItem, context } = InteractionStore();
+  const { isCreateTicketModalOpen, closeCreateTicketModal, isDeleteModalOpen, closeDeleteModal, selectedItem, context } = InteractionStore();
+  const formattedItemName = context === 'comments' ? 'comment' : 'mention';
 
+  const handleConfirmDelete = () => {
+    if (!selectedItem) return;
+    console.log(`Menghapus ${context} dengan ID:`, selectedItem.id);
+    // Tambahkan logika delete aslimu di sini nanti
+    closeDeleteModal();
+  };
+  
   return (
+    <>
     <CustomModal 
       isOpen={isCreateTicketModalOpen} 
       onClose={closeCreateTicketModal} 
@@ -56,5 +66,13 @@ export default function SocialTicketModal() {
         </div>
       </div>
     </CustomModal>
+
+    <DeleteModal 
+        isOpen={isDeleteModalOpen} 
+        onClose={closeDeleteModal} 
+        onConfirm={handleConfirmDelete} 
+        itemName={formattedItemName} 
+      />
+    </>
   );
 }
