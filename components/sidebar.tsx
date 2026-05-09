@@ -42,7 +42,7 @@ export default function Sidebar() {
         {/* Menu Lainnya */}
         <Link href="/dashboard/tickets" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><Ticket size={20} /> <span className="font-medium text-sm">Tickets</span></Link>
         <Link href="/dashboard/reports" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><FileText size={20} /> <span className="font-medium text-sm">Reports</span></Link>
-        <Link href="/dashboard/usermanagement" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><Users size={20} /> <span className="font-medium text-sm">User Management</span></Link>
+        <Link href="/dashboard/user-management" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-700/50"><Users size={20} /> <span className="font-medium text-sm">User Management</span></Link>
       </nav>
 
       {/* Bottom Actions */}
@@ -50,7 +50,7 @@ export default function Sidebar() {
         <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-700/50 rounded-xl"><Settings size={20} /> <span className="text-sm">Settings</span></Link>
         <Link href="/dashboard/profile" className="flex items-center justify-between px-4 py-3 hover:bg-slate-700/50 rounded-xl">
           <div className="flex items-center gap-3"><User size={20} /> <span className="text-sm">Admin</span></div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
         </Link>
       </div>
     </aside>

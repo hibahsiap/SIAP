@@ -1,21 +1,20 @@
 import { ReactNode } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import { TableRowData } from "@/constants/tableFormats";
 
-export interface ColumnDefinition {
+export interface ColumnDefinition<T = Record<string, any>> {
     header: string;
     key: string;
-    cell?: (value: any, rowData: TableRowData) => ReactNode; 
+    cell?: (value: any, rowData: T) => ReactNode; 
     className?: string; 
 }
 
-interface TableTemplateProps {
-    columns: ColumnDefinition[],
-    data: TableRowData[];
+interface TableTemplateProps<T = Record<string, any>> {
+    columns: ColumnDefinition<T>[],
+    data: T[];
     position?: string;
 }
 
-const TableTemplate = ({columns, data, position}: TableTemplateProps) => {
+const TableTemplate = <T extends Record<string, any>>({columns, data, position}: TableTemplateProps<T>) => {
     return (
         <div>
             <Table>
@@ -37,7 +36,7 @@ const TableTemplate = ({columns, data, position}: TableTemplateProps) => {
                             <TableRow key={rowIndex} className={`border-b border-[#e7e6e6] text-[#041942] capitalize text-[14px] h-16 ${position || ""}`}>
                                 {columns.map((col) => (
                                     <TableCell key={col.key} className={col.className}>
-                                        {col.cell ? col.cell(row[col.key as keyof TableRowData], row) : row[col.key as keyof TableRowData]}
+                                        {col.cell ? col.cell(row[col.key], row) : row[col.key]}
                                     </TableCell>
                                 ))}
                             </TableRow>
