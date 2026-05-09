@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export default function Header({ searchQuery, setSearchQuery }: HeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row justify-end items-center gap-3 mb-6 font-sans">
+    <div className="flex flex-row justify-end items-center gap-3 font-sans">
       <div className="w-full md:w-64">
         <SearchField 
           placeholder="Search tickets" 

@@ -77,22 +77,7 @@ export default function TicketsPage() {
     };
 
     if (activeTab === 'kanban') {
-      return [
-        // { header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, key: "taskName", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
-        // { header: <><ArrowUpRight className="w-4 h-4"/> OPD</>, key: "opd" },
-        // { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
-        // { header: <><CircleChevronDown className="w-4 h-4"/> Issue Type</>, key: "issueType", cell: (val) => getBadge(val, 'issue') },
-        // { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
-        // messageColumn,
-        // { header: "Actions", key: "action", cell: (_, row) => (
-        //     <div className="flex items-center justify-center gap-4">
-        //       <button onClick={() => openEditModal(row)} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
-        //       <button className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Forward className="w-4 h-4" /></button>
-        //     </div>
-        //   )
-        // }
-        
-      ];
+      return [];
     } else if (activeTab === 'pending') {
       return [
         { header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, key: "taskName", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
@@ -192,21 +177,21 @@ export default function TicketsPage() {
       {/* </div> */}
 
       {/* --- TABS & SEARCH HEADER --- */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4">
+      <div className="flex flex-row justify-center items-center gap-4 py-4 mb-4">
         <div className="flex gap-2">
-          {['kanban', 'pending', 'all', 'aspirations'].map((id) => (
+          {['kanban', 'pending review', 'all tickets', 'aspirations'].map((id) => (
             <button
               key={id}
               onClick={() => { setActiveTab(id as TabCategory); setSearchQuery(""); }}
-              className={`px-5 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200 ${
-                activeTab === id ? "bg-[#1D2F58] text-white shadow-md" : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+              className={`px-4 py-1.5 rounded-[12px] text-xs font-semibold transition-all duration-200 ${
+                activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border-2 border-[#F3F3F3]"
               }`}
             >
               {id.charAt(0).toUpperCase() + id.slice(1)}
             </button>
           ))}
         </div>
-        <div className="w-full lg:w-auto flex-1">
+        <div className="w-auto">
             <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> 
         </div>
       </div>
