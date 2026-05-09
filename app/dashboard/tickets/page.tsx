@@ -8,7 +8,8 @@ import SearchEmptyState from '@/components/SearchEmpty';
 import DeleteAlertModal from '@/components/DeleteModal';
 import { ArrowUpRight, Loader, CircleChevronDown, Calendar, Trash2, Edit2, Forward } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
-import { pendingTickets, allTickets, aspirationTickets } from '@/constants/ticketsDummy';
+import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
+import KanbanBoard from '@/components/spectrumui/kanbanboard';
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
@@ -40,14 +41,15 @@ const getBadge = (text: string, type: 'issue' | 'priority') => {
   return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[text]}`}>{text}</span>;
 };
 
-type TabCategory = 'pending' | 'all' | 'aspirations';
+type TabCategory = 'kanban' | 'pending' | 'all' | 'aspirations';
 
 export default function TicketsPage() {
-  const [activeTab, setActiveTab] = useState<TabCategory>('pending');
+  const [activeTab, setActiveTab] = useState<TabCategory>('kanban');
   const [searchQuery, setSearchQuery] = useState("");
   const { openEditModal, openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
 
   const currentData = useMemo(() => {
+    // if (activeTab === 'kanban') return kanban;
     if (activeTab === 'pending') return pendingTickets;
     if (activeTab === 'all') return allTickets;
     return aspirationTickets;
@@ -74,7 +76,24 @@ export default function TicketsPage() {
       )
     };
 
-    if (activeTab === 'pending') {
+    if (activeTab === 'kanban') {
+      return [
+        // { header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, key: "taskName", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
+        // { header: <><ArrowUpRight className="w-4 h-4"/> OPD</>, key: "opd" },
+        // { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
+        // { header: <><CircleChevronDown className="w-4 h-4"/> Issue Type</>, key: "issueType", cell: (val) => getBadge(val, 'issue') },
+        // { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
+        // messageColumn,
+        // { header: "Actions", key: "action", cell: (_, row) => (
+        //     <div className="flex items-center justify-center gap-4">
+        //       <button onClick={() => openEditModal(row)} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
+        //       <button className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Forward className="w-4 h-4" /></button>
+        //     </div>
+        //   )
+        // }
+        
+      ];
+    } else if (activeTab === 'pending') {
       return [
         { header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, key: "taskName", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
         { header: <><ArrowUpRight className="w-4 h-4"/> OPD</>, key: "opd" },
@@ -118,13 +137,14 @@ export default function TicketsPage() {
   }, [activeTab, openEditModal, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-full max-w-full h-full p-6 md:p-8 bg-[#F8F9FA] min-h-screen">
+    <div className="flex-1 w-full max-w-full h-full">
+{/* bg-[#F8F9FA] */}
+      {/* <div className="w-full mx-auto bg-white p-6 rounded-2xl shadow-sm border border-gray-100"> */}
 
-      <div className="w-full mx-auto bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+        {/* <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
           <div className="flex gap-2">
             {[
+              { id: 'kanban', label: 'Kanban' },
               { id: 'pending', label: 'Pending Review' },
               { id: 'all', label: 'All Tickets' },
               { id: 'aspirations', label: 'Aspirations' }
@@ -149,10 +169,10 @@ export default function TicketsPage() {
           <div className="w-full lg:w-auto flex-1">
              <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> 
           </div>
-        </div>
+        </div> */}
 
         {/* --- AREA KONTEN --- */}
-        <div className="w-full pt-2">
+        {/* <div className="w-full pt-2">
           {filteredData.length > 0 ? (
             <div className="overflow-x-auto w-full">
               <TableTemplate2 columns={columns} data={filteredData as any} />
@@ -165,8 +185,48 @@ export default function TicketsPage() {
               description="Please add new data to see it displayed here." 
             />
           )}
-        </div>
+        </div> */}
 
+        
+
+      {/* </div> */}
+
+      {/* --- TABS & SEARCH HEADER --- */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4">
+        <div className="flex gap-2">
+          {['kanban', 'pending', 'all', 'aspirations'].map((id) => (
+            <button
+              key={id}
+              onClick={() => { setActiveTab(id as TabCategory); setSearchQuery(""); }}
+              className={`px-5 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200 ${
+                activeTab === id ? "bg-[#1D2F58] text-white shadow-md" : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+              }`}
+            >
+              {id.charAt(0).toUpperCase() + id.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div className="w-full lg:w-auto flex-1">
+            <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> 
+        </div>
+      </div>
+
+      {/* --- AREA KONTEN (LOGIKA SWITCH) --- */}
+      <div className="w-full">
+        {activeTab === 'kanban' ? (
+          <KanbanBoard />
+        ) : filteredData.length > 0 ? (
+          <div className="overflow-x-auto w-full">
+            <TableTemplate2 columns={columns} data={filteredData as any} />
+          </div>
+        ) : searchQuery !== "" ? (
+          <SearchEmptyState type={activeTab} />
+        ) : (
+          <EmptyState 
+            title={`There is currently no data available`} 
+            description="Please add new data to see it displayed here." 
+          />
+        )}
       </div>
 
       <DeleteAlertModal 
