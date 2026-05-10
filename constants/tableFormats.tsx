@@ -57,7 +57,7 @@ export const formatActionCell = (
   onDelete: (id: string) => void
 ): ReactNode => {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center justify-center gap-1.5">
       <button 
         onClick={() => onEdit(rowData.id)}
         className="p-1.5 text-[#546064] hover:text-blue-600 transition-colors"

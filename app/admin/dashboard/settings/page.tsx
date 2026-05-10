@@ -44,7 +44,7 @@ export default function Settings() {
         { 
         header: "NAME OPD", 
         key: "name", 
-        cell: (_, rowData) => formatNameCell(rowData) 
+        cell: (_, rowData) => formatNameCell(rowData as TableRowData) 
         },
         // { 
         // header: "ROLE", 
@@ -54,8 +54,8 @@ export default function Settings() {
         { 
         header: "ACTIONS", 
         key: "actions", 
-        className: "text-right",
-        cell: (_, rowData) => formatActionCell(rowData, handleEdit, handleDelete)
+        className: "text-center",
+        cell: (_, rowData) => formatActionCell(rowData as TableRowData, handleEdit, handleDelete)
         },
     ];
 
@@ -106,7 +106,7 @@ export default function Settings() {
                     <div className="flex flex-row justify-between items-center">
                         <h2 className="font-bold text-2xl text-[#041942]">Issue Categories</h2>
                         <div className="flex flex-row gap-2 w-[40%]">
-                            <SearchField placeholder="Search"/>
+                            <SearchField placeholder="Search" value="" onChange={() => {}}/>
                             <ButtonClick name="add category" type="button" icon={<PlusIcon size={16}/>}/>
                         </div>
                     </div>
