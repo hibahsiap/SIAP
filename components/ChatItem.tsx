@@ -15,11 +15,12 @@ interface ChatItemProps {
   platform: 'whatsapp' | 'instagram';
   flagColor: string; 
   isActive?: boolean;
+  unread?: boolean;
 }
 
 export const ChatItem = ({ 
   name, message, time, status, statusColor, 
-  category, categoryColor, department, platform, flagColor, isActive 
+  category, categoryColor, department, platform, flagColor, isActive, unread
 }: ChatItemProps) => {
   return (
     <div className={`p-4 border-b cursor-pointer transition-all ${isActive ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'}`}>
@@ -44,27 +45,44 @@ export const ChatItem = ({
               <p className="text-[13px] text-gray-500 mt-1 truncate">{message}</p>
             </div>
             
-            <div className="flex flex-col items-end flex-shrink-0 gap-2">
-              <span className="text-[11px] text-gray-400">{time}</span>
-              {platform === 'whatsapp' ? (
-                <div className="text-green-500"><Image src="/images/whatsapp-icon.png" width={18} height={18} alt="WA" /></div>
-              ) : (
-                <div className="text-pink-500"><Image src="/images/instagram-icon.png" width={15} height={15} alt="IG" /></div>
-              )}
+            {/* Waktu & Icon */}
+            <div className="flex flex-col items-end flex-shrink-0">
+              <span className="text-[11px] text-gray-400 mb-2">{time}</span>
+              <div className="w-6 flex justify-center"> {/* Fixed width agar sejajar dengan bulatan di bawah */}
+                {platform === 'whatsapp' ? (
+                  <div className="text-green-500">
+                    <Image src="/images/whatsapp-icon.png" width={18} height={18} alt="WA" />
+                  </div>
+                ) : (
+                  <div className="text-pink-500">
+                    <Image src="/images/instagram-icon.png" width={16} height={16} alt="IG" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Badges Area */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Badge className={statusColor}>
-              <span className="mr-1">●</span>{status}
-            </Badge>
-            <Badge className={categoryColor}>
-              {category}
-            </Badge>
-            <Badge className="bg-gray-200 text-gray-700">
-              {department}
-            </Badge>
+          {/* Badges & Unread Indicator */}
+          <div className="flex items-center justify-between mt-3">
+            {/* Badge */}
+            <div className="flex flex-wrap gap-2">
+              <Badge className={statusColor}>
+                <span className="mr-1 text-[8px]">●</span>{status}
+              </Badge>
+              <Badge className={categoryColor}>
+                {category}
+              </Badge>
+              <Badge className="bg-gray-200 text-gray-700">
+                {department}
+              </Badge>
+            </div>
+
+            {/* Unread Indicator */}
+            <div className="w-6 flex justify-center flex-shrink-0">
+              {unread && (
+                <div className="w-2 h-2 bg-[#4ADE80] rounded-full"></div>
+              )}
+            </div>
           </div>
         </div>
       </div>

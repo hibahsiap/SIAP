@@ -1,23 +1,71 @@
-// app/inbox/page.tsx
 "use client";
+
 import { useState } from "react";
 import { Search } from "lucide-react";
+import Image from "next/image";
 import { ChatItem } from "@/components/ChatItem";
 import { TimeRange } from "@/components/TimeRange";
-import Image from "next/image";
+import { InteractionTabs } from "@/components/InteractionTabs";
+import ChatDetailView from "@/components/ChatDetailView";
 
 export default function InboxPage() {
+  const [activeTab, setActiveTab] = useState("all");
   const [sort, setSort] = useState("newest");
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // State untuk menyimpan chat mana yang sedang dibuka
+  const [selectedChat, setSelectedChat] = useState<any | null>(null);
+
+  const inboxTabs = [
+    { id: "all", label: "All Chat" },
+    { id: "unread", label: "Unread" },
+    { 
+      id: "whatsapp", 
+      label: "WhatsApp", 
+      icon: <Image src="/images/whatsapp-icon.png" width={16} height={16} alt="wa" /> 
+    },
+    { 
+      id: "instagram", 
+      label: "Instagram", 
+      icon: <Image src="/images/instagram-icon.png" width={16} height={16} alt="ig" /> 
+    },
+  ];
+
+  const chatData = [
+    { 
+      id: "1", name: "Bagus", message: "Lorem ipsum dolor sit amet consectetur.", time: "12m ago",
+      status: "Done", statusColor: "bg-green-100 text-green-700",
+      category: "Question", categoryColor: "bg-orange-100 text-orange-700",
+      department: "Dinas Sosial", platform: "whatsapp" as const, flagColor: "text-green-500", unread: false 
+    },
+    { 
+      id: "2", name: "Sarah Blake", message: "Mohon tindak lanjut terkait jalan rusak.", time: "45m ago",
+      status: "In Progress", statusColor: "bg-blue-100 text-blue-700",
+      category: "Complaint", categoryColor: "bg-pink-100 text-pink-700",
+      department: "Dinas Perhubungan", platform: "whatsapp" as const, flagColor: "text-green-500", unread: true 
+    },
+    { 
+      id: "3", name: "Felix Cooper", message: "Bagaimana cara membuat kartu identitas?", time: "2h ago",
+      status: "To Do", statusColor: "bg-red-100 text-red-700",
+      category: "Complaint", categoryColor: "bg-pink-100 text-pink-700",
+      department: "Dinas Lingkungan Hidup", platform: "instagram" as const, flagColor: "text-orange-500", unread: false 
+    },
+  ];
+
+  const filteredChats = chatData.filter((chat) => {
+    if (activeTab === "unread") return chat.unread;
+    if (activeTab === "whatsapp") return chat.platform === "whatsapp";
+    if (activeTab === "instagram") return chat.platform === "instagram";
+    return true;
+  });
 
   return (
-    <div className="flex h-screen bg-white">
-      {/* Kolon Kiri: List Chat */}
-      <div className="w-[400px] border-r flex flex-col h-full">
-        {/* Title */}
-        <div className="p-4 space-y-4 shadow-sm">
+    <div className="flex h-screen bg-white overflow-hidden">
+      {/* List Chat */}
+      <div className="w-[390px] border-r flex flex-col h-full bg-white z-10">
+        <div className="p-4 space-y-4 border-b">
           <h2 className="text-2xl font-bold text-slate-900">All Inbox</h2>
           
-          {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
             <input 
@@ -27,19 +75,14 @@ export default function InboxPage() {
             />
           </div>
 
-          {/* Platform Tabs */}
-          <div className="flex gap-2 overflow-x-auto">
-            <button className="px-3 py-1 bg-slate-800 text-white rounded-full text-xs">All Chat</button>
-            <button className="px-3 py-1 border rounded-full text-xs hover:bg-gray-100">Unread</button>
-            <button className="px-3 py-1 border rounded-full text-xs flex items-center gap-1">
-              <span className="text-green-500"><Image src="/images/whatsapp-icon.png" width={18} height={18} alt="WA" /></span> WhatsApp
-            </button>
-            <button className="px-3 py-1 border rounded-full text-xs flex items-center gap-1">
-              <span className="text-pink-500"><Image src="/images/instagram-icon.png" width={15} height={15} alt="IG" /></span> Instagram
-            </button>
+          <div className="overflow-x-auto">
+            <InteractionTabs 
+              tabs={inboxTabs}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+            />
           </div>
 
-          {/* Filter Time and Status */}
           <div className="flex gap-2">
             <TimeRange 
               options={[{label: "Newest", value: "newest"}, {label: "Oldest", value: "oldest"}]}
@@ -56,42 +99,46 @@ export default function InboxPage() {
           </div>
         </div>
 
-        {/* Scrollable Chat List */}
         <div className="flex-1 overflow-y-auto">
-          <ChatItem 
-            name="Bagus Anugrah" message="Lorem ipsum dolor sit amet consectetur." time="12m ago"
-            status="Done" statusColor="bg-green-100 text-green-700"
-            category="Question" categoryColor="bg-orange-100 text-orange-700"
-            department="Dinas Sosial" platform="whatsapp" flagColor="text-green-500" isActive
-          />
-          <ChatItem 
-            name="Sarah Blake" message="Lorem ipsum dolor sit amet consectetur." time="12m ago"
-            status="In Progress" statusColor="bg-blue-100 text-blue-700"
-            category="Complaint" categoryColor="bg-pink-100 text-pink-700"
-            department="Dinas Perhubungan" platform="whatsapp" flagColor="text-green-500"
-          />
-          <ChatItem 
-            name="Felix Cooper" message="Lorem ipsum dolor sit amet consectetur." time="12m ago"
-            status="To Do" statusColor="bg-red-100 text-red-700"
-            category="Complaint" categoryColor="bg-pink-100 text-pink-700"
-            department="Dinas Lingkungan Hidup" platform="instagram" flagColor="text-orange-500"
-          />
+          {filteredChats.length > 0 ? (
+            filteredChats.map((chat) => (
+              <div key={chat.id} onClick={() => setSelectedChat(chat)}>
+                <ChatItem 
+                  {...chat}
+                  isActive={selectedChat?.id === chat.id} 
+                />
+              </div>
+            ))
+          ) : (
+            <div className="p-10 text-center text-gray-400 text-sm">
+              No messages found.
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Kolon Kanan: Empty State */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 p-10">
-        <div className="relative w-80 h-48 bg-slate-900 rounded-2xl mb-12 shadow-2xl">
-          <div className="absolute -bottom-8 -left-8 w-72 h-44 bg-white border border-gray-100 rounded-2xl shadow-xl p-6">
-            <div className="h-4 w-32 bg-gray-200 rounded-full mb-3"></div>
-            <div className="h-4 w-48 bg-gray-100 rounded-full mb-2"></div>
-            <div className="h-4 w-40 bg-gray-100 rounded-full"></div>
+      {/* Kondisional antara Empty State atau ChatDetail */}
+      <div className="flex-1 h-full">
+        {selectedChat ? (
+          <ChatDetailView activeChat={selectedChat} />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full bg-gray-50 p-10">
+            <div className="relative w-80 h-48 bg-slate-900 rounded-2xl mb-12 shadow-2xl flex items-center justify-center">
+                <div className="w-16 h-4 bg-slate-700 rounded-full animate-pulse mr-20"></div>
+                <div className="w-24 h-4 bg-slate-800 rounded-full animate-pulse"></div>
+                <div className="absolute -bottom-8 -left-8 w-72 h-44 bg-white border border-gray-100 rounded-2xl shadow-xl p-6 flex flex-col gap-3">
+                    <div className="h-4 w-32 bg-gray-100 rounded-full"></div>
+                    <div className="h-4 w-52 bg-gray-50 rounded-full"></div>
+                    <div className="h-4 w-44 bg-gray-50 rounded-full"></div>
+                </div>
+            </div>
+
+            <h3 className="text-2xl font-bold text-slate-800">Every message deserves a response</h3>
+            <p className="text-gray-400 mt-2 text-center max-w-sm">
+              Choose a message from the left menu and start the conversation
+            </p>
           </div>
-        </div>
-        <h3 className="text-2xl font-bold text-slate-800">Every message deserves a response</h3>
-        <p className="text-gray-400 mt-2 text-center max-w-sm">
-          Choose a message from the left menu and start the conversation
-        </p>
+        )}
       </div>
     </div>
   );
