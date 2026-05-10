@@ -15,7 +15,7 @@ export default function ChatDetailView({ activeChat }: { activeChat: any }) {
       <div className="flex-1 overflow-y-auto px-6 pb-24">
         <ForwardControl />
         
-        {/* Contoh Chat History */}
+        {/* Dummy Chat History */}
         <ChatBubble 
             message="Lorem ipsum dolor sit amet consectetur. Est urna quam ornare egestas." 
             time="10:45 AM" 

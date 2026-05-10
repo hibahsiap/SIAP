@@ -1,19 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
 import Image from "next/image";
 import { ChatItem } from "@/components/ChatItem";
 import { TimeRange } from "@/components/TimeRange";
 import { InteractionTabs } from "@/components/InteractionTabs";
 import ChatDetailView from "@/components/ChatDetailView";
+import SearchField from "@/components/SearchField";
 
 export default function InboxPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [sort, setSort] = useState("newest");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // State untuk menyimpan chat mana yang sedang dibuka
   const [selectedChat, setSelectedChat] = useState<any | null>(null);
 
   const inboxTabs = [
@@ -67,11 +66,11 @@ export default function InboxPage() {
           <h2 className="text-2xl font-bold text-slate-900">All Inbox</h2>
           
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search message..." 
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:ring-1 focus:ring-slate-400 outline-none"
+            <SearchField 
+              placeholder="Search message..."
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="w-full" 
             />
           </div>
 
@@ -91,10 +90,16 @@ export default function InboxPage() {
               prefixLabel="Sort by :"
             />
             <TimeRange 
-              options={[{label: "All Status", value: "all"}]}
-              value="all"
-              onChange={() => {}}
               prefixLabel="Status :"
+              options={[
+                { label: "All Status", value: "all" },             
+                { label: "To Do", value: "to_do" },
+                { label: "In Progress", value: "in_progress" },
+                { label: "Done", value: "done" },
+              ]}
+              value={filterStatus}
+              onChange={setFilterStatus}
+              variant="default" 
             />
           </div>
         </div>

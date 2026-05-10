@@ -1,4 +1,3 @@
-// components/ChatItem.tsx
 import { Flag } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "./Badge";
