@@ -15,7 +15,7 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
 
   useEffect(() => {
     const isInboxRoute = pathname.includes('/admin/dashboard/chat') || pathname.includes('/admin/dashboard/comments');
-    
+
     if (isInboxRoute) {
       setIsSubMenuOpen(true);
     } else {
@@ -27,8 +27,8 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
   const getLinkStyle = (href: string) => {
     const isActive = pathname === href;
     const baseClass = "flex items-center gap-3 px-4 py-3 rounded-[4px] transition-all duration-200 group mb-1 text-sm font-medium";
-    
-    return isActive 
+
+    return isActive
       ? `${baseClass} bg-[#E2EFF3]/10 text-white border-r-4 border-white`
       : `${baseClass} text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white`;
   };
@@ -37,8 +37,8 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
   const getLinkProfileStyle = (href: string) => {
     const isActive = pathname === href;
     const baseClass = "flex items-center justify-between gap-3 px-4 py-3 rounded-[4px] transition-all duration-200 group mb-1 text-sm font-medium";
-    
-    return isActive 
+
+    return isActive
       ? `${baseClass} bg-[#E2EFF3]/10 text-white border-r-4 border-white`
       : `${baseClass} text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white`;
   };
@@ -62,41 +62,41 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
         {/* Inbox dengan Submenu */}
         {role === 'admin' && (
           <div className="space-y-1">
-            <div 
+            <div
               onClick={() => setIsSubMenuOpen(!isSubMenuOpen)}
               className={`flex items-center justify-between px-4 py-3 rounded-[4px] cursor-pointer transition-all ${pathname.includes('/admin/dashboard/chat') || pathname.includes('/admin/dashboard/comments') ? 'text-white' : 'text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white'}`
-              
+
               }>
-                <div className='flex items-center gap-3'>
-                  <MessageSquare size={20} /> <span className="font-medium text-sm">Inbox</span>
-                </div>
-                {isSubMenuOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              <div className='flex items-center gap-3'>
+                <MessageSquare size={20} /> <span className="font-medium text-sm">Inbox</span>
+              </div>
+              {isSubMenuOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </div>
 
             {/* Submenu Chat & Comments */}
             {isSubMenuOpen && (
               <div className="pl-1 space-y-1 border-l ml-6 border-slate-600 transition-all">
-                <Link href="/admin/dashboard/chat" 
-                className={getLinkStyle('/admin/dashboard/chat')}
+                <Link href="/admin/dashboard/chat"
+                  className={getLinkStyle('/admin/dashboard/chat')}
                 >
                   <MessagesSquare size={16} /> Chat
                 </Link>
-                <Link href="/admin/dashboard/comments" 
-                className={getLinkStyle('/admin/dashboard/comments')}
+                <Link href="/admin/dashboard/comments"
+                  className={getLinkStyle('/admin/dashboard/comments')}
                 >
                   <MessageSquareMore size={16} /> Comments
                 </Link>
               </div>
             )}
-            
+
           </div>
         )}
 
         {menuItems.map((item) => (
-          <Link href={item.href} key={item.name} 
+          <Link href={item.href} key={item.name}
             className={getLinkStyle(item.href)}
           >
-            {item.icon} 
+            {item.icon}
             <span className="font-medium text-sm">{item.name}</span>
           </Link>
         ))}
@@ -106,33 +106,33 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
       <div className="border-t border-slate-700 pt-4 space-y-1">
         {role === 'admin' ? (
           <>
-            <Link href="/admin/dashboard/settings" 
-            className={getLinkStyle('/admin/dashboard/settings')}
+            <Link href="/admin/dashboard/settings"
+              className={getLinkStyle('/admin/dashboard/settings')}
             >
               <Settings size={20} /> <span className="text-sm">Settings</span>
             </Link>
             <div className={getLinkProfileStyle('/admin/dashboard/profile')}>
               <Link href={"/admin/dashboard/profile"} className="w-full flex items-center gap-3">
-                <User size={20} /> 
+                <User size={20} />
                 <span className="text-sm">Admin</span>
               </Link>
               <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300'>
-                <LogOut size={20}/>
+                <LogOut size={20} />
               </Link>
             </div>
           </>
         ) :
-        (
-          <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
-            <Link href={"/opd/dashboard/profile"} className="w-full flex items-center gap-3">
-              <User size={20} />
-              <span className="text-sm">OPD</span>
-            </Link>
-            <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300'>
-              <LogOut size={20}/>
-            </Link>
-          </div>
-        )
+          (
+            <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
+              <Link href={"/opd/dashboard/profile"} className="w-full flex items-center gap-3">
+                <User size={20} />
+                <span className="text-sm">OPD</span>
+              </Link>
+              <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300'>
+                <LogOut size={20} />
+              </Link>
+            </div>
+          )
         }
       </div>
 

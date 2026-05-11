@@ -26,7 +26,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const auth = await getAuthUser()
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (auth.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (auth.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { name, email, password, phone, role, opdName } = await request.json()
 
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       email,
       password: hashedPassword,
       phone: phone || null,
-      role: role ?? 'OPD',
+      role: role ?? 'opd',
       opdId: opdId ?? null,
     },
     select: {

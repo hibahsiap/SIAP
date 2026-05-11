@@ -18,7 +18,7 @@ async function main() {
       email: 'admin@hibah.go.id',
       password: hashedPassword,
       name: 'Administrator',
-      role: 'ADMIN',
+      role: 'admin',
     },
   })
 
