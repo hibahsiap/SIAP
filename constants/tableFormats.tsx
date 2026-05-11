@@ -4,7 +4,7 @@ import { IoPencil, IoTrash } from "react-icons/io5";
 
 // Tipe data untuk struktur data yang dikirim dari API
 export interface TableRowData {
-  initials: ReactNode;
+  initials?: ReactNode;
   id: string;
   name?: string;
   avatarUrl?: string; // Jika ada foto profile
@@ -57,7 +57,7 @@ export const formatActionCell = (
   onDelete: (id: string) => void
 ): ReactNode => {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center justify-center gap-1.5">
       <button 
         onClick={() => onEdit(rowData.id)}
         className="p-1.5 text-[#546064] hover:text-blue-600 transition-colors"

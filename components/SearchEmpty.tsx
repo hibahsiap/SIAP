@@ -2,7 +2,7 @@ import { ClipboardX, TicketX, MessageSquareX, UserX } from 'lucide-react';
 
 interface SearchEmptyStateProps {
   searchQuery?: string;
-  type?: 'pending' | 'all' | 'aspirations' | 'user';
+  type?: 'kanban' | 'pending' | 'all' | 'aspirations' | 'user';
 }
 
 export default function SearchEmptyState({ searchQuery, type = 'pending' }: SearchEmptyStateProps) {

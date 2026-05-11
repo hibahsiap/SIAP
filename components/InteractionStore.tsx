@@ -19,5 +19,5 @@ export const InteractionStore = create<InteractionStore>((set) => ({
   openCreateTicketModal: (item, context) => set({ isCreateTicketModalOpen: true, selectedItem: item, context }),
   closeCreateTicketModal: () => set({ isCreateTicketModalOpen: false, selectedItem: null, context: null }),
   openDeleteModal: (item, context) => set({ isDeleteModalOpen: true, selectedItem: item, context }),
-  closeDeleteModal: () => set({ isDeleteModalOpen: false, selectedItem: null }),
+  closeDeleteModal: () => set({ isDeleteModalOpen: false, selectedItem: null, context: null }),
 }));
