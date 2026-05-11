@@ -6,9 +6,259 @@ datasource db {
   provider = "postgresql"
 }
 
-// ============================================
-// ENUMS
-// ============================================
+model Opd {
+  id                  String               @id @default(uuid())
+  name                String               @unique
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  aiClassifications   AiClassification[]
+  categories          Category[]
+  tickets             Ticket[]
+  ticketVerifications TicketVerification[]
+  users               User[]
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  password            String
+  name                String
+  phone               String?
+  role                Role                 @default(OPD)
+  opdId               String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  activityLogs        ActivityLog[]
+  aiVerifications     AiClassification[]   @relation("AiVerifiedBy")
+  approvals           Approval[]
+  attachments         Attachment[]
+  messages            Message[]
+  progressChanges     TicketProgress[]
+  ticketVerifications TicketVerification[]
+  opd                 Opd?                 @relation(fields: [opdId], references: [id])
+}
+
+model Citizen {
+  id          String           @id @default(uuid())
+  displayName String
+  nik         String?
+  region      String?
+  isBlocked   Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  contacts    CitizenContact[]
+  tickets     Ticket[]
+}
+
+model CitizenContact {
+  id        String          @id @default(uuid())
+  platform  ChannelPlatform
+  handle    String
+  citizenId String
+  createdAt DateTime        @default(now())
+  citizen   Citizen         @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+
+  @@unique([citizenId, platform])
+}
+
+model Channel {
+  id                 String              @id @default(uuid())
+  platform           ChannelPlatform     @unique
+  accountHandle      String?
+  isActive           Boolean             @default(false)
+  updatedAt          DateTime            @updatedAt
+  socialInteractions SocialInteraction[]
+  tickets            Ticket[]
+}
+
+model Category {
+  id                  String               @id @default(uuid())
+  name                String               @unique
+  slug                String               @unique
+  defaultOpdId        String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  defaultOpd          Opd?                 @relation(fields: [defaultOpdId], references: [id])
+  tickets             Ticket[]
+  ticketVerifications TicketVerification[] @relation("OverrideCategory")
+}
+
+model Ticket {
+  id                String               @id @default(uuid())
+  ticketNumber      String               @unique
+  title             String?
+  description       String
+  status            TicketStatus         @default(TO_DO)
+  priority          TicketPriority?
+  urgency           TicketUrgency?
+  type              TicketType?
+  citizenId         String
+  channelId         String
+  categoryId        String?
+  assignedOpdId     String?
+  startDate         DateTime?
+  dueDate           DateTime?
+  resolvedAt        DateTime?
+  closedAt          DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  aiClassifications AiClassification[]
+  attachments       Attachment[]
+  messages          Message[]
+  sourceInteraction SocialInteraction?   @relation("TicketSource")
+  assignedOpd       Opd?                 @relation(fields: [assignedOpdId], references: [id])
+  category          Category?            @relation(fields: [categoryId], references: [id])
+  channel           Channel              @relation(fields: [channelId], references: [id])
+  citizen           Citizen              @relation(fields: [citizenId], references: [id])
+  progress          TicketProgress[]
+  verifications     TicketVerification[]
+
+  @@index([status])
+  @@index([citizenId])
+  @@index([assignedOpdId])
+  @@index([channelId])
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model TicketProgress {
+  ticketId    String
+  seqNo       Int
+  fromStatus  TicketStatus?
+  toStatus    TicketStatus
+  note        String?
+  changedById String?
+  changedAt   DateTime      @default(now())
+  changedBy   User?         @relation(fields: [changedById], references: [id])
+  ticket      Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@id([ticketId, seqNo])
+}
+
+model TicketVerification {
+  ticketId           String
+  seqNo              Int
+  verdict            VerificationVerdict
+  verifierUserId     String?
+  overrideCategoryId String?
+  overrideOpdId      String?
+  note               String?
+  verifiedAt         DateTime            @default(now())
+  overrideCategory   Category?           @relation("OverrideCategory", fields: [overrideCategoryId], references: [id])
+  overrideOpd        Opd?                @relation(fields: [overrideOpdId], references: [id])
+  ticket             Ticket              @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  verifierUser       User?               @relation(fields: [verifierUserId], references: [id])
+
+  @@id([ticketId, seqNo])
+}
+
+model Approval {
+  id          String          @id @default(uuid())
+  subjectType ApprovalSubject
+  verdict     ApprovalVerdict
+  decidedById String?
+  decidedAt   DateTime        @default(now())
+  reason      String?
+  createdAt   DateTime        @default(now())
+  decidedBy   User?           @relation(fields: [decidedById], references: [id])
+  messages    Message[]
+}
+
+model Message {
+  id           String           @id @default(uuid())
+  content      String
+  senderType   SenderType
+  direction    MessageDirection
+  isInternal   Boolean          @default(false)
+  isApproved   Boolean          @default(true)
+  sentAt       DateTime?
+  ticketId     String
+  senderUserId String?
+  approvalId   String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  attachments  Attachment[]
+  approval     Approval?        @relation(fields: [approvalId], references: [id])
+  senderUser   User?            @relation(fields: [senderUserId], references: [id])
+  ticket       Ticket           @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([createdAt])
+}
+
+model Attachment {
+  id           String   @id @default(uuid())
+  url          String
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  ticketId     String?
+  messageId    String?
+  uploadedById String?
+  uploadedAt   DateTime @default(now())
+  message      Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  ticket       Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+}
+
+model SocialInteraction {
+  id                String             @id @default(uuid())
+  interactionType   InteractionType
+  externalId        String
+  username          String
+  content           String
+  permalink         String?
+  isTicketCreated   Boolean            @default(false)
+  capturedAt        DateTime           @default(now())
+  channelId         String
+  convertedTicketId String?            @unique
+  aiClassifications AiClassification[]
+  channel           Channel            @relation(fields: [channelId], references: [id])
+  convertedTicket   Ticket?            @relation("TicketSource", fields: [convertedTicketId], references: [id])
+
+  @@unique([channelId, externalId])
+  @@index([channelId])
+  @@index([convertedTicketId])
+  @@index([capturedAt])
+}
+
+model AiClassification {
+  id                String             @id @default(uuid())
+  subjectType       AiSubjectType
+  predictedType     TicketType?
+  predictedCategory String?
+  predictedUrgency  TicketUrgency?
+  confidence        Float
+  modelName         String
+  verified          Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  ticketId          String?
+  socialId          String?
+  predictedOpdId    String?
+  verifiedById      String?
+  predictedOpd      Opd?               @relation(fields: [predictedOpdId], references: [id])
+  socialInteraction SocialInteraction? @relation(fields: [socialId], references: [id], onDelete: Cascade)
+  ticket            Ticket?            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  verifiedBy        User?              @relation("AiVerifiedBy", fields: [verifiedById], references: [id])
+
+  @@index([ticketId])
+  @@index([socialId])
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  action      String
+  entityType  String?
+  entityId    String?
+  description String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
 
 enum Role {
   ADMIN
@@ -83,315 +333,4 @@ enum VerificationVerdict {
   VALID
   INVALID
   NEEDS_REROUTE
-}
-
-// ============================================
-// MODELS
-// ============================================
-
-model Opd {
-  id   String @id @default(uuid())
-  name String @unique
-
-  users               User[]
-  tickets             Ticket[]
-  categories          Category[]
-  ticketVerifications TicketVerification[]
-  aiClassifications   AiClassification[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model User {
-  id       String @id @default(uuid())
-  email    String @unique
-  password String
-  name     String
-  phone    String?
-  role     Role   @default(OPD)
-
-  opdId String?
-  opd   Opd? @relation(fields: [opdId], references: [id], onDelete: SetNull)
-
-  messages            Message[]
-  approvals           Approval[]
-  ticketVerifications TicketVerification[]
-  activityLogs        ActivityLog[]
-  attachments         Attachment[]
-
-  aiVerifications AiClassification[] @relation("AiVerifiedBy")
-  progressChanges TicketProgress[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Citizen {
-  id          String  @id @default(uuid())
-  displayName String
-  nik         String?
-  region      String?
-  isBlocked   Boolean @default(false)
-
-  contacts CitizenContact[]
-  tickets  Ticket[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model CitizenContact {
-  id       String          @id @default(uuid())
-  platform ChannelPlatform
-  handle   String
-
-  citizenId String
-  citizen   Citizen @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([citizenId, platform])
-}
-
-model Channel {
-  id            String          @id @default(uuid())
-  platform      ChannelPlatform @unique
-  accountHandle String?
-  isActive      Boolean         @default(false)
-
-  tickets            Ticket[]
-  socialInteractions SocialInteraction[]
-
-  updatedAt DateTime @updatedAt
-}
-
-model Category {
-  id   String @id @default(uuid())
-  name String @unique
-  slug String @unique
-
-  defaultOpdId String?
-  defaultOpd   Opd? @relation(fields: [defaultOpdId], references: [id], onDelete: SetNull)
-
-  tickets             Ticket[]
-  ticketVerifications TicketVerification[] @relation("OverrideCategory")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Ticket {
-  id           String       @id @default(uuid())
-  ticketNumber String       @unique
-  title        String?
-  description  String       @db.Text
-  status       TicketStatus @default(TO_DO)
-  priority     TicketPriority?
-  urgency      TicketUrgency?
-  type         TicketType?
-
-  citizenId String
-  citizen   Citizen @relation(fields: [citizenId], references: [id], onDelete: Restrict)
-
-  channelId String
-  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Restrict)
-
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-
-  assignedOpdId String?
-  assignedOpd   Opd? @relation(fields: [assignedOpdId], references: [id], onDelete: SetNull)
-
-  startDate  DateTime?
-  dueDate    DateTime?
-  resolvedAt DateTime?
-  closedAt   DateTime?
-
-  messages          Message[]
-  attachments       Attachment[]
-  progress          TicketProgress[]
-  verifications     TicketVerification[]
-  aiClassifications AiClassification[]
-
-  sourceInteraction SocialInteraction? @relation("TicketSource")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([status])
-  @@index([citizenId])
-  @@index([assignedOpdId])
-  @@index([channelId])
-  @@index([categoryId])
-  @@index([createdAt])
-}
-
-model TicketProgress {
-  ticketId String
-  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
-  seqNo      Int
-  fromStatus TicketStatus?
-  toStatus   TicketStatus
-  note       String? @db.Text
-
-  changedById String?
-  changedBy   User? @relation(fields: [changedById], references: [id], onDelete: SetNull)
-
-  changedAt DateTime @default(now())
-
-  @@id([ticketId, seqNo])
-}
-
-model TicketVerification {
-  ticketId String
-  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
-  seqNo   Int
-  verdict VerificationVerdict
-
-  verifierUserId String?
-  verifierUser   User? @relation(fields: [verifierUserId], references: [id], onDelete: SetNull)
-
-  overrideCategoryId String?
-  overrideCategory Category? @relation("OverrideCategory", fields: [overrideCategoryId], references: [id], onDelete: SetNull)
-
-  overrideOpdId String?
-  overrideOpd   Opd? @relation(fields: [overrideOpdId], references: [id], onDelete: SetNull)
-
-  note       String? @db.Text
-  verifiedAt DateTime @default(now())
-
-  @@id([ticketId, seqNo])
-}
-
-model Approval {
-  id          String @id @default(uuid())
-  subjectType ApprovalSubject
-  verdict     ApprovalVerdict
-
-  decidedById String?
-  decidedBy   User? @relation(fields: [decidedById], references: [id], onDelete: SetNull)
-
-  decidedAt DateTime @default(now())
-  reason    String? @db.Text
-
-  messages Message[]
-
-  createdAt DateTime @default(now())
-}
-
-model Message {
-  id         String @id @default(uuid())
-  content    String @db.Text
-  senderType SenderType
-  direction  MessageDirection
-  isInternal Boolean @default(false)
-  isApproved Boolean @default(true)
-  sentAt     DateTime?
-
-  ticketId String
-  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
-  senderUserId String?
-  senderUser   User? @relation(fields: [senderUserId], references: [id], onDelete: SetNull)
-
-  approvalId String?
-  approval   Approval? @relation(fields: [approvalId], references: [id], onDelete: SetNull)
-
-  attachments Attachment[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([ticketId])
-  @@index([createdAt])
-}
-
-model Attachment {
-  id        String @id @default(uuid())
-  url       String @db.Text
-  fileName  String
-  mimeType  String
-  sizeBytes Int
-
-  ticketId String?
-  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
-  messageId String?
-  message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  uploadedById String?
-  uploadedBy   User? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
-
-  uploadedAt DateTime @default(now())
-}
-
-model SocialInteraction {
-  id              String @id @default(uuid())
-  interactionType InteractionType
-  externalId      String
-  username        String
-  content         String @db.Text
-  permalink       String?
-  isTicketCreated Boolean @default(false)
-  capturedAt      DateTime @default(now())
-
-  channelId String
-  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Restrict)
-
-  convertedTicketId String? @unique
-  convertedTicket Ticket? @relation("TicketSource", fields: [convertedTicketId], references: [id], onDelete: SetNull)
-
-  aiClassifications AiClassification[]
-
-  @@unique([channelId, externalId])
-  @@index([channelId])
-  @@index([convertedTicketId])
-  @@index([capturedAt])
-}
-
-model AiClassification {
-  id                String @id @default(uuid())
-  subjectType       AiSubjectType
-  predictedType     TicketType?
-  predictedCategory String?
-  predictedUrgency  TicketUrgency?
-  confidence        Float
-  modelName         String
-  verified          Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  ticketId String?
-  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
-  socialId String?
-  socialInteraction SocialInteraction? @relation(fields: [socialId], references: [id], onDelete: Cascade)
-
-  predictedOpdId String?
-  predictedOpd   Opd? @relation(fields: [predictedOpdId], references: [id], onDelete: SetNull)
-
-  verifiedById String?
-  verifiedBy User? @relation("AiVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
-
-  @@index([ticketId])
-  @@index([socialId])
-}
-
-model ActivityLog {
-  id          String @id @default(uuid())
-  action      String
-  entityType  String?
-  entityId    String?
-  description String? @db.Text
-  ipAddress   String?
-  createdAt   DateTime @default(now())
-
-  userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([createdAt])
 }
