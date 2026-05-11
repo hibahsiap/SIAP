@@ -148,10 +148,6 @@ export default function KanbanBoard() {
       }),
     );
   };
-
-  const handleDetailTask = () => {
-    router.push('/dashboard/reports')
-  }
  
   return (
     <div className="w-240 mb-4 flex flex-col gap-4 -mt-2">

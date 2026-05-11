@@ -97,7 +97,7 @@ export default function TicketsPage() {
         { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
         { header: <><CircleChevronDown className="w-4 h-4"/> Issue Type</>, key: "issueType", cell: (val) => getBadge(val, 'issue') },
         { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
-        { header: <><Calendar className="w-4 h-4"/> Star date</>, key: "startDate" },
+        { header: <><Calendar className="w-4 h-4"/> Start date</>, key: "startDate" },
         { header: <><Calendar className="w-4 h-4"/> Due date</>, key: "dueDate" },
         messageColumn
       ];
@@ -123,15 +123,19 @@ export default function TicketsPage() {
       {/* --- TABS & SEARCH HEADER --- */}
       <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
         <div className="flex gap-2">
-          {['pending review', 'all tickets', 'aspirations'].map((id) => (
+          {[
+            { id: 'pending', label: 'Pending Review' },
+            { id: 'all', label: 'All Tickets' },
+            { id: 'aspirations', label: 'Aspirations' }
+          ].map((tab) => (
             <button
-              key={id}
-              onClick={() => { setActiveTab(id as TabCategory); setSearchQuery(""); }}
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id as TabCategory); setSearchQuery(""); }}
               className={`px-4 py-1.5 rounded-[12px] text-xs font-semibold transition-all duration-200 ${
-                activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border-2 border-[#F3F3F3]"
+                activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border-2 border-[#F3F3F3]"
               }`}
             >
-              {id.charAt(0).toUpperCase() + id.slice(1)}
+              {tab.id.charAt(0).toUpperCase() + tab.id.slice(1)}
             </button>
           ))}
         </div>
