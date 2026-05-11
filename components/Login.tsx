@@ -1,13 +1,15 @@
 "use client";
 
-import ButtonClick from "./Button";
-import Field from "./Field";
+import { CheckCircle2, XCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import FieldPassword from "./FieldPassword";
-import { IoPersonCircleOutline } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { IoPersonCircleOutline } from "react-icons/io5";
+import { toast } from "sonner";
+import ButtonClick from "./Button";
+import Field from "./Field";
+import FieldPassword from "./FieldPassword";
 
 const field =
 {
@@ -30,14 +32,51 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
 
-        console.log("Logging in with:", formData);
+        let isSuccess = false;
 
-        const isValid = true;
+        if (formData.email === "admin") {
+            isSuccess = true;
 
-        if (isValid) {
-            router.push("/dashboard/user-management");
+            router.push("admin/dashboard/reports");
+
+            toast.success("Login Successfull", {
+                description: `Welcome back ${formData.email}`,
+                position: "top-center",
+                duration: 2000,
+                style: {
+                    background: "#f0fdf4",
+                    color: "#22c55e",
+                    border: "1px solid #22c55e",
+                },
+            })
+        } else if (formData.email === "opd") {
+            isSuccess = true;
+
+            router.push("opd/dashboard/reports");
+            
+            toast.success("Login Successfull", {
+                description: `Welcome back ${formData.email}`,
+                position: "top-center",
+                duration: 2000,
+                style: {
+                    background: "#f0fdf4",
+                    color: "#22c55e",
+                    border: "1px solid #22c55e",
+                },
+            })
+
         } else {
-            alert("Login Gagal!");
+            toast.error("Login Failed", {
+                description: "Email atau Password yang Anda masukkan tidak valid",
+                position: "top-center",
+                duration: 2000,
+                style: {
+                    background: "#fef2f2",
+                    color: "#ef4444",
+                    border: "1px solid #ef4444",
+                },
+            })
+
             setLoading(false);
         }
     };
