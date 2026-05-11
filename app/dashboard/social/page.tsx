@@ -83,6 +83,7 @@ export default function SocialInteractionsPage() {
           options={timeOptions}
           value={selectedRange}
           onChange={setSelectedRange}
+          prefixLabel="Range Time by :"
         />
       </div>
 
