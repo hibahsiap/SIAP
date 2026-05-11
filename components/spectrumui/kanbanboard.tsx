@@ -148,10 +148,6 @@ export default function KanbanBoard() {
       }),
     );
   };
-
-  const handleDetailTask = () => {
-    router.push('/dashboard/reports')
-  }
  
   return (
     <div className="w-240 mb-4 flex flex-col gap-4 -mt-2">
@@ -193,7 +189,7 @@ export default function KanbanBoard() {
                       draggable
                       onDragStart={(e) => handleDragStart(e, task, column.id)}
                       onClick={() => {
-                        router.push(`/dashboard/detail-task/${task.id}`)
+                        router.push(`/opd/dashboard/task/${task.id}`)
                       }}
                     >
                       <CardContent className="px-3 py-1">
