@@ -16,7 +16,7 @@ interface TableTemplateProps {
 
 const TableTemplate = ({columns, data}: TableTemplateProps) => {
     return (
-        <div className="font-sans w-[1000px] bg-red-300 overflow-x-auto scrollbar-hide">
+        <div className="font-sans w-250">
             <div className="overflow-x-auto scrollbar-hide">
                 <Table>
                     <TableHeader>
