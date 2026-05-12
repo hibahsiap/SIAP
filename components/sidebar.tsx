@@ -116,23 +116,23 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
                 <User size={20} />
                 <span className="text-sm">Admin</span>
               </Link>
-              <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300'>
-                <LogOut size={20} />
+              <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 p-1 rounded-[4px] transition-all transform duration-300'>
+                <LogOut size={20}/>
               </Link>
             </div>
           </>
         ) :
-          (
-            <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
-              <Link href={"/opd/dashboard/profile"} className="w-full flex items-center gap-3">
-                <User size={20} />
-                <span className="text-sm">OPD</span>
-              </Link>
-              <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300'>
-                <LogOut size={20} />
-              </Link>
-            </div>
-          )
+        (
+          <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
+            <Link href={"/opd/dashboard/profile"} className="w-full flex items-center gap-3">
+              <User size={20} />
+              <span className="text-sm">OPD</span>
+            </Link>
+            <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 p-1 rounded-[4px] transition-all transform duration-300'>
+              <LogOut size={20}/>
+            </Link>
+          </div>
+        )
         }
       </div>
 

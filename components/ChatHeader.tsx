@@ -1,8 +1,13 @@
+"use client";
+
 import { TimeRange } from "@/components/TimeRange";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ToastFrame from "./ToastFrame";
+import ReturnAdminButton from "./ReturnAdminButton";
+import { DUMMY_TASK } from "@/constants/taskDummy";
 
-export const ChatHeader = ({ name, phone }: { name: string; phone: string }) => {
+export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone: string, role: 'admin' | 'opd', chatId: string }) => {
   const [urgency, setUrgency] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
@@ -27,9 +32,12 @@ export const ChatHeader = ({ name, phone }: { name: string; phone: string }) => 
     { value: 'cancelled', label: 'Cancelled', colorClass: 'bg-gray-200 text-gray-700' },
   ];
 
+  // const { chatId } = await params
+  const task = { ...DUMMY_TASK, chatId }
+
   // Header Chat
   return (
-    <div className="p-4 border-b flex justify-between items-center bg-white">
+    <div className="p-4 border-b flex justify-between items-center">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold">
           {name.charAt(0)}
@@ -42,35 +50,39 @@ export const ChatHeader = ({ name, phone }: { name: string; phone: string }) => 
         </div>
       </div>
       
-      <div className="flex gap-2">
-        <div className="min-w-[100px]">
-          <TimeRange 
-            prefixLabel="Urgency"
-            options={urgencyOptions}
-            value={urgency}
-            onChange={setUrgency}
-            variant="badge"
-          />
+      {role === 'admin' ? (
+        <div className="flex gap-2">
+          <div className="min-w-[100px]">
+            <TimeRange 
+              prefixLabel="Urgency"
+              options={urgencyOptions}
+              value={urgency}
+              onChange={setUrgency}
+              variant="badge"
+            />
+          </div>
+          <div className="min-w-[100px]">
+            <TimeRange 
+              prefixLabel="Category"
+              options={categoryOptions}
+              value={category}
+              onChange={setCategory}
+              variant="badge"
+            />
+          </div>
+          <div className="min-w-[100px]">
+            <TimeRange 
+              prefixLabel="Status"
+              options={statusOptions}
+              value={status}
+              onChange={setStatus}
+              variant="badge"
+            />
+          </div>
         </div>
-        <div className="min-w-[100px]">
-          <TimeRange 
-            prefixLabel="Category"
-            options={categoryOptions}
-            value={category}
-            onChange={setCategory}
-            variant="badge"
-          />
-        </div>
-        <div className="min-w-[100px]">
-          <TimeRange 
-            prefixLabel="Status"
-            options={statusOptions}
-            value={status}
-            onChange={setStatus}
-            variant="badge"
-          />
-        </div>
-      </div>
+      ) : (
+        <ReturnAdminButton task={task}/>
+      )}
     </div>
   );
 };
@@ -78,16 +90,25 @@ export const ChatHeader = ({ name, phone }: { name: string; phone: string }) => 
 // Forward Chat
 export const ForwardControl = () => {
   const [selectedOPD, setSelectedOPD] = useState<string>("");
+  const [triggerToast, setTriggerToast] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(true);
 
   const handleForward = () => {
     if (!selectedOPD) {
-      alert("Silakan pilih OPD tujuan terlebih dahulu!");
+      // alert("Silakan pilih OPD tujuan terlebih dahulu!");
+      setTriggerToast(false); // Reset dulu
+      setIsSuccess(false);    // Set status error/cancel
+      setTimeout(() => setTriggerToast(true), 10); // Jalankan toast
       return;
     }
     
     // Masukkan API
     console.log("Meneruskan pesan ke:", selectedOPD);
-    alert(`Pesan berhasil diteruskan ke ${selectedOPD}`);
+    // alert(`Pesan berhasil diteruskan ke ${selectedOPD}`);
+    // alert("Profil berhasil diperbarui!");
+    setTriggerToast(false); // Reset dulu
+    setIsSuccess(true);     // Set status sukses
+    setTimeout(() => setTriggerToast(true), 10); // Jalankan toast
   };
 
   return (
@@ -113,6 +134,13 @@ export const ForwardControl = () => {
         >
           Forward Chat
         </button>
+        {triggerToast && (
+          <ToastFrame 
+            isSuccess={isSuccess} 
+            id="Budi P-0012" 
+            process={isSuccess ? "updated" : undefined} 
+          />
+        )}
       </div>
     </div>
   );

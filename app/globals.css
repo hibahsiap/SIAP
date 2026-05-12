@@ -136,4 +136,22 @@
     -ms-overflow-style: none !important; /* IE and Edge */
     scrollbar-width: none !important; /* Firefox */
   }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;   /* vertical scrollbar */
+    height: 4px;  /* horizontal scrollbar */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #5B6F9C;
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #3b82f6;
+  }
 }

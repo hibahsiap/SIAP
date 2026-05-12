@@ -67,7 +67,7 @@ export default function Settings() {
     ];
 
     return (
-        <div className="grid grid-rows-[120px_1fr] gap-2.5">
+        <div className="grid grid-rows-[100px_1fr] gap-2.5 p-2">
             {/* header page */}
             <div className="flex flex-col justify-center text-[#041942] gap-1.5 px-2 border-b border-black/10">
                 <h1 className="font-bold text-3xl">Settings</h1>

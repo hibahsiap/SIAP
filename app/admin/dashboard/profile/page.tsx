@@ -45,8 +45,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Account Information</h1>
+    <div className="p-4 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8 text-[#041942]">Account Information</h1>
       
       <div className="bg-white p-10 rounded-lg border border-gray-200 grid grid-cols-12 gap-12">
         

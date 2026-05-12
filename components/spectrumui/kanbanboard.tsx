@@ -155,9 +155,9 @@ export default function KanbanBoard() {
         <p className='font-semibold text-xs'>Scroll</p>
         <ArrowRight size={16}/>
       </div>
-      <div className="overflow-x-auto scrollbar-hide">
+      <div className="overflow-x-auto custom-scrollbar">
           
-          <div className="flex gap-4 w-300">
+          <div className="flex gap-4 w-300 mb-2">
             {columns.map((column) => (
               <div
                 key={column.id}

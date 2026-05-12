@@ -7,7 +7,7 @@ import SearchEmptyState from '@/components/SearchEmpty';
 import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
 import { allTickets, aspirationTickets, pendingTickets } from '@/constants/ticketsDummy';
 import { useTaskStore } from '@/store/useTaskStore';
-import { ArrowUpRight, Calendar, CircleChevronDown, Edit2, Forward, Loader, Trash2 } from 'lucide-react';
+import { ArrowUpRight, Calendar, CircleChevronDown, Forward, Loader, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 const getStatusBadge = (status: string) => {
@@ -84,7 +84,7 @@ export default function TicketsPage() {
         messageColumn,
         { header: "Actions", key: "action", cell: (_, row) => (
             <div className="flex items-center justify-center gap-4">
-              <button onClick={() => openEditModal(row)} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
+              <button onClick={() => openEditModal(row)} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Pencil className="w-4 h-4" /></button>
               <button className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Forward className="w-4 h-4" /></button>
             </div>
           )
@@ -118,7 +118,7 @@ export default function TicketsPage() {
   }, [activeTab, openEditModal, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-full max-w-full h-full">
+    <div className="flex-1 w-full max-w-full h-full p-2">
 
       {/* --- TABS & SEARCH HEADER --- */}
       <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
@@ -131,7 +131,7 @@ export default function TicketsPage() {
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id as TabCategory); setSearchQuery(""); }}
-              className={`px-4 py-1.5 rounded-[12px] text-xs font-semibold transition-all duration-200 ${
+              className={`px-6 py-1.5 rounded-[12px] text-sm font-semibold transition-all duration-200 ${
                 activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border-2 border-[#F3F3F3]"
               }`}
             >
