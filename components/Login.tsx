@@ -23,59 +23,34 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
-        email: "",
-        password: ""
+        email: "admin@hibah.go.id",
+        password: "admin123"
     });
+
+    const [error, setError] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError("");
 
-        let isSuccess = false;
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
 
-        if (formData.email === "admin") {
-            isSuccess = true;
+            if (!res.ok) {
+                const data = await res.json();
+                setError(data.error ?? "Login failed");
+                setLoading(false);
+                return;
+            }
 
-            router.push("admin/dashboard/reports");
-
-            toast.success("Login Successfull", {
-                description: `Welcome back ${formData.email}`,
-                position: "top-center",
-                duration: 2000,
-                style: {
-                    background: "#f0fdf4",
-                    color: "#22c55e",
-                    border: "1px solid #22c55e",
-                },
-            })
-        } else if (formData.email === "opd") {
-            isSuccess = true;
-
-            router.push("opd/dashboard/reports");
-            
-            toast.success("Login Successfull", {
-                description: `Welcome back ${formData.email}`,
-                position: "top-center",
-                duration: 2000,
-                style: {
-                    background: "#f0fdf4",
-                    color: "#22c55e",
-                    border: "1px solid #22c55e",
-                },
-            })
-
-        } else {
-            toast.error("Login Failed", {
-                description: "Email atau Password yang Anda masukkan tidak valid",
-                position: "top-center",
-                duration: 2000,
-                style: {
-                    background: "#fef2f2",
-                    color: "#ef4444",
-                    border: "1px solid #ef4444",
-                },
-            })
-
+            router.push("/dashboard/user-management");
+        } catch {
+            setError("An unexpected error occurred");
             setLoading(false);
         }
     };
@@ -99,6 +74,9 @@ const Login = () => {
                     <h1 className="text-[#041942] font-bold text-2xl tracking-wide">Login</h1>
                     <p className="text-[#75777F] text-xs font-light ">Please enter your credentials to access the portal dashboard.</p>
                 </div>
+                {error && (
+                    <p className="text-red-500 text-xs text-center -mt-4">{error}</p>
+                )}
                 <form onSubmit={handleSubmit} className="w-full flex-col flex gap-6">
                     <div className="flex flex-col gap-4">
                         <Field
