@@ -138,8 +138,8 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 2px;   /* vertical scrollbar */
-    height: 2px;  /* horizontal scrollbar */
+    width: 4px;   /* vertical scrollbar */
+    height: 4px;  /* horizontal scrollbar */
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -152,6 +152,6 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #737373;
+    background-color: #3b82f6;
   }
 }

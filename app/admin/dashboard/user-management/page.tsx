@@ -87,7 +87,7 @@ export default function UserManagementPage() {
   ], [openEditModal, openDeleteModal])
 
   return (
-    <div className="p-8 bg-gray-50/50 min-h-screen">
+    <div className="p-4 bg-gray-50/50 min-h-screen">
       
       {/* BAGIAN HEADER */}
       <div className="bg-white px-8 py-6 rounded-t-lg border border-gray-200 border-b-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
