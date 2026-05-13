@@ -1,15 +1,10 @@
-"use client";
-
-import { ActivityLog } from "@/components/activity-log";
-import Field from "@/components/Field";
-import FieldPassword from "@/components/FieldPassword";
-import { ProfileStore } from "@/components/ProfileStore";
-import ToastFrame from "@/components/ToastFrame";
-import { Button } from "@/components/ui/button";
-import { UserAvatar } from "@/components/user-avatar";
-import { useState } from "react";
+import ProfileForm from "@/components/ProfileForm";
 
 export default function ProfilePage() {
+<<<<<<< HEAD
+  return <ProfileForm />;
+}
+=======
   const { name, email, opd, role, updateProfile, addLog } = ProfileStore();
   
   const [formData, setFormData] = useState({ name, email, opd, role, password: "", confirmPassword: "" });
@@ -146,3 +141,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+>>>>>>> 6d11bae57749619c33c93dcf120d372af5624303

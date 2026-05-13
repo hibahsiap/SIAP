@@ -1,53 +1,79 @@
 "use client";
 
-import { Mail, Lock, Phone, User } from "lucide-react"; 
+import {
+  Mail,
+  Lock,
+  Phone,
+  User,
+  FileText,
+  LogIn,
+  LogOut,
+  AlertCircle,
+  Building2,
+  IdCard,
+} from "lucide-react";
 import { ProfileStore } from "@/components/ProfileStore";
 
-const initialActivities = [
-  { icon: Mail, title: "Primary Email Changed", time: "12:03PM", date: "09-11-2023", desc: "Updated by Admin", detail: "Change: old***@mail.com → new***@mail.com" },
-  { icon: Lock, title: "Password Updated", time: "12:03PM", date: "09-11-2023", desc: "Password changed by User via ...", detail: "Status: Successfully updated" },
-  { icon: Phone, title: "Phone Number Verified", time: "12:03PM", date: "09-11-2023", desc: "Added by User via SMS OTP", detail: "Device: iPhone 18 Pro" },
-];
+function iconForAction(action: string) {
+  if (action.includes('PASSWORD')) return Lock;
+  if (action.includes('EMAIL')) return Mail;
+  if (action.includes('PHONE')) return Phone;
+  if (action.includes('NAME')) return IdCard;
+  if (action.includes('OPD')) return Building2;
+  if (action.includes('LOGIN')) return LogIn;
+  if (action.includes('LOGOUT')) return LogOut;
+  if (action.includes('PROFILE')) return User;
+  if (action.includes('TICKET')) return FileText;
+  return AlertCircle;
+}
+
+function humanizeAction(action: string) {
+  return action
+    .toLowerCase()
+    .split('_')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
 
 export function ActivityLog() {
-  const { logs } = ProfileStore();
+  const { logs, loaded } = ProfileStore();
 
-  const allActivities = [...logs.map(log => ({
-    icon: User,
-    title: log.title,
-    time: log.time,
-    date: log.date,
-    desc: log.desc,
-    detail: "Status: Recorded successfully"
-  })), ...initialActivities];
+  if (!loaded) {
+    return <p className="text-[12px] text-gray-400">Loading activity…</p>;
+  }
+
+  if (logs.length === 0) {
+    return <p className="text-[12px] text-gray-400">No activity yet.</p>;
+  }
 
   return (
     <div className="relative pt-0">
       <div className="absolute left-[117px] top-[10px] bottom-[20px] w-[2px] bg-gray-300 z-0"></div>
 
       <div className="space-y-8 relative z-10">
-        {allActivities.map((act, i) => {
-          const Icon = act.icon;
+        {logs.map((log) => {
+          const Icon = iconForAction(log.action);
+          const d = new Date(log.createdAt);
+          const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const date = d.toLocaleDateString();
           return (
-            <div key={i} className="flex gap-2">
-              {/* Kolom Waktu */}
+            <div key={log.id} className="flex gap-2">
               <div className="text-right w-[80px] shrink-0">
-                <p className="text-[10px] font-bold text-gray-500">{act.time}</p>
-                <p className="text-[12px] font-bold text-gray-900">{act.date}</p>
+                <p className="text-[10px] font-bold text-gray-500">{time}</p>
+                <p className="text-[12px] font-bold text-gray-900">{date}</p>
               </div>
 
-              {/* Kolom Ikon */}
               <div className="w-[60px] flex justify-center pt-1">
                 <div className="w-10 h-10 rounded-full border border-gray-100 bg-white flex items-center justify-center text-gray-700 shadow-md">
                   <Icon size={20} />
                 </div>
               </div>
 
-              {/* Kolom Konten */}
               <div className="flex-1 pt-4">
-                <p className="text-[13px] font-bold text-gray-900">{act.title}</p>
-                <p className="text-[12px] text-gray-500">{act.desc}</p>
-                <p className="text-[12px] text-gray-500 font-medium">{act.detail}</p>
+                <p className="text-[13px] font-bold text-gray-900">{humanizeAction(log.action)}</p>
+                {log.description && (
+                  <p className="text-[12px] text-gray-500">{log.description}</p>
+                )}
               </div>
             </div>
           );

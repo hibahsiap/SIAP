@@ -4,14 +4,26 @@ import { SIDEBAR_MENU } from '@/constants/sidebar-menu';
 import { ChevronDown, ChevronRight, LogOut, MessageSquare, MessageSquareMore, MessagesSquare, Settings, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
+export default function Sidebar({ role, name }: { role: 'admin' | 'opd'; name?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const menuItems = SIDEBAR_MENU[role];
 
   const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // ignore
+    }
+    router.push('/login');
+    router.refresh();
+  };
 
   useEffect(() => {
     const isInboxRoute = pathname.includes('/admin/dashboard/chat') || pathname.includes('/admin/dashboard/comments');
@@ -112,16 +124,54 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
               <Settings size={20} /> <span className="text-sm">Settings</span>
             </Link>
             <div className={getLinkProfileStyle('/admin/dashboard/profile')}>
-              <Link href={"/admin/dashboard/profile"} className="w-full flex items-center gap-3">
+              <Link href={"/admin/dashboard/profile"} className="w-full flex items-center gap-3 min-w-0">
                 <User size={20} />
-                <span className="text-sm">Admin</span>
+                <span className="text-sm truncate">{name ?? 'Admin'}</span>
               </Link>
+<<<<<<< HEAD
+<<<<<<< HEAD
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label="Logout"
+                className='hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300 cursor-pointer'
+              >
+                <LogOut size={20} />
+              </button>
+            </div>
+          </>
+        ) :
+          (
+            <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
+              <Link href={"/opd/dashboard/profile"} className="w-full flex items-center gap-3 min-w-0">
+                <User size={20} />
+                <span className="text-sm truncate">{name ?? 'OPD'}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label="Logout"
+                className='hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300 cursor-pointer'
+              >
+                <LogOut size={20} />
+              </button>
+            </div>
+          )
+=======
               <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 p-1 rounded-[4px] transition-all transform duration-300'>
                 <LogOut size={20}/>
               </Link>
             </div>
           </>
         ) :
+=======
+              <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 p-1 rounded-[4px] transition-all transform duration-300'>
+                <LogOut size={20}/>
+              </Link>
+            </div>
+          </>
+        ) :
+>>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
         (
           <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
             <Link href={"/opd/dashboard/profile"} className="w-full flex items-center gap-3">
@@ -133,6 +183,10 @@ export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
             </Link>
           </div>
         )
+<<<<<<< HEAD
+>>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
+=======
+>>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
         }
       </div>
 
