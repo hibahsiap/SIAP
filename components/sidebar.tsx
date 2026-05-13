@@ -129,6 +129,7 @@ export default function Sidebar({ role, name }: { role: 'admin' | 'opd'; name?: 
                 <span className="text-sm truncate">{name ?? 'Admin'}</span>
               </Link>
 <<<<<<< HEAD
+<<<<<<< HEAD
               <button
                 type="button"
                 onClick={handleLogout}
@@ -163,6 +164,14 @@ export default function Sidebar({ role, name }: { role: 'admin' | 'opd'; name?: 
             </div>
           </>
         ) :
+=======
+              <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 p-1 rounded-[4px] transition-all transform duration-300'>
+                <LogOut size={20}/>
+              </Link>
+            </div>
+          </>
+        ) :
+>>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
         (
           <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
             <Link href={"/opd/dashboard/profile"} className="w-full flex items-center gap-3">
@@ -174,6 +183,9 @@ export default function Sidebar({ role, name }: { role: 'admin' | 'opd'; name?: 
             </Link>
           </div>
         )
+<<<<<<< HEAD
+>>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
+=======
 >>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
         }
       </div>

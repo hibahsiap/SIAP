@@ -141,14 +141,12 @@
     scrollbar-width: none !important;
     /* Firefox */
   }
-<<<<<<< HEAD
-}
-
-=======
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;   /* vertical scrollbar */
-    height: 4px;  /* horizontal scrollbar */
+    width: 4px;
+    /* vertical scrollbar */
+    height: 4px;
+    /* horizontal scrollbar */
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -164,4 +162,3 @@
     background-color: #3b82f6;
   }
 }
->>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
