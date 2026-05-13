@@ -64,7 +64,7 @@ export default function Reports() {
     ];
 
     return (
-        <div className="flex flex-col gap-5 px-2">
+        <div className="flex flex-col gap-5 px-4 py-2">
             <div className="flex flex-row items-center justify-between py-1">
                 <h1 className="font-bold text-3xl text-[#041942]">Report</h1>
                 <TimeRange

@@ -49,8 +49,6 @@ export default function TicketsPage() {
   const { openEditModal, openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
 
   const currentData = useMemo(() => {
-    // if (activeTab === 'kanban') return kanban;
-    // if (activeTab === 'pending') return pendingTickets;
     if (activeTab === 'all') return allTickets;
     return aspirationTickets;
   }, [activeTab]);
@@ -106,20 +104,23 @@ export default function TicketsPage() {
   }, [activeTab, openEditModal, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-full max-w-full h-full">
+    <div className="flex-1 w-full max-w-full h-full p-2">
 
       {/* --- TABS & SEARCH HEADER --- */}
       <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
         <div className="flex gap-2">
-          {['kanban', 'all tickets', 'aspirations'].map((id) => (
+          {[{ id: 'kanban', label: 'Kanban' },
+            { id: 'all', label: 'All Tickets' },
+            { id: 'aspirations', label: 'Aspirations' }
+          ].map((tab) => (
             <button
-              key={id}
-              onClick={() => { setActiveTab(id as TabCategory); setSearchQuery(""); }}
-              className={`px-4 py-1.5 rounded-[12px] text-xs font-semibold transition-all duration-200 ${
-                activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border-2 border-[#F3F3F3]"
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id as TabCategory); setSearchQuery(""); }}
+              className={`px-6 py-1.5 rounded-[12px] text-sm font-semibold transition-all duration-200 ${
+                activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border-2 border-[#F3F3F3]"
               }`}
             >
-              {id.charAt(0).toUpperCase() + id.slice(1)}
+              {tab.id.charAt(0).toUpperCase() + tab.id.slice(1)}
             </button>
           ))}
         </div>

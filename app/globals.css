@@ -141,5 +141,27 @@
     scrollbar-width: none !important;
     /* Firefox */
   }
+<<<<<<< HEAD
 }
 
+=======
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;   /* vertical scrollbar */
+    height: 4px;  /* horizontal scrollbar */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #5B6F9C;
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #3b82f6;
+  }
+}
+>>>>>>> 6d11bae57749619c33c93dcf120d372af5624303

@@ -22,7 +22,7 @@ export const ChatItem = ({
   category, categoryColor, department, platform, flagColor, isActive, unread
 }: ChatItemProps) => {
   return (
-    <div className={`p-4 border-b cursor-pointer transition-all ${isActive ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'}`}>
+    <div className={`p-4 border-b cursor-pointer transition-all ${isActive ? 'bg-blue-50' : 'bg-[#F9F9F9] hover:bg-gray-200/60'}`}>
       <div className="flex gap-3">
         {/* Avatar & Flag Area */}
         <div className="flex flex-col items-center flex-shrink-0">
