@@ -36,7 +36,7 @@ const stats = [
 ]
 
 export default function Reports() {
-    const userColumns: ColumnDefinition[] = [
+    const userColumns: ColumnDefinition<TableRowData>[] = [
         { 
         header: "NAME OPD", 
         key: "name", 

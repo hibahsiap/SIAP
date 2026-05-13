@@ -5,7 +5,8 @@
       "PowerShell(Get-ChildItem -Path \"D:\\\\SMT6\\\\SIAP\\\\prisma\" -Recurse | Select-Object Name, @{Name=\"Type\";Expression={$_.PSIsContainer ? \"DIR\" : \"FILE\"}} | Format-Table -AutoSize)",
       "Bash(Get-ChildItem -Recurse D:\\\\SMT6\\\\SIAP\\\\app\\\\api)",
       "Bash(Select-Object FullName)",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "Bash(npm run *)"
     ]
   }
 }

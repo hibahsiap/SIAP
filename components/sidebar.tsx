@@ -1,13 +1,28 @@
 'use client';
 
 import { SIDEBAR_MENU } from '@/constants/sidebar-menu';
-import { ChevronDown, ChevronRight, LogOut, MessageSquare, MessageSquareMore, MessagesSquare, Settings, User } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  MessageSquare,
+  MessageSquareMore,
+  MessagesSquare,
+  Settings,
+  User,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function Sidebar({ role, name }: { role: 'admin' | 'opd'; name?: string }) {
+export default function Sidebar({
+  role,
+  name,
+}: {
+  role: 'admin' | 'opd';
+  name?: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const menuItems = SIDEBAR_MENU[role];
@@ -16,17 +31,23 @@ export default function Sidebar({ role, name }: { role: 'admin' | 'opd'; name?: 
 
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
+
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
     } catch {
       // ignore
     }
+
     router.push('/login');
     router.refresh();
   };
 
   useEffect(() => {
-    const isInboxRoute = pathname.includes('/admin/dashboard/chat') || pathname.includes('/admin/dashboard/comments');
+    const isInboxRoute =
+      pathname.includes('/admin/dashboard/chat') ||
+      pathname.includes('/admin/dashboard/comments');
 
     if (isInboxRoute) {
       setIsSubMenuOpen(true);
@@ -35,20 +56,20 @@ export default function Sidebar({ role, name }: { role: 'admin' | 'opd'; name?: 
     }
   }, [pathname]);
 
-  // Fungsi helper untuk menentukan style aktif (Hold Active)
   const getLinkStyle = (href: string) => {
     const isActive = pathname === href;
-    const baseClass = "flex items-center gap-3 px-4 py-3 rounded-[4px] transition-all duration-200 group mb-1 text-sm font-medium";
+    const baseClass =
+      'flex items-center gap-3 px-4 py-3 rounded-[4px] transition-all duration-200 group mb-1 text-sm font-medium';
 
     return isActive
       ? `${baseClass} bg-[#E2EFF3]/10 text-white border-r-4 border-white`
       : `${baseClass} text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white`;
   };
 
-  // Fungsi helper untuk menentukan style aktif (Hold Active)
   const getLinkProfileStyle = (href: string) => {
     const isActive = pathname === href;
-    const baseClass = "flex items-center justify-between gap-3 px-4 py-3 rounded-[4px] transition-all duration-200 group mb-1 text-sm font-medium";
+    const baseClass =
+      'flex items-center justify-between gap-3 px-4 py-3 rounded-[4px] transition-all duration-200 group mb-1 text-sm font-medium';
 
     return isActive
       ? `${baseClass} bg-[#E2EFF3]/10 text-white border-r-4 border-white`
@@ -60,52 +81,76 @@ export default function Sidebar({ role, name }: { role: 'admin' | 'opd'; name?: 
       {/* Logo & Branding */}
       <div className="flex items-center gap-3 mb-10 px-2">
         <div className="flex items-center justify-center w-12 h-12 bg-white rounded-lg p-1.5 shadow-md">
-          <Image src="/logo_siap.png" alt="Logo SIAP" width={38} height={38} className="object-contain" priority />
+          <Image
+            src="/logo_siap.png"
+            alt="Logo SIAP"
+            width={38}
+            height={38}
+            className="object-contain"
+            priority
+          />
         </div>
-        <div className='space-y-1'>
+
+        <div className="space-y-1">
           <h1 className="font-bold text-[16px] leading-tight">SIAP</h1>
-          <p className="text-[9px] uppercase text-slate-400 tracking-wider">Sistem Informasi Aduan Publik</p>
+          <p className="text-[9px] uppercase text-slate-400 tracking-wider">
+            Sistem Informasi Aduan Publik
+          </p>
         </div>
       </div>
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1">
-
         {/* Inbox dengan Submenu */}
         {role === 'admin' && (
           <div className="space-y-1">
             <div
               onClick={() => setIsSubMenuOpen(!isSubMenuOpen)}
-              className={`flex items-center justify-between px-4 py-3 rounded-[4px] cursor-pointer transition-all ${pathname.includes('/admin/dashboard/chat') || pathname.includes('/admin/dashboard/comments') ? 'text-white' : 'text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white'}`
-
-              }>
-              <div className='flex items-center gap-3'>
-                <MessageSquare size={20} /> <span className="font-medium text-sm">Inbox</span>
+              className={`flex items-center justify-between px-4 py-3 rounded-[4px] cursor-pointer transition-all ${pathname.includes('/admin/dashboard/chat') ||
+                pathname.includes('/admin/dashboard/comments')
+                ? 'text-white'
+                : 'text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white'
+                }`}
+            >
+              <div className="flex items-center gap-3">
+                <MessageSquare size={20} />
+                <span className="font-medium text-sm">Inbox</span>
               </div>
-              {isSubMenuOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+
+              {isSubMenuOpen ? (
+                <ChevronDown size={14} />
+              ) : (
+                <ChevronRight size={14} />
+              )}
             </div>
 
             {/* Submenu Chat & Comments */}
             {isSubMenuOpen && (
               <div className="pl-1 space-y-1 border-l ml-6 border-slate-600 transition-all">
-                <Link href="/admin/dashboard/chat"
+                <Link
+                  href="/admin/dashboard/chat"
                   className={getLinkStyle('/admin/dashboard/chat')}
                 >
-                  <MessagesSquare size={16} /> Chat
+                  <MessagesSquare size={16} />
+                  Chat
                 </Link>
-                <Link href="/admin/dashboard/comments"
+
+                <Link
+                  href="/admin/dashboard/comments"
                   className={getLinkStyle('/admin/dashboard/comments')}
                 >
-                  <MessageSquareMore size={16} /> Comments
+                  <MessageSquareMore size={16} />
+                  Comments
                 </Link>
               </div>
             )}
-
           </div>
         )}
 
         {menuItems.map((item) => (
-          <Link href={item.href} key={item.name}
+          <Link
+            href={item.href}
+            key={item.name}
             className={getLinkStyle(item.href)}
           >
             {item.icon}
@@ -118,78 +163,58 @@ export default function Sidebar({ role, name }: { role: 'admin' | 'opd'; name?: 
       <div className="border-t border-slate-700 pt-4 space-y-1">
         {role === 'admin' ? (
           <>
-            <Link href="/admin/dashboard/settings"
+            <Link
+              href="/admin/dashboard/settings"
               className={getLinkStyle('/admin/dashboard/settings')}
             >
-              <Settings size={20} /> <span className="text-sm">Settings</span>
+              <Settings size={20} />
+              <span className="text-sm">Settings</span>
             </Link>
-            <div className={getLinkProfileStyle('/admin/dashboard/profile')}>
-              <Link href={"/admin/dashboard/profile"} className="w-full flex items-center gap-3 min-w-0">
-                <User size={20} />
-                <span className="text-sm truncate">{name ?? 'Admin'}</span>
-              </Link>
-<<<<<<< HEAD
-<<<<<<< HEAD
-              <button
-                type="button"
-                onClick={handleLogout}
-                aria-label="Logout"
-                className='hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300 cursor-pointer'
-              >
-                <LogOut size={20} />
-              </button>
-            </div>
-          </>
-        ) :
-          (
-            <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
-              <Link href={"/opd/dashboard/profile"} className="w-full flex items-center gap-3 min-w-0">
-                <User size={20} />
-                <span className="text-sm truncate">{name ?? 'OPD'}</span>
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                aria-label="Logout"
-                className='hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300 cursor-pointer'
-              >
-                <LogOut size={20} />
-              </button>
-            </div>
-          )
-=======
-              <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 p-1 rounded-[4px] transition-all transform duration-300'>
-                <LogOut size={20}/>
-              </Link>
-            </div>
-          </>
-        ) :
-=======
-              <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 p-1 rounded-[4px] transition-all transform duration-300'>
-                <LogOut size={20}/>
-              </Link>
-            </div>
-          </>
-        ) :
->>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
-        (
-          <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
-            <Link href={"/opd/dashboard/profile"} className="w-full flex items-center gap-3">
-              <User size={20} />
-              <span className="text-sm">OPD</span>
-            </Link>
-            <Link href={"/login"} className='hover:bg-[#E2EFF3]/50 p-1 rounded-[4px] transition-all transform duration-300'>
-              <LogOut size={20}/>
-            </Link>
-          </div>
-        )
-<<<<<<< HEAD
->>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
-=======
->>>>>>> 6d11bae57749619c33c93dcf120d372af5624303
-        }
-      </div>
 
+            <div className={getLinkProfileStyle('/admin/dashboard/profile')}>
+              <Link
+                href="/admin/dashboard/profile"
+                className="w-full flex items-center gap-3 min-w-0"
+              >
+                <User size={20} />
+                <span className="text-sm truncate">
+                  {name ?? 'Admin'}
+                </span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label="Logout"
+                className="hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300 cursor-pointer"
+              >
+                <LogOut size={20} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
+            <Link
+              href="/opd/dashboard/profile"
+              className="w-full flex items-center gap-3 min-w-0"
+            >
+              <User size={20} />
+              <span className="text-sm truncate">
+                {name ?? 'OPD'}
+              </span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Logout"
+              className="hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300 cursor-pointer"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }
