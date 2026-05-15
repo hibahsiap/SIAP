@@ -7,7 +7,7 @@ import ToastFrame from "./ToastFrame";
 import ReturnAdminButton from "./ReturnAdminButton";
 import { DUMMY_TASK } from "@/constants/taskDummy";
 
-export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone: string, role: 'admin' | 'opd', chatId: string }) => {
+export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone: string, role: 'ADMIN' | 'OPD', chatId: string }) => {
   const [urgency, setUrgency] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
@@ -50,7 +50,7 @@ export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone:
         </div>
       </div>
       
-      {role === 'admin' ? (
+      {role === 'ADMIN' ? (
         <div className="flex gap-2">
           <div className="min-w-[100px]">
             <TimeRange 

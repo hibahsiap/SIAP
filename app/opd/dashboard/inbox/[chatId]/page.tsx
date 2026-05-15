@@ -20,7 +20,7 @@ export default async function ChatDetailPage({ params }: { params: Promise<{ cha
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#F9F9F9] relative">
-      <ChatHeader chatId={chatId} name={chatInfo.name} phone="085123456789" role="opd" />
+      <ChatHeader chatId={chatId} name={chatInfo.name} phone="085123456789" role="OPD" />
       
       <div className="flex-1 overflow-y-auto px-6 pb-24 pt-4 custom-scrollbar">
         

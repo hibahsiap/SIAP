@@ -5,7 +5,7 @@ export type User = {
   name: string
   email: string
   phone: string | null
-  role: 'admin' | 'opd'
+  role: 'ADMIN' | 'OPD'
   opd: { id: string; name: string } | null
   createdAt: string
 }
@@ -15,7 +15,7 @@ export type CreateUserData = {
   email: string
   password: string
   phone?: string
-  role: 'admin' | 'opd'
+  role: 'ADMIN' | 'OPD'
   opdName?: string
 }
 
@@ -23,7 +23,7 @@ export type UpdateUserData = {
   name?: string
   email?: string
   phone?: string
-  role?: 'admin' | 'opd'
+  role?: 'ADMIN' | 'OPD'
   opdName?: string
 }
 

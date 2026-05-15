@@ -44,10 +44,10 @@ export default function UserModals() {
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const emptyAdd = { name: "", email: "", phone: "", role: "opd" as "admin" | "opd", opdName: "", password: "" }
+  const emptyAdd = { name: "", email: "", phone: "", role: "OPD" as "ADMIN" | "OPD", opdName: "", password: "" }
   const [addForm, setAddForm] = useState(emptyAdd)
 
-  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", role: "opd" as "admin" | "opd", opdName: "" })
+  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", role: "OPD" as "ADMIN" | "OPD", opdName: "" })
 
   useEffect(() => {
     if (selectedUser) {
@@ -118,11 +118,11 @@ export default function UserModals() {
 
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Assigned Role</label>
-            <Select value={addForm.role} onValueChange={(v) => setAddForm({ ...addForm, role: v as "admin" | "opd" })}>
+            <Select value={addForm.role} onValueChange={(v) => setAddForm({ ...addForm, role: v as "ADMIN" | "OPD" })}>
               <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="opd">OPD</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="OPD">OPD</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -161,11 +161,11 @@ export default function UserModals() {
 
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Assigned Role</label>
-                <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v as "admin" | "opd" })}>
+                <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v as "ADMIN" | "OPD" })}>
                   <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="opd">OPD</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="OPD">OPD</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -3,7 +3,7 @@ import { Plus, SendHorizontal } from "lucide-react";
 import { ChatHeader, ForwardControl } from "./ChatHeader";
 import { ChatBubble } from "./ChatBubble";
 
-export default function ChatDetailView({ activeChat, role }: { activeChat: any, role?: 'admin' | 'opd'}) {
+export default function ChatDetailView({ activeChat, role }: { activeChat: any, role?: 'ADMIN' | 'OPD'}) {
   if (!activeChat) {
     return <div className="flex-1 flex items-center justify-center text-gray-400">Pilih pesan untuk memulai percakapan</div>;
   }
@@ -14,7 +14,7 @@ export default function ChatDetailView({ activeChat, role }: { activeChat: any, 
       
       <div className="flex-1 overflow-y-auto px-6 pb-24 pt-2">
 
-        {role === 'admin' && (
+        {role === 'ADMIN' && (
           <ForwardControl />
         )}
         

@@ -23,8 +23,8 @@ model User {
   email               String               @unique
   password            String
   name                String
-  phone               String?
-  role                Role                 @default(opd)
+  phone               String
+  role                Role                 @default(OPD)
   opdId               String?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
@@ -261,8 +261,8 @@ model ActivityLog {
 }
 
 enum Role {
-  admin
-  opd
+  ADMIN
+  OPD
 }
 
 enum TicketStatus {

@@ -20,7 +20,7 @@ export default function Sidebar({
   role,
   name,
 }: {
-  role: 'admin' | 'opd';
+  role: 'ADMIN' | 'OPD';
   name?: string;
 }) {
   const pathname = usePathname();
@@ -102,7 +102,7 @@ export default function Sidebar({
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1">
         {/* Inbox dengan Submenu */}
-        {role === 'admin' && (
+        {role === 'ADMIN' && (
           <div className="space-y-1">
             <div
               onClick={() => setIsSubMenuOpen(!isSubMenuOpen)}
@@ -161,7 +161,7 @@ export default function Sidebar({
 
       {/* Bottom Actions */}
       <div className="border-t border-slate-700 pt-4 space-y-1">
-        {role === 'admin' ? (
+        {role === 'ADMIN' ? (
           <>
             <Link
               href="/admin/dashboard/settings"

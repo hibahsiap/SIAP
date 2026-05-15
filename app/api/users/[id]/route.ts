@@ -9,7 +9,7 @@ export async function PUT(
 ) {
   const auth = await getAuthUser()
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (auth.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (auth.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
   const { name, email, phone, role, opdName, password } = await request.json()
@@ -59,7 +59,7 @@ export async function DELETE(
 ) {
   const auth = await getAuthUser()
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (auth.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (auth.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
   await prisma.user.delete({ where: { id } })

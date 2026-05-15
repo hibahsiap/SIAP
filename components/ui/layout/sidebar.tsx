@@ -5,7 +5,7 @@ import { SIDEBAR_MENU } from '@/constants/sidebar-menu';
 import { SidebarItem } from './sidebar-item';
 import { Settings, User, LogOut } from 'lucide-react';
 
-export default function Sidebar({ role }: { role: 'admin' | 'opd' }) {
+export default function Sidebar({ role }: { role: 'ADMIN' | 'OPD' }) {
   const pathname = usePathname();
   const menuItems = SIDEBAR_MENU[role];
 

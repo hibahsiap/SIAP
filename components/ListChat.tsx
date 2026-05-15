@@ -11,7 +11,7 @@ import Link from "next/link";
 import { chatData } from "@/constants/chatData";
 
 
-const ListChat = ({role} : {role: 'admin' | 'opd'}) => {
+const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
 
     const pathname = usePathname();
 
@@ -88,7 +88,7 @@ const ListChat = ({role} : {role: 'admin' | 'opd'}) => {
 
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {filteredChats.length > 0 ? (
-                    role === "admin" ? (
+                    role === "ADMIN" ? (
                         filteredChats.map((chat) => (
                             <Link href={`/admin/dashboard/chat/${chat.id}`} key={chat.id}>
                                 <ChatItem 
