@@ -4,7 +4,7 @@ export default function InboxPage() {
 
   return (
     <div className="">
-      <div className="flex flex-col items-center justify-center h-full bg-gray-50 p-10">
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50 p-10">
         <div className="relative w-80 h-48 bg-slate-900 rounded-2xl mb-12 shadow-2xl flex items-center justify-center">
             <div className="w-16 h-4 bg-slate-700 rounded-full animate-pulse mr-20"></div>
             <div className="w-24 h-4 bg-slate-800 rounded-full animate-pulse"></div>
