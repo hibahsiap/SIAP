@@ -186,7 +186,7 @@ export default function Sidebar({
                 type="button"
                 onClick={handleLogout}
                 aria-label="Logout"
-                className="hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300 cursor-pointer"
+                className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer"
               >
                 <LogOut size={20} />
               </button>
@@ -208,7 +208,7 @@ export default function Sidebar({
               type="button"
               onClick={handleLogout}
               aria-label="Logout"
-              className="hover:bg-[#E2EFF3]/50 hover:px-2 rounded-[4px] transition-all transform duration-300 cursor-pointer"
+              className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer"
             >
               <LogOut size={20} />
             </button>

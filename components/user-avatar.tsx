@@ -39,12 +39,12 @@ export function UserAvatar() {
           >
             UPLOAD NEW PHOTO
           </Button>
-          <Button 
+          {/* <Button 
             variant="secondary" 
             onClick={() => setAvatar("/logo_siap.png")}
           >
             RESET
-          </Button>
+          </Button> */}
         </div>
         <p className="text-[11px] text-gray-500">Allowed JPG or PNG. Max size 1 MB</p>
       </div>

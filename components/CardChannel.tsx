@@ -44,48 +44,23 @@ const CardChannel = ({icon, title, status, account, account_id}: CardChannelProp
     return (
         <motion.div
             initial={false}
-            animate={{ height: isConnected ? 176 : 136 }}
+            animate={{ height: isConnected ? 160 : 124 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
-            className={`flex flex-col gap-3 py-4 px-5 overflow-hidden rounded-[15px] ${colorCard[title]} shadow-sm shadow-black/40`}>
+            className={`flex flex-col gap-2.5 p-4 overflow-hidden rounded-[15px] ${colorCard[title]} shadow-sm shadow-black/40`}>
 
             <div className="flex flex-row gap-1.5 items-center">
-                <Icon size={28} className={`${colorTextCard[title]}`} />
-                <p className="text-[#041942] font-semibold text-lg capitalize">{title} Integration</p>
+                <Icon size={20} className={`${colorTextCard[title]}`} />
+                <p className="text-[#041942] font-bold text-sm capitalize tracking-wide">{title} Integration</p>
             </div>
 
             <motion.div 
                 initial={false}
-                animate={{ height: isConnected ? 100 : 60 }}
+                animate={{ height: isConnected ? 96 : 60 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className={`${colorCardInside[title]} rounded-lg p-3 flex flex-row items-center justify-between`}>
 
-
-                
-                {/* {isConnected ? (<>
-                    <div className="flex gap-0.5 flex-col">
-                        <p className="font-semibold">{title} Connected</p>
-                        <p>{status}</p>
-                        <p>Account: {account}</p>
-                        <p>ID: {account_id}</p>
-                    </div>
-                    <div className="w-24">
-                        <ButtonClick onClick={toggleChannel} name={"Disconnect"} type="button" className="bg-red-500 text-white font-bold" />
-                    </div>
-                </>)
-                :
-
-                (<>
-                    <div className="flex gap-0.5 flex-col">
-                        <p className="font-semibold">Connect your channel</p>
-                    </div>
-                    <div className="w-24">
-                        <ButtonClick onClick={toggleChannel} name={"Connect"} type="button" className="bg-white text-[#041942] border border-[#F0F0F0] font-bold " />
-                    </div>
-                </>)
-                } */}
-
                 {/* 2. ANIMASI ISI KONTEN (Fade-in / Fade-out) */}
-                <AnimatePresence mode="wait"> {/* mode="wait" memastikan konten lama keluar dulu, baru konten baru masuk */}
+                <AnimatePresence mode="wait"> 
                 {isConnected ? (
                     // Konten saat Connected
                     <motion.div
@@ -96,18 +71,18 @@ const CardChannel = ({icon, title, status, account, account_id}: CardChannelProp
                     transition={{ duration: 0.3 }}
                     className="w-full flex flex-row items-center justify-between"
                     >
-                    <div className={`flex gap-0.5 flex-col ${colorTextCard[title]}`}>
-                        <p className="font-semibold capitalize">{title} Connected</p>
-                        <p>{status}</p>
-                        <p>Account: {account}</p>
-                        <p>ID: {account_id}</p>
+                    <div className={`flex gap-1 flex-col ${colorTextCard[title]}`}>
+                        <p className="font-semibold text-sm capitalize">{title} Connected</p>
+                        {/* <p>{status}</p> */}
+                        <p className="text-[12px]">Account: {account}</p>
+                        <p className="text-[12px]">ID: {account_id}</p>
                     </div>
                     <div className="w-24">
                         <ButtonClick
                         onClick={toggleChannel}
                         name="Disconnect"
                         type="button"
-                        className="bg-red-500 text-white font-bold"
+                        className="bg-red-500 text-white font-semibold"
                         />
                     </div>
                     </motion.div>
@@ -122,14 +97,14 @@ const CardChannel = ({icon, title, status, account, account_id}: CardChannelProp
                     className="w-full flex flex-row items-center justify-between"
                     >
                     <div className={`flex gap-0.5 flex-col ${colorTextCard[title]}`}>
-                        <p className="font-semibold">Connect your channel</p>
+                        <p className="font-semibold text-sm">Connect your channel</p>
                     </div>
                     <div className="w-24">
                         <ButtonClick
                         onClick={toggleChannel}
                         name="Connect"
                         type="button"
-                        className="bg-white text-[#041942] border-2 border-[#d2d2d2] font-bold"
+                        className="bg-white text-[#041942] border-2 border-[#d2d2d2] font-semibold"
                         />
                     </div>
                     </motion.div>

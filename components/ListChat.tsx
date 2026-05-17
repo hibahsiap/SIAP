@@ -90,7 +90,7 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
                 {filteredChats.length > 0 ? (
                     role === "ADMIN" ? (
                         filteredChats.map((chat) => (
-                            <Link href={`/admin/dashboard/chat/${chat.id}`} key={chat.id}>
+                            <Link href={`/admin/chat/${chat.id}`} key={chat.id}>
                                 <ChatItem 
                                     {...chat}
                                     isActive={pathname === `/chat/${chat.id}`} 
@@ -99,7 +99,7 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
                         ))
                     ) : (
                         filteredChats.map((chat) => (
-                            <Link href={`/opd/dashboard/inbox/${chat.id}`} key={chat.id}>
+                            <Link href={`/opd/inbox/${chat.id}`} key={chat.id}>
                                 <ChatItem 
                                     {...chat}
                                     isActive={pathname === `/inbox/${chat.id}`} 

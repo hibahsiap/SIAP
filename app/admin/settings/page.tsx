@@ -4,7 +4,9 @@ import ButtonClick from "@/components/Button";
 import CardChannel from "@/components/CardChannel";
 import SearchField from "@/components/SearchField";
 import TableTemplate, { ColumnDefinition } from "@/components/TableTemplate";
+import UserModals from "@/components/UserModal";
 import { formatActionCell, formatNameCell, formatRoleCell, TableRowData } from "@/constants/tableFormats";
+import { useUserStore } from "@/store/useUserStore";
 import { MessageSquare, PlusIcon } from "lucide-react";
 import { FaFacebook, FaInstagram, FaWhatsapp } from "react-icons/fa";
 
@@ -36,6 +38,11 @@ export default function Settings() {
 
     const handleEdit = (id: string) => console.log("Edit User ID:", id);
     const handleDelete = (id: string) => console.log("Hapus User ID:", id);
+    const {
+        users, isLoading, fetchUsers, deleteUser,
+        openEditModal, openAddModal,
+        isDeleteModalOpen, closeDeleteModal, selectedUser, openDeleteModal,
+      } = useUserStore()
 
     // Definisi Kolom khusus untuk halaman issue category
     const userColumns: ColumnDefinition[] = [
@@ -77,15 +84,15 @@ export default function Settings() {
             {/* content */}
             <div className="p-2.5 flex flex-col gap-4">
                 {/* channel management section */}
-                <div className="rounded-[12px] overflow-hidden px-5 py-4 shadow-sm shadow-black/40 flex flex-col gap-2 bg-white">
+                <div className="rounded-[12px] overflow-hidden p-4 shadow-sm shadow-black/40 flex flex-col gap-2 bg-white">
                     <div className="flex flex-row items-center gap-3.5 text-[#041942]">
-                        <MessageSquare size={40} />
+                        <MessageSquare size={36} />
                         <div className="flex flex-col gap-0.5">
-                            <h2 className="text-2xl font-bold opacity-60">Channel Management</h2>
+                            <h2 className="text-2xl font-bold">Channel Management</h2>
                             <p className="text-sm">Connect your communication channels</p>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 pt-2">
                         {channels.map((channel, index) => {
                             return (
                                 <CardChannel
@@ -107,7 +114,7 @@ export default function Settings() {
                         <h2 className="font-bold text-2xl text-[#041942]">Issue Categories</h2>
                         <div className="flex flex-row gap-2 w-[40%]">
                             <SearchField placeholder="Search" value="" onChange={() => {}}/>
-                            <ButtonClick name="add category" type="button" icon={<PlusIcon size={16}/>}/>
+                            <ButtonClick onClick={openAddModal} name="add category" type="button" icon={<PlusIcon size={16}/>}/>
                         </div>
                     </div>
 
@@ -116,6 +123,8 @@ export default function Settings() {
                     </div>
                 </div>
             </div>
+
+            <UserModals />
         </div>
     )
 }

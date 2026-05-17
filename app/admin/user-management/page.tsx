@@ -58,7 +58,7 @@ export default function UserManagementPage() {
     {
       header: "NAME",
       key: "name",
-      className: "text-left pl-8 w-[350px]",
+      className: "text-center pl-8 w-[350px]",
       cell: (_, row) => (
         <div className="flex items-center gap-4 py-2">
           <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-600 font-bold border border-gray-200">
@@ -69,10 +69,16 @@ export default function UserManagementPage() {
       ),
     },
     {
+      header: "OPD",
+      key: "nameOPD",
+      className: "text-center",
+      cell: (val) => <div className="text-gray-500 font-medium">{val}</div>,
+    },
+    {
       header: "EMAIL",
       key: "email",
       className: "text-center",
-      cell: (val) => <div className="text-gray-500 font-medium">{val}</div>,
+      cell: (val) => <div className="text-gray-500 font-medium lowercase">{val}</div>,
     },
     {
       header: "PHONE NUMBER",
