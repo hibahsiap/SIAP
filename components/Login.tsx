@@ -52,9 +52,9 @@ const Login = () => {
             const userRole = data.user?.role
             
             if (userRole === "ADMIN") {
-                router.push("admin/dashboard/chat");
+                router.push("admin/chat");
             } else {
-                router.push("opd/dashboard/inbox");
+                router.push("opd/inbox");
             }
 
         } catch {
