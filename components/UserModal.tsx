@@ -9,6 +9,8 @@ import { useUserStore } from "@/store/useUserStore"
 import CustomModal from "@/components/CustomModal"
 import { toast } from "sonner"
 
+type Opd = { id: string; name: string }
+
 const FormField = ({
   label,
   value,
@@ -43,11 +45,18 @@ export default function UserModals() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [opds, setOpds] = useState<Opd[]>([])
 
-  const emptyAdd = { name: "", email: "", phone: "", role: "OPD" as "ADMIN" | "OPD", opdName: "", password: "" }
+  const emptyAdd = { name: "", email: "", phone: "", role: "OPD" as "ADMIN" | "OPD", opdId: "", password: "" }
   const [addForm, setAddForm] = useState(emptyAdd)
+  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", role: "OPD" as "ADMIN" | "OPD", opdId: "" })
 
-  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", role: "OPD" as "ADMIN" | "OPD", opdName: "" })
+  useEffect(() => {
+    fetch('/api/opd')
+      .then((r) => r.json())
+      .then((data) => setOpds(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (selectedUser) {
@@ -56,7 +65,7 @@ export default function UserModals() {
         email: selectedUser.email,
         phone: selectedUser.phone ?? "",
         role: selectedUser.role,
-        opdName: selectedUser.opd?.name ?? "",
+        opdId: selectedUser.opd?.id ?? "",
       })
     }
   }, [selectedUser])
@@ -68,13 +77,14 @@ export default function UserModals() {
     }
     setIsSubmitting(true)
     try {
+      const selectedOpd = opds.find((o) => o.id === addForm.opdId)
       await createUser({
         name: addForm.name,
         email: addForm.email,
         password: addForm.password,
         phone: addForm.phone || undefined,
         role: addForm.role,
-        opdName: addForm.opdName || undefined,
+        opdName: selectedOpd?.name || undefined,
       })
       toast.success("User created successfully")
       setAddForm(emptyAdd)
@@ -90,12 +100,13 @@ export default function UserModals() {
     if (!selectedUser) return
     setIsSubmitting(true)
     try {
+      const selectedOpd = opds.find((o) => o.id === editForm.opdId)
       await updateUser(selectedUser.id, {
         name: editForm.name,
         email: editForm.email,
         phone: editForm.phone || undefined,
         role: editForm.role,
-        opdName: editForm.opdName || undefined,
+        opdName: selectedOpd?.name || undefined,
       })
       toast.success("User updated successfully")
       closeEditModal()
@@ -106,6 +117,32 @@ export default function UserModals() {
     }
   }
 
+  const OpdSelect = ({
+    value,
+    onChange,
+  }: {
+    value: string
+    onChange: (v: string) => void
+  }) => (
+    <div className="space-y-1.5">
+      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OPD</label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900">
+          <SelectValue placeholder="Pilih OPD..." />
+        </SelectTrigger>
+        <SelectContent>
+          {opds.length === 0 ? (
+            <SelectItem value="_empty" disabled>Tidak ada data OPD</SelectItem>
+          ) : (
+            opds.map((opd) => (
+              <SelectItem key={opd.id} value={opd.id}>{opd.name}</SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+
   return (
     <>
       {/* ADD USER MODAL */}
@@ -114,11 +151,13 @@ export default function UserModals() {
           <FormField label="Full Name" placeholder="Joni Darmawan" value={addForm.name} onChange={(v) => setAddForm({ ...addForm, name: v })} />
           <FormField label="Email Address" placeholder="joni.d@siap.com" type="email" value={addForm.email} onChange={(v) => setAddForm({ ...addForm, email: v })} />
           <FormField label="Phone Number" placeholder="+62 812-3456-7890" value={addForm.phone} onChange={(v) => setAddForm({ ...addForm, phone: v })} />
-          <FormField label="OPD" placeholder="Dinas Komunikasi dan Informatika" value={addForm.opdName} onChange={(v) => setAddForm({ ...addForm, opdName: v })} />
 
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Assigned Role</label>
-            <Select value={addForm.role} onValueChange={(v) => setAddForm({ ...addForm, role: v as "ADMIN" | "OPD" })}>
+            <Select
+              value={addForm.role}
+              onValueChange={(v) => setAddForm({ ...addForm, role: v as "ADMIN" | "OPD", opdId: "" })}
+            >
               <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ADMIN">Admin</SelectItem>
@@ -126,6 +165,10 @@ export default function UserModals() {
               </SelectContent>
             </Select>
           </div>
+
+          {addForm.role === "OPD" && (
+            <OpdSelect value={addForm.opdId} onChange={(v) => setAddForm({ ...addForm, opdId: v })} />
+          )}
 
           <div className="space-y-1.5 relative">
             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Password</label>
@@ -157,11 +200,13 @@ export default function UserModals() {
               <FormField label="Full Name" value={editForm.name} onChange={(v) => setEditForm({ ...editForm, name: v })} />
               <FormField label="Email Address" type="email" value={editForm.email} onChange={(v) => setEditForm({ ...editForm, email: v })} />
               <FormField label="Phone Number" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} />
-              <FormField label="OPD" value={editForm.opdName} onChange={(v) => setEditForm({ ...editForm, opdName: v })} />
 
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Assigned Role</label>
-                <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v as "ADMIN" | "OPD" })}>
+                <Select
+                  value={editForm.role}
+                  onValueChange={(v) => setEditForm({ ...editForm, role: v as "ADMIN" | "OPD", opdId: "" })}
+                >
                   <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ADMIN">Admin</SelectItem>
@@ -169,6 +214,10 @@ export default function UserModals() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {editForm.role === "OPD" && (
+                <OpdSelect value={editForm.opdId} onChange={(v) => setEditForm({ ...editForm, opdId: v })} />
+              )}
             </div>
             <div className="flex gap-3 mt-8">
               <Button onClick={closeEditModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold" disabled={isSubmitting}>CANCEL</Button>

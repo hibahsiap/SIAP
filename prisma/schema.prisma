@@ -65,6 +65,8 @@ model Channel {
   id                 String              @id @default(uuid())
   platform           ChannelPlatform     @unique
   accountHandle      String?
+  accountId          String?
+  accessToken        String?
   isActive           Boolean             @default(false)
   updatedAt          DateTime            @updatedAt
   socialInteractions SocialInteraction[]

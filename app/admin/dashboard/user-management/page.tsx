@@ -93,6 +93,16 @@ export default function UserManagementPage() {
       ),
     },
     {
+      header: "OPD",
+      key: "opd",
+      className: "text-center",
+      cell: (val) => (
+        <div className="text-gray-500 font-medium">
+          {val?.name ?? <span className="text-gray-300">—</span>}
+        </div>
+      ),
+    },
+    {
       header: "ACTIONS",
       key: "actions",
       className: "text-right pr-8 w-[150px]",
