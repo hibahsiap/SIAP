@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { DateRangePicker, DateRange, formatDateRange } from "@/components/DateRangePicker";
 
 interface TimeOption {
   value: string;
@@ -11,7 +12,7 @@ interface TimeOption {
 interface TimeRangeSelectorProps {
   options: TimeOption[];
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, dateRange?: DateRange) => void;
   prefixLabel?: string;
   variant?: 'default' | 'badge';
 }
@@ -27,6 +28,11 @@ export const TimeRange = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedOption = options.find(opt => opt.value === value);
 
+  // State khusus default variant untuk calendar
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [dateRange, setDateRange]       = useState<DateRange>({ from: null, to: null });
+  const [appliedRange, setAppliedRange] = useState<DateRange>({ from: null, to: null });
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -37,25 +43,65 @@ export const TimeRange = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Default Dropdown
+  // ─── Default Dropdown ────────────────────────────────────────────────────────
   if (variant === 'default') {
+    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const selected = e.target.value;
+      if (selected === 'custom') {
+        setCalendarOpen(true);
+      } else {
+        setAppliedRange({ from: null, to: null });
+        onChange(selected);
+      }
+    };
+
+    const handleApply = (range: DateRange) => {
+      setAppliedRange(range);
+      setCalendarOpen(false);
+      onChange('custom', range);
+    };
+
+    const handleCancel = () => {
+      setCalendarOpen(false);
+      setDateRange(appliedRange); 
+    };
+
+    const customLabel =
+      value === 'custom' && appliedRange.from && appliedRange.to
+        ? formatDateRange(appliedRange)
+        : 'Custom Range';
+
     return (
-      <div className="flex items-center gap-2 border border-gray-200 rounded px-3 py-2 bg-white">
+      <div className="relative flex items-center gap-2 border border-gray-200 rounded px-2 py-2 bg-white">
         {prefixLabel && <span className="text-xs text-gray-500">{prefixLabel}</span>}
+
         <select
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleSelectChange}
           className="text-xs font-medium outline-none bg-transparent cursor-pointer"
         >
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.value === 'custom' ? customLabel : opt.label}
+            </option>
           ))}
         </select>
+
+        <DateRangePicker
+          open={calendarOpen}
+          onOpenChange={(open) => { if (!open) handleCancel(); }}
+          value={dateRange}
+          onChange={setDateRange}
+          onApply={handleApply}
+          onCancel={handleCancel}
+          align="end"
+          trigger={<span className="absolute right-0 top-full" />}
+        />
       </div>
     );
   }
 
-  // Badge Header Chat
+  // ─── Badge Header Chat ────────────────────────
   return (
     <div className="relative" ref={dropdownRef}>
       <div
@@ -88,7 +134,6 @@ export const TimeRange = ({
                 value === opt.value ? 'bg-gray-50 text-slate-900' : 'text-slate-600'
               }`}
             >
-
               {opt.colorClass && (
                 <div className={`w-2 h-2 rounded-full ${opt.colorClass.split(' ')[0]}`}></div>
               )}
