@@ -142,7 +142,7 @@ export default function Reports() {
                         <SearchEmptyState type="category" searchQuery={searchQuery} />
                     ) : (
                         <EmptyState
-                        title="No OPD found"
+                        title="No Category found"
                         description={<>There is currently no data available. <br /> Please add new data to see it displayed here.</>}
                         // actionButton={
                         //     <Button onClick={openAddModal} className="bg-[#172033] hover:bg-[#172033]/90 text-white font-medium px-5 py-5 flex items-center gap-2 rounded-md">

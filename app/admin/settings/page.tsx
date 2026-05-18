@@ -2,13 +2,19 @@
 
 import ButtonClick from "@/components/Button";
 import CardChannel from "@/components/CardChannel";
+import CategoryModals from "@/components/CategoryModal";
+import DeleteModal from "@/components/DeleteModal";
+import EmptyState from "@/components/EmptyState";
+import SearchEmptyState from "@/components/SearchEmpty";
 import SearchField from "@/components/SearchField";
 import TableTemplate, { ColumnDefinition } from "@/components/TableTemplate";
-import UserModals from "@/components/UserModal";
-import { formatActionCell, formatNameCell, formatRoleCell, TableRowData } from "@/constants/tableFormats";
+import { Input } from "@/components/ui/input";
+import { formatActionCell, formatNameCell, TableRowData } from "@/constants/tableFormats";
 import { useUserStore } from "@/store/useUserStore";
-import { MessageSquare, PlusIcon } from "lucide-react";
+import { MessageSquare, Pencil, PlusIcon, Search, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { FaFacebook, FaInstagram, FaWhatsapp } from "react-icons/fa";
+import { toast } from "sonner";
 
 const channels = [
     {
@@ -37,7 +43,19 @@ const channels = [
 export default function Settings() {
 
     const handleEdit = (id: string) => console.log("Edit User ID:", id);
-    const handleDelete = (id: string) => console.log("Hapus User ID:", id);
+    
+    const handleDelete = async () => {
+        if (!selectedUser) return
+        try {
+        await deleteUser(selectedUser.id)
+        toast.success("Category deleted successfully")
+        } catch {
+        toast.error("Failed to delete category")
+        } finally {
+        closeDeleteModal()
+        }
+    }
+
     const {
         users, isLoading, fetchUsers, deleteUser,
         openEditModal, openAddModal,
@@ -45,33 +63,50 @@ export default function Settings() {
       } = useUserStore()
 
     // Definisi Kolom khusus untuk halaman issue category
-    const userColumns: ColumnDefinition[] = [
+    const categoryColumns: ColumnDefinition[] = useMemo(() => [
         { header: "NO", key: "id" },
         { header: "CATEGORIES", key: "category" },
         { 
-        header: "NAME OPD", 
-        key: "name", 
-        cell: (_, rowData) => formatNameCell(rowData as TableRowData) 
+            header: "NAME OPD", 
+            key: "name", 
+            cell: (_, rowData) => formatNameCell(rowData as TableRowData) 
         },
-        // { 
-        // header: "ROLE", 
-        // key: "role", 
-        // cell: (value) => formatRoleCell(value) 
-        // },
         { 
-        header: "ACTIONS", 
-        key: "actions", 
-        className: "text-center",
-        cell: (_, rowData) => formatActionCell(rowData as TableRowData, handleEdit, handleDelete)
+            header: "ACTIONS", 
+            key: "actions", 
+            className: "text-center pr-8 w-[150px]",
+            // cell: (_, rowData) => formatActionCell(rowData as TableRowData, handleEdit, handleDelete)
+            cell: (_, row) => (
+                <div className="flex justify-center gap-2 text-gray-400">
+                    <button onClick={() => openEditModal(row as User)} className="p-2 hover:bg-gray-100 rounded-md hover:text-[#14234b] transition-all">
+                    <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => openDeleteModal(row as User)} className="p-2 hover:bg-red-50 rounded-md hover:text-red-600 transition-all">
+                    <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+                ),
         },
-    ];
+    ], [openEditModal, openDeleteModal]);
 
     // contoh
-    const userData: TableRowData[] = [
-        { id: "1", category: "kesehatan", name: "budi wahyudi"},
-        { id: "2", category: "jalan raya", name: "tono sudibyo"},
-        { id: "3", category: "keamanan lingkungan", name: "amal hidayah"},
+    const categoryData: TableRowData[] = [
+        { id: "1", category: "kesehatan", name: "Dinas Kesehatan"},
+        { id: "2", category: "jalan raya", name: "Dinas Pekerjaan Umum"},
+        { id: "3", category: "keamanan lingkungan", name: "Dinas Lingkungan"},
+        { id: "4", category: "pendidikan masyarakat", name: "Dinas Pendidikan"},
+        { id: "5", category: "bantuan pangan", name: "Dinas Pangan"},
+        { id: "6", category: "lingkungan layak", name: "Dinas Lingkungan"},
     ];
+
+    const [searchQuery, setSearchQuery] = useState("")
+    
+    const filteredCategories = useMemo(() => {
+        return categoryData.filter((item) =>
+            (item.category || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.name || "").toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [searchQuery, categoryData]);
 
     return (
         <div className="grid grid-rows-[100px_1fr] gap-2.5 p-2">
@@ -112,19 +147,52 @@ export default function Settings() {
                 <div className=" flex flex-col gap-4">
                     <div className="flex flex-row justify-between items-center">
                         <h2 className="font-bold text-2xl text-[#041942]">Issue Categories</h2>
-                        <div className="flex flex-row gap-2 w-[40%]">
-                            <SearchField placeholder="Search" value="" onChange={() => {}}/>
+                        <div className="grid grid-cols-2 gap-2 w-[40%]">
+                            {/* <SearchField placeholder="Search" value="" onChange={() => {}}/> */}
+                            
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                <Input
+                                    placeholder="Search"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9 w-full border-[#D2D2D2] bg-white focus:bg-white focus:border-[#1D2F58] rounded-md h-10 text-sm transition-all"
+                                />
+                            </div>
+                            
                             <ButtonClick onClick={openAddModal} name="add category" type="button" icon={<PlusIcon size={16}/>}/>
                         </div>
                     </div>
 
                     <div className="bg-white p-4 rounded-lg shadow-sm shadow-black/40 overflow-hidden">
-                        <TableTemplate columns={userColumns} data={userData} />
+                        {/* <TableTemplate columns={categoryColumns} data={categoryData} /> */}
+
+                        <div className="w-full">
+                            {isLoading ? (
+                                <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading...</div>
+                            ) : filteredCategories.length > 0 ? (
+                                <TableTemplate columns={categoryColumns} data={filteredCategories as any}/>
+                            ) : searchQuery !== "" ? (
+                                <SearchEmptyState type="category" searchQuery={searchQuery} />
+                            ) : (
+                                <EmptyState
+                                title="No Category found"
+                                description={<>There is currently no data available. <br /> Please add new data to see it displayed here.</>}
+                                />
+                            )}
+                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <UserModals />
+            <CategoryModals />
+            <DeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={closeDeleteModal}
+                onConfirm={handleDelete}
+                itemName="category"
+            />
         </div>
     )
 }
