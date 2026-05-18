@@ -29,7 +29,7 @@ const ToastFrame = ({isSuccess, id, name,  process}: ToastFrameProps) => {
                     </div>
                 </div>
             ), {
-                duration: 2000,
+                duration: 2500,
                 position: 'top-center',
             });
         } else {
@@ -46,7 +46,7 @@ const ToastFrame = ({isSuccess, id, name,  process}: ToastFrameProps) => {
                     </div>
                 </div>
             ), {
-                duration: 2000,
+                duration: 2500,
                 position: 'top-center',
             });
         }

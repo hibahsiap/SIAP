@@ -104,7 +104,7 @@ export default function TicketsPage() {
   }, [activeTab, openEditModal, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-full max-w-full h-full p-2">
+    <div className="flex-1 w-full max-w-full h-full p-2 bg-white">
 
       {/* --- TABS & SEARCH HEADER --- */}
       <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
@@ -130,7 +130,7 @@ export default function TicketsPage() {
       </div>
 
       {/* --- AREA KONTEN (LOGIKA SWITCH) --- */}
-      <div className="w-full">
+      <div className="bg-red-400">
         {activeTab === 'kanban' ? (
           <KanbanBoard />
         ) : filteredData.length > 0 ? (
