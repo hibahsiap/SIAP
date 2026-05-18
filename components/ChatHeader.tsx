@@ -88,7 +88,7 @@ export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone:
 };
 
 // Forward Chat
-export const ForwardControl = () => {
+export const ForwardControl = ({ chatId, name }: { chatId: string, name: string }) => {
   const [selectedOPD, setSelectedOPD] = useState<string>("");
   const [triggerToast, setTriggerToast] = useState(false);
   const [isSuccess, setIsSuccess] = useState(true);
@@ -137,8 +137,9 @@ export const ForwardControl = () => {
         {triggerToast && (
           <ToastFrame 
             isSuccess={isSuccess} 
-            id="Budi P-0012" 
-            process={isSuccess ? "updated" : undefined} 
+            id={chatId} 
+            name={name}
+            process={isSuccess ? "forwarded" : undefined} 
           />
         )}
       </div>

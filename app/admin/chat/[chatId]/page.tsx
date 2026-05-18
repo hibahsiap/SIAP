@@ -24,7 +24,7 @@ export default async function ChatDetailPage({ params }: { params: Promise<{ cha
       
       <div className="flex-1 overflow-y-auto px-6 pb-24 custom-scrollbar">
 
-        <ForwardControl />
+        <ForwardControl chatId={chatId} name={chatInfo.name} />
         
         {/* Dummy Chat History */}
         <ChatBubble 
