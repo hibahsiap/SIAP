@@ -6,7 +6,7 @@ export interface ColumnDefinition {
     header: ReactNode;
     key: string;
     cell?: (value: any, rowData: TableRowData) => ReactNode; 
-    className?: string; // Ditambahin buat ngatur rata kiri/kanan/tengah
+    className?: string; 
 }
 
 interface TableTemplateProps {
@@ -16,7 +16,7 @@ interface TableTemplateProps {
 
 const TableTemplate = ({columns, data}: TableTemplateProps) => {
     return (
-        // Hapus w-250, ganti jadi w-full
+
         <div className="font-sans w-full"> 
             <div className="overflow-x-auto scrollbar-hide w-full">
                 <Table className="w-full">

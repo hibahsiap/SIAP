@@ -1,14 +1,17 @@
 "use client";
 
-import DeleteAlertModal from '@/components/DeleteModal';
-import EmptyState from '@/components/EmptyState';
-import Header from '@/components/Header';
-import SearchEmptyState from '@/components/SearchEmpty';
+import React, { useState, useMemo } from 'react';
+import Header from '@/components/Header'; 
 import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
-import { allTickets, aspirationTickets, pendingTickets } from '@/constants/ticketsDummy';
+import EmptyState from '@/components/EmptyState';
+import SearchEmptyState from '@/components/SearchEmpty';
+import DeleteAlertModal from '@/components/DeleteModal';
+import EditTicketModal from '@/components/EditTicketModal'; 
+import ForwardTicketModal from '@/components/ForwardTicketModal'; // Import modal baru
+import { Trash2, Edit2, Forward } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
-import { ArrowUpRight, Calendar, CircleChevronDown, Forward, Loader, Pencil, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
+import { toast } from "sonner"; // Opsional untuk notifikasi sukses
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
@@ -40,12 +43,16 @@ const getBadge = (text: string, type: 'issue' | 'priority') => {
   return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[text]}`}>{text}</span>;
 };
 
-type TabCategory = 'pending' | 'all' | 'aspirations';
+type TabCategory = 'pending' | 'all' | 'aspirations'; 
 
 export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState<TabCategory>('pending');
   const [searchQuery, setSearchQuery] = useState("");
-  const { openEditModal, openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
+  const { openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
+  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false); // State modal forward
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
 
   const currentData = useMemo(() => {
     if (activeTab === 'pending') return pendingTickets;
@@ -53,7 +60,6 @@ export default function TicketsPage() {
     return aspirationTickets;
   }, [activeTab]);
 
-  // Logika Pencarian
   const filteredData = useMemo(() => {
     return currentData.filter((item: any) => {
       const searchStr = searchQuery.toLowerCase();
@@ -62,11 +68,19 @@ export default function TicketsPage() {
     });
   }, [currentData, searchQuery]);
 
-  // Kolom dibuat dinamis berdasarkan Tab yang aktif
+  // Fungsi saat tombol MOVE di dalam modal diklik
+  const handleForwardConfirm = () => {
+    setIsForwardModalOpen(false);
+    toast.success("Ticket successfully forwarded to All Tickets");
+    // Di sini kamu bisa selipkan fungsi panggil API backend mu nanti, contoh:
+    // await forwardTicket(selectedTicket.id)
+  };
+
   const columns = useMemo<ColumnDefinition[]>(() => {
-    const messageColumn = { 
+    const messageColumn: ColumnDefinition = { 
       header: "Pesan Aspirasi", 
       key: "message", 
+      className: "text-center", 
       cell: (val: string) => (
         <span className="block w-full min-w-[250px] whitespace-normal break-words text-[12px] font-normal leading-relaxed text-justify text-[#1D2F58]">
           {val}
@@ -76,38 +90,39 @@ export default function TicketsPage() {
 
     if (activeTab === 'pending') {
       return [
-        { header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, key: "taskName", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
-        { header: <><ArrowUpRight className="w-4 h-4"/> OPD</>, key: "opd" },
-        { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
-        { header: <><CircleChevronDown className="w-4 h-4"/> Issue Type</>, key: "issueType", cell: (val) => getBadge(val, 'issue') },
-        { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
+        { header: "Title", key: "taskName", className: "text-center", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
+        { header: "OPD", key: "opd", className: "text-center" }, 
+        { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
+        { header: "Issue Type", key: "issueType", className: "text-center", cell: (val) => getBadge(val, 'issue') },
+        { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
         messageColumn,
-        { header: "Actions", key: "action", cell: (_, row) => (
+        { header: "Actions", key: "action", className: "text-center", cell: (_, row) => (
             <div className="flex items-center justify-center gap-4">
-              <button onClick={() => openEditModal(row)} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Pencil className="w-4 h-4" /></button>
-              <button className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Forward className="w-4 h-4" /></button>
+              <button onClick={() => { setSelectedTicket(row); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
+              {/* Hubungkan fungsi klik forward di sini */}
+              <button onClick={() => { setSelectedTicket(row); setIsForwardModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Forward className="w-4 h-4" /></button>
             </div>
           )
         }
       ];
     } else if (activeTab === 'all') {
       return [
-        { header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, key: "taskName", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
-        { header: <><ArrowUpRight className="w-4 h-4"/> OPD</>, key: "opd" },
-        { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
-        { header: <><CircleChevronDown className="w-4 h-4"/> Issue Type</>, key: "issueType", cell: (val) => getBadge(val, 'issue') },
-        { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
-        { header: <><Calendar className="w-4 h-4"/> Start date</>, key: "startDate" },
-        { header: <><Calendar className="w-4 h-4"/> Due date</>, key: "dueDate" },
+        { header: "Title", key: "taskName", className: "text-center", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
+        { header: "OPD", key: "opd", className: "text-center" }, 
+        { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
+        { header: "Issue Type", key: "issueType", className: "text-center", cell: (val) => getBadge(val, 'issue') },
+        { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
+        { header: "Star date", key: "startDate", className: "text-center" },
+        { header: "Due date", key: "dueDate", className: "text-center" },
         messageColumn
       ];
     } else {
       return [
-        { header: "Pengirim", key: "pengirim", cell: (val) => <span className="whitespace-normal min-w-[100px] inline-block font-bold">{val}</span> },
-        { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
-        { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
+        { header: "Pengirim", key: "pengirim", className: "text-center", cell: (val) => <span className="whitespace-normal min-w-[100px] inline-block font-bold">{val}</span> },
+        { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
+        { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
         messageColumn,
-        { header: "Action", key: "action", cell: (_, row) => (
+        { header: "Action", key: "action", className: "text-center", cell: (_, row) => (
             <button onClick={() => openDeleteModal(row)} className="text-gray-400 hover:text-red-500 transition-colors">
               <Trash2 className="w-4 h-4" />
             </button>
@@ -115,56 +130,66 @@ export default function TicketsPage() {
         }
       ];
     }
-  }, [activeTab, openEditModal, openDeleteModal]);
+  }, [activeTab, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-full max-w-full h-full p-2">
+    <div className="flex-1 w-full max-w-full h-full p-4 lg:p-8">
 
       {/* --- TABS & SEARCH HEADER --- */}
-      <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
-        <div className="flex gap-2">
-          {[
-            { id: 'pending', label: 'Pending Review' },
-            { id: 'all', label: 'All Tickets' },
-            { id: 'aspirations', label: 'Aspirations' }
-          ].map((tab) => (
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 py-4 mb-4">
+        <div className="flex flex-wrap gap-2">
+          {['pending', 'all', 'aspirations'].map((id) => (
             <button
-              key={tab.id}
-              onClick={() => { setActiveTab(tab.id as TabCategory); setSearchQuery(""); }}
-              className={`px-6 py-1.5 rounded-[12px] text-sm font-semibold transition-all duration-200 ${
-                activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border-2 border-[#F3F3F3]"
+              key={id}
+              onClick={() => { setActiveTab(id as TabCategory); setSearchQuery(""); }}
+              className={`px-5 h-[40px] flex items-center justify-center rounded-[12px] text-sm font-semibold transition-all duration-200 ${
+                activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
               }`}
             >
-              {tab.id.charAt(0).toUpperCase() + tab.id.slice(1)}
+              {id === 'pending' ? 'Pending Review' : id === 'all' ? 'All Tickets' : 'Aspirations'}
             </button>
           ))}
         </div>
-        <div className="w-auto">
+        <div className="w-full md:w-auto">
             <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> 
         </div>
       </div>
 
-      {/* --- AREA KONTEN (LOGIKA SWITCH) --- */}
+      {/* --- AREA KONTEN --- */}
       <div className="w-full">
         {filteredData.length > 0 ? (
-          <div className="overflow-x-auto w-full">
+          <div className="w-full">
             <TableTemplate2 columns={columns} data={filteredData as any} />
           </div>
         ) : searchQuery !== "" ? (
           <SearchEmptyState type={activeTab} />
         ) : (
           <EmptyState 
-            title={`There is currently no data available`} 
-            description="Please add new data to see it displayed here." 
+            title="No files found" 
+            description="There is currently no data available. Please add new data to see it displayed here." 
           />
         )}
       </div>
 
+      {/* Modals */}
       <DeleteAlertModal 
         isOpen={isDeleteModalOpen} 
         onClose={closeDeleteModal} 
         onConfirm={() => { closeDeleteModal(); }} 
         itemName={activeTab === 'aspirations' ? "aspiration message" : "task"} 
+      />
+
+      <EditTicketModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        ticketData={selectedTicket}
+      />
+
+      {/* Sisipkan pemanggilan modal forward baru di sini */}
+      <ForwardTicketModal 
+        isOpen={isForwardModalOpen}
+        onClose={() => setIsForwardModalOpen(false)}
+        onConfirm={handleForwardConfirm}
       />
       
     </div>

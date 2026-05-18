@@ -33,12 +33,11 @@ export default function SearchEmptyState({ searchQuery, type = 'pending' }: Sear
   }
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 w-full min-py-8 max-py-32 px-4 text-center bg-white rounded-xl">
+    <div className="flex flex-col items-center justify-center w-full min-h-[calc(100vh-240px)] px-4 text-center font-sans">
       
       {/* Wrapper Ilustrasi */}
-      <div className="relative flex items-center justify-center mb-8">
-        <div className="absolute w-40 h-32 bg-gray-100/50 rounded-full blur-xl transform -rotate-12"></div>
-        <div className="absolute w-32 h-32 bg-gray-50 rounded-[40px] transform rotate-12 right-[-20px] top-[-10px]"></div>
+      <div className="relative flex items-center justify-center mb-6">
+        <div className="absolute w-40 h-32 bg-gray-200/30 rounded-full blur-xl transform -rotate-12"></div>
         
         {/* Ikon Utama */}
         <IconComponent 
@@ -47,13 +46,13 @@ export default function SearchEmptyState({ searchQuery, type = 'pending' }: Sear
           className="text-gray-300 relative z-10" 
         />
         
-        {/* Hiasan Tanda Plus kecil di sekitar (seperti di gambarmu) */}
+        {/* Hiasan Tanda Plus kecil */}
         <span className="absolute top-0 left-[-20px] text-gray-300 text-xl font-light">+</span>
         <span className="absolute bottom-10 right-[-30px] text-gray-300 text-xl font-light">+</span>
       </div>
 
       <h3 className="text-[22px] font-bold text-gray-400 mb-2">{title}</h3>
-      <p className="text-[15px] text-gray-400 max-w-sm leading-relaxed">
+      <p className="text-[15px] text-gray-400 max-w-sm leading-relaxed font-medium">
         {description}
       </p>
     </div>
