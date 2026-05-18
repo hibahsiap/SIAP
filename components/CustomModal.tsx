@@ -7,16 +7,23 @@ interface CustomModalProps {
   title: string;
   children: ReactNode;
   isAlert?: boolean;
+  size?: 'sm' | 'md' | 'lg';  // default: 'md' (450px)
 }
 
-export default function CustomModal({ isOpen, onClose, title, children, isAlert = false }: CustomModalProps) {
+const sizeClass = {
+  sm: 'sm:max-w-[350px]',
+  md: 'sm:max-w-[450px]',
+  lg: 'sm:max-w-[540px]',
+}
+
+export default function CustomModal({ isOpen, onClose, title, children, isAlert = false, size = 'md' }: CustomModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
         className={
           isAlert 
             ? "sm:max-w-[400px] p-8 bg-white rounded-2xl flex flex-col items-center text-center" 
-            : "sm:max-w-[450px] p-6 bg-white rounded-xl"
+            : `${sizeClass[size]} p-6 bg-white rounded-xl`
         }
       >
         <DialogHeader className={isAlert ? "w-full flex flex-col items-center" : "mb-4"}>
