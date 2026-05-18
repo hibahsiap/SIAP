@@ -12,25 +12,29 @@ interface ChatItemProps {
   categoryColor: string;
   department: string;
   platform: 'whatsapp' | 'instagram';
-  flagColor: string; 
+  flagColor: string;
+  avatarUrl?: string | null;
   isActive?: boolean;
   unread?: boolean;
 }
 
-export const ChatItem = ({ 
-  name, message, time, status, statusColor, 
-  category, categoryColor, department, platform, flagColor, isActive, unread
+export const ChatItem = ({
+  name, message, time, status, statusColor,
+  category, categoryColor, department, platform, flagColor, avatarUrl, isActive, unread
 }: ChatItemProps) => {
+  const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D3B66&color=fff`;
   return (
     <div className={`p-4 border-b cursor-pointer transition-all ${isActive ? 'bg-blue-50' : 'bg-[#F9F9F9] hover:bg-gray-200/60'}`}>
       <div className="flex gap-3">
         {/* Avatar & Flag Area */}
         <div className="flex flex-col items-center flex-shrink-0">
-          <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200 relative mb-3">
-            <img 
-              src={`https://ui-avatars.com/api/?name=${name}&background=0D3B66&color=fff`} 
+          <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200 relative mb-3 bg-slate-100">
+            <img
+              src={avatarUrl || fallbackAvatar}
               alt={name}
-              className="object-cover"
+              referrerPolicy="no-referrer"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackAvatar; }}
+              className="w-full h-full object-cover"
             />
           </div>
           <Flag size={15} className={`${flagColor} fill-current`} />

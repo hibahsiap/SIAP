@@ -53,102 +53,197 @@ Deno.serve(async (req: Request) => {
         return new Response('Invalid object', { status: 400 })
       }
 
-      // Ambil channel Instagram dari DB
       const { data: channel } = await supabase
         .from('Channel')
-        .select('id')
+        .select('id, accessToken, accountId')
         .eq('platform', 'INSTAGRAM')
         .single()
 
       if (!channel) return new Response(JSON.stringify({ status: 'no channel' }), { status: 200 })
 
+      const igGraphVersion = Deno.env.get('INSTAGRAM_GRAPH_VERSION') ?? 'v25.0'
+
+      async function fetchIgProfile(psid: string): Promise<{
+        name?: string
+        username?: string
+        profilePicUrl?: string
+      }> {
+        if (!channel.accessToken) return {}
+        try {
+          const profileUrl =
+            `https://graph.instagram.com/${igGraphVersion}/${psid}` +
+            `?fields=name,username,profile_pic&access_token=${encodeURIComponent(channel.accessToken)}`
+          const res = await fetch(profileUrl)
+          if (!res.ok) {
+            const errText = await res.text()
+            console.warn(`[Webhook] Profile fetch failed for ${psid}: ${res.status} ${errText}`)
+            return {}
+          }
+          const data = await res.json()
+          return {
+            name: data.name,
+            username: data.username,
+            profilePicUrl: data.profile_pic,
+          }
+        } catch (err) {
+          console.warn(`[Webhook] Profile fetch error for ${psid}:`, err)
+          return {}
+        }
+      }
+
+      console.log(`[Webhook] Processing ${body.entry?.length ?? 0} entries`)
+
       for (const entry of body.entry ?? []) {
+        const messagingEvents = entry.messaging ?? []
+        console.log(`[Webhook] Entry ${entry.id} has ${messagingEvents.length} messaging event(s)`)
+
         // --- Direct Message ---
-        for (const event of entry.messaging ?? []) {
-          if (!event.message || event.message.is_echo) continue
+        for (const event of messagingEvents) {
+          if (!event.message) {
+            console.log('[Webhook] Skip: no message in event')
+            continue
+          }
+          if (event.message.is_echo) {
+            console.log('[Webhook] Skip: echo')
+            continue
+          }
 
-          const senderId: string = event.sender.id
+          const senderId: string = event.sender?.id ?? ''
+          if (!senderId) {
+            console.log('[Webhook] Skip: no sender.id')
+            continue
+          }
           const messageText: string = event.message.text ?? ''
+          console.log(`[Webhook] DM from ${senderId}: ${messageText.slice(0, 80)}`)
 
-          // Cari citizen berdasarkan Instagram handle
-          const { data: contact } = await supabase
+          // Cari CitizenContact berdasarkan PSID. maybeSingle = null saat 0 row, tanpa error palsu.
+          const { data: contact, error: contactSelErr } = await supabase
             .from('CitizenContact')
-            .select('citizenId')
+            .select('citizenId, username, profilePicUrl')
             .eq('platform', 'INSTAGRAM')
             .eq('handle', senderId)
-            .single()
+            .maybeSingle()
+
+          if (contactSelErr) {
+            console.error('[Webhook] Failed to query CitizenContact:', JSON.stringify(contactSelErr))
+            continue
+          }
 
           let citizenId: string
 
           if (contact) {
             citizenId = contact.citizenId
+
+            // Backfill username/profilePicUrl/displayName if missing
+            if (!contact.username || !contact.profilePicUrl) {
+              const profile = await fetchIgProfile(senderId)
+              const contactPatch: Record<string, string | null> = {}
+              if (!contact.username && profile.username) contactPatch.username = profile.username
+              if (!contact.profilePicUrl && profile.profilePicUrl) contactPatch.profilePicUrl = profile.profilePicUrl
+
+              if (Object.keys(contactPatch).length > 0) {
+                await supabase
+                  .from('CitizenContact')
+                  .update(contactPatch)
+                  .eq('platform', 'INSTAGRAM')
+                  .eq('handle', senderId)
+              }
+
+              if (profile.name) {
+                await supabase
+                  .from('Citizen')
+                  .update({ displayName: profile.name, updatedAt: new Date() })
+                  .eq('id', citizenId)
+              }
+            }
           } else {
-            // Buat citizen baru
-            const { data: newCitizen } = await supabase
+            const profile = await fetchIgProfile(senderId)
+            const displayName =
+              profile.name?.trim() ||
+              (profile.username ? `@${profile.username}` : 'Instagram User')
+
+            const { data: newCitizen, error: citizenErr } = await supabase
               .from('Citizen')
-              .insert({ displayName: 'Instagram User', createdAt: new Date(), updatedAt: new Date() })
+              .insert({ displayName, updatedAt: new Date() })
               .select('id')
               .single()
+            if (citizenErr || !newCitizen) {
+              console.error('[Webhook] Failed to insert Citizen:', JSON.stringify(citizenErr))
+              continue
+            }
+            citizenId = newCitizen.id
 
-            citizenId = newCitizen!.id
-
-            await supabase
-              .from('CitizenContact')
-              .insert({ platform: 'INSTAGRAM', handle: senderId, citizenId, createdAt: new Date() })
+            const { error: contactErr } = await supabase.from('CitizenContact').insert({
+              platform: 'INSTAGRAM',
+              handle: senderId,
+              username: profile.username ?? null,
+              profilePicUrl: profile.profilePicUrl ?? null,
+              citizenId,
+            })
+            if (contactErr) {
+              console.error('[Webhook] Failed to insert CitizenContact:', JSON.stringify(contactErr))
+              continue
+            }
           }
 
-          // Cari tiket aktif untuk citizen ini
-          const { data: ticket } = await supabase
-            .from('Ticket')
+          // Upsert Conversation (citizen × channel). Tickets are created manually by admin later.
+          const sentAt = event.timestamp ? new Date(event.timestamp) : new Date()
+          const now = new Date()
+
+          const { data: conv, error: convSelErr } = await supabase
+            .from('Conversation')
             .select('id')
             .eq('citizenId', citizenId)
             .eq('channelId', channel.id)
-            .in('status', ['TO_DO', 'IN_PROGRESS'])
-            .order('createdAt', { ascending: false })
-            .limit(1)
-            .single()
+            .maybeSingle()
 
-          let ticketId: string
+          if (convSelErr) {
+            console.error('[Webhook] Failed to query Conversation:', JSON.stringify(convSelErr))
+            continue
+          }
 
-          if (ticket) {
-            ticketId = ticket.id
+          let conversationId: string
+
+          if (conv) {
+            conversationId = conv.id
+            await supabase
+              .from('Conversation')
+              .update({ lastMessageAt: sentAt, updatedAt: now })
+              .eq('id', conversationId)
           } else {
-            // Buat tiket baru
-            const { count } = await supabase
-              .from('Ticket')
-              .select('*', { count: 'exact', head: true })
-
-            const ticketNumber = `TKT-${String((count ?? 0) + 1).padStart(5, '0')}`
-
-            const { data: newTicket } = await supabase
-              .from('Ticket')
+            const { data: newConv, error: convInsErr } = await supabase
+              .from('Conversation')
               .insert({
-                ticketNumber,
-                description: messageText || '[Media attachment]',
+                id: crypto.randomUUID(),
                 citizenId,
                 channelId: channel.id,
-                status: 'TO_DO',
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                lastMessageAt: sentAt,
+                updatedAt: now,
               })
               .select('id')
               .single()
-
-            ticketId = newTicket!.id
+            if (convInsErr || !newConv) {
+              console.error('[Webhook] Failed to insert Conversation:', JSON.stringify(convInsErr))
+              continue
+            }
+            conversationId = newConv.id
           }
 
-          // Simpan pesan
-          await supabase.from('Message').insert({
+          // Simpan pesan ke conversation
+          const { error: msgErr } = await supabase.from('Message').insert({
+            id: crypto.randomUUID(),
             content: messageText || '[Media attachment]',
             senderType: 'WARGA',
             direction: 'INBOUND',
-            ticketId,
-            sentAt: new Date(event.timestamp),
+            conversationId,
+            sentAt,
             isInternal: false,
             isApproved: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            updatedAt: now,
           })
+          if (msgErr) {
+            console.error('[Webhook] Failed to insert Message:', JSON.stringify(msgErr))
+          }
         }
 
         // --- Comment & Mention ---
@@ -164,18 +259,16 @@ Deno.serve(async (req: Request) => {
           const capturedAt = val.timestamp ? new Date(val.timestamp * 1000) : new Date()
           const interactionType = field === 'mentions' ? 'MENTION' : 'COMMENT'
 
-          // Deduplikasi — skip jika comment ID sudah ada
           const { data: existing } = await supabase
             .from('SocialInteraction')
             .select('id')
             .eq('channelId', channel.id)
             .eq('externalId', commentId)
-            .single()
+            .maybeSingle()
 
           if (existing) continue
 
           const { error: insertError } = await supabase.from('SocialInteraction').insert({
-            id: crypto.randomUUID(),
             interactionType,
             externalId: commentId,
             username,
@@ -195,14 +288,12 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // Meta butuh response 200 dalam 20 detik
       return new Response(JSON.stringify({ status: 'ok' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       })
     } catch (err) {
       console.error('[Webhook Error]', err)
-      // Tetap return 200 agar Meta tidak terus retry
       return new Response(JSON.stringify({ status: 'error' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },

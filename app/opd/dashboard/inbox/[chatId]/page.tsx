@@ -1,59 +1,161 @@
+"use client";
+
 import { ChatBubble } from "@/components/ChatBubble";
-import { ChatHeader, ForwardControl } from "@/components/ChatHeader";
-import { chatData } from "@/constants/chatData";
+import { ChatHeader } from "@/components/ChatHeader";
+import { useInboxStore } from "@/store/useInboxStore";
 import { Plus, SendHorizontal } from "lucide-react";
+import { useEffect, useRef, useState, use } from "react";
 
-export default async function ChatDetailPage({ params }: { params: Promise<{ chatId: string }>}) {
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 
-    const resolvedParams = await params;
-    const chatId = resolvedParams.chatId;
+export default function ChatDetailPage({
+  params,
+}: {
+  params: Promise<{ chatId: string }>;
+}) {
+  const { chatId } = use(params);
 
-    console.log("Tipe chatData:", typeof chatData, Array.isArray(chatData));
-    console.log("Isi chatData:", chatData);
-    const chatInfo = chatData.find((c) => c.id === chatId);
+  const {
+    current,
+    isLoadingDetail,
+    detailError,
+    fetchConversation,
+    sendMessage,
+    isSending,
+    sendError,
+  } = useInboxStore();
 
-    if (!chatInfo) return (
-        <div className="flex-1 flex items-center justify-center text-gray-400">
-            Pilih pesan untuk memulai percakapan
-        </div>
+  const [draft, setDraft] = useState("");
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    fetchConversation(chatId);
+  }, [chatId, fetchConversation]);
+
+  useEffect(() => {
+    if (scrollerRef.current) {
+      scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
+    }
+  }, [current?.messages.length]);
+
+  const handleSend = async () => {
+    const text = draft.trim();
+    if (!text || isSending) return;
+    setDraft("");
+    await sendMessage(chatId, text);
+  };
+
+  if (isLoadingDetail && !current) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-400">
+        Loading conversation…
+      </div>
     );
+  }
+
+  if (detailError) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-red-500">
+        {detailError}
+      </div>
+    );
+  }
+
+  if (!current) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-400">
+        Pilih pesan untuk memulai percakapan
+      </div>
+    );
+  }
+
+  const phone = current.citizen.username
+    ? `${current.citizen.platform} · @${current.citizen.username}`
+    : current.channel.platform;
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#F9F9F9] relative">
-      <ChatHeader chatId={chatId} name={chatInfo.name} phone="085123456789" role="OPD" />
-      
-      <div className="flex-1 overflow-y-auto px-6 pb-24 pt-4 custom-scrollbar">
-        
-        {/* Dummy Chat History */}
-        <ChatBubble 
-            message="Lorem ipsum dolor sit amet consectetur. Est urna quam ornare egestas." 
-            time="10:45 AM" 
-        />
-        <ChatBubble 
-            message="Lorem ipsum dolor sit amet consectetur. Non morbi ultrices tempor fames." 
-            time="11:05 AM" 
-            isSender 
-        />
-        <ChatBubble 
-            message="Ut sociis egestas a amet. Sed porttitor blandit ullamcorper tempor eu pretium dui nibh." 
-            time="10:48 AM" 
-            isOPD 
-            senderName="OPD (Sekretariat Daerah)"
-        />
+      <ChatHeader
+        chatId={current.id}
+        name={current.citizen.name}
+        phone={phone}
+        role="OPD"
+        avatarUrl={current.citizen.profilePicUrl}
+      />
+
+      <div ref={scrollerRef} className="flex-1 overflow-y-auto px-6 pb-24 pt-4 custom-scrollbar">
+        {current.messages.length === 0 ? (
+          <div className="text-center text-gray-400 text-sm py-10">
+            Belum ada pesan.
+          </div>
+        ) : (
+          current.messages.map((m) => {
+            const time = formatTime(m.at);
+            if (m.direction === "INBOUND") {
+              return (
+                <ChatBubble
+                  key={m.id}
+                  message={m.content}
+                  time={time}
+                  senderName={current.citizen.name}
+                  avatar={current.citizen.profilePicUrl}
+                />
+              );
+            }
+            if (m.senderType === "OPD") {
+              return (
+                <ChatBubble
+                  key={m.id}
+                  message={m.content}
+                  time={time}
+                  isOPD
+                  senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
+                />
+              );
+            }
+            return (
+              <ChatBubble
+                key={m.id}
+                message={m.content}
+                time={time}
+                isSender
+                senderName={m.sender?.name ?? "Admin"}
+              />
+            );
+          })
+        )}
       </div>
 
-      {/* Input Area */}
       <div className="absolute bottom-0 left-0 w-full p-4 bg-[#F9F9F9]">
+        {sendError && (
+          <div className="text-xs text-red-500 mb-2 px-2">{sendError}</div>
+        )}
         <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-full px-4 py-2">
-          <button className="text-gray-400 hover:text-slate-600">
+          <button className="text-gray-400 hover:text-slate-600" type="button">
             <Plus size={20} />
           </button>
-          <input 
-            type="text" 
-            placeholder="Type a response..." 
+          <input
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder="Type a response..."
             className="flex-1 bg-transparent outline-none text-sm"
+            disabled={isSending}
           />
-          <button className="bg-[#1e293b] p-2 rounded-full text-white">
+          <button
+            onClick={handleSend}
+            disabled={isSending || !draft.trim()}
+            className="bg-[#1e293b] p-2 rounded-full text-white disabled:opacity-50"
+            type="button"
+          >
             <SendHorizontal size={18} />
           </button>
         </div>

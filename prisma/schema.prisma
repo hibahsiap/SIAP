@@ -39,24 +39,27 @@ model User {
 }
 
 model Citizen {
-  id          String           @id @default(uuid())
-  displayName String
-  nik         String?
-  region      String?
-  isBlocked   Boolean          @default(false)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  contacts    CitizenContact[]
-  tickets     Ticket[]
+  id            String           @id @default(uuid())
+  displayName   String
+  nik           String?
+  region        String?
+  isBlocked     Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  contacts      CitizenContact[]
+  tickets       Ticket[]
+  conversations Conversation[]
 }
 
 model CitizenContact {
-  id        String          @id @default(uuid())
-  platform  ChannelPlatform
-  handle    String
-  citizenId String
-  createdAt DateTime        @default(now())
-  citizen   Citizen         @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  id            String          @id @default(uuid())
+  platform      ChannelPlatform
+  handle        String
+  username      String?
+  profilePicUrl String?
+  citizenId     String
+  createdAt     DateTime        @default(now())
+  citizen       Citizen         @relation(fields: [citizenId], references: [id], onDelete: Cascade)
 
   @@unique([citizenId, platform])
 }
@@ -71,6 +74,23 @@ model Channel {
   updatedAt          DateTime            @updatedAt
   socialInteractions SocialInteraction[]
   tickets            Ticket[]
+  conversations      Conversation[]
+}
+
+model Conversation {
+  id            String    @id @default(uuid())
+  citizenId     String
+  channelId     String
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  citizen       Citizen   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  channel       Channel   @relation(fields: [channelId], references: [id])
+  messages      Message[]
+  ticket        Ticket?
+
+  @@unique([citizenId, channelId])
+  @@index([lastMessageAt])
 }
 
 model Category {
@@ -96,6 +116,7 @@ model Ticket {
   type              TicketType?
   citizenId         String
   channelId         String
+  conversationId    String?              @unique
   categoryId        String?
   assignedOpdId     String?
   startDate         DateTime?
@@ -112,6 +133,7 @@ model Ticket {
   category          Category?            @relation(fields: [categoryId], references: [id])
   channel           Channel              @relation(fields: [channelId], references: [id])
   citizen           Citizen              @relation(fields: [citizenId], references: [id])
+  conversation      Conversation?        @relation(fields: [conversationId], references: [id])
   progress          TicketProgress[]
   verifications     TicketVerification[]
 
@@ -167,24 +189,27 @@ model Approval {
 }
 
 model Message {
-  id           String           @id @default(uuid())
-  content      String
-  senderType   SenderType
-  direction    MessageDirection
-  isInternal   Boolean          @default(false)
-  isApproved   Boolean          @default(true)
-  sentAt       DateTime?
-  ticketId     String
-  senderUserId String?
-  approvalId   String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  attachments  Attachment[]
-  approval     Approval?        @relation(fields: [approvalId], references: [id])
-  senderUser   User?            @relation(fields: [senderUserId], references: [id])
-  ticket       Ticket           @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  id             String           @id @default(uuid())
+  content        String
+  senderType     SenderType
+  direction      MessageDirection
+  isInternal     Boolean          @default(false)
+  isApproved     Boolean          @default(true)
+  sentAt         DateTime?
+  ticketId       String?
+  conversationId String?
+  senderUserId   String?
+  approvalId     String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  attachments    Attachment[]
+  approval       Approval?        @relation(fields: [approvalId], references: [id])
+  senderUser     User?            @relation(fields: [senderUserId], references: [id])
+  ticket         Ticket?          @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  conversation   Conversation?    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
+  @@index([conversationId])
   @@index([createdAt])
 }
 

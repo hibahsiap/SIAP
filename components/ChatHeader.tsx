@@ -7,7 +7,7 @@ import ToastFrame from "./ToastFrame";
 import ReturnAdminButton from "./ReturnAdminButton";
 import { DUMMY_TASK } from "@/constants/taskDummy";
 
-export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone: string, role: 'ADMIN' | 'OPD', chatId: string }) => {
+export const ChatHeader = ({ name, phone, role, chatId, avatarUrl }: { name: string, phone: string, role: 'ADMIN' | 'OPD', chatId: string, avatarUrl?: string | null }) => {
   const [urgency, setUrgency] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
@@ -39,8 +39,23 @@ export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone:
   return (
     <div className="p-4 border-b flex justify-between items-center">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold">
-          {name.charAt(0)}
+        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-800 flex items-center justify-center text-white font-bold flex-shrink-0">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt={name}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const t = e.currentTarget as HTMLImageElement;
+                t.style.display = 'none';
+                (t.parentElement as HTMLElement).textContent = name.charAt(0);
+              }}
+            />
+          ) : (
+            name.charAt(0)
+          )}
         </div>
         <div>
           <h3 className="font-bold text-slate-900 leading-tight">{name}</h3>
