@@ -16,14 +16,14 @@ interface TableTemplateProps<T = Record<string, any>> {
 
 const TableTemplate = <T extends Record<string, any>>({columns, data, position}: TableTemplateProps<T>) => {
     return (
-        <div>
+        <div className={`w-full max-h-[450px] overflow-y-auto relative custom-scrollbar`}>
             <Table>
                 <TableHeader className="bg-[#F3F3F3]">
                     <TableRow>
                         {columns.map((col) => (
                             <TableHead 
                                 key={col.key} 
-                                className={`uppercase text-[#546064] font-semibold tracking-wide h-12 ${position || ""} ${col.className || ""}`}
+                                className={`uppercase sticky top-0 z-20 bg-[#F3F3F3] text-[#546064] font-semibold tracking-wide h-12 ${position || ""} ${col.className || ""}`}
                             >
                                 {col.header}
                             </TableHead>

@@ -1,8 +1,8 @@
-import { ClipboardX, TicketX, MessageSquareX, UserX } from 'lucide-react';
+import { ClipboardX, TicketX, MessageSquareX, UserX, SearchX } from 'lucide-react';
 
 interface SearchEmptyStateProps {
   searchQuery?: string;
-  type?: 'kanban' | 'pending' | 'all' | 'aspirations' | 'user';
+  type?: 'kanban' | 'pending' | 'all' | 'aspirations' | 'user' | 'opd' | 'category';
 }
 
 export default function SearchEmptyState({ searchQuery, type = 'pending' }: SearchEmptyStateProps) {
@@ -22,6 +22,14 @@ export default function SearchEmptyState({ searchQuery, type = 'pending' }: Sear
     IconComponent = UserX;
     title = "No Users Found";
     description = "We couldn't find any users matching your search criteria.";
+  } else if (type === 'opd') { 
+    IconComponent = UserX;
+    title = "No OPD Found";
+    description = "We couldn't find any OPD matching your search criteria.";
+  } else if (type === 'category') { 
+    IconComponent = SearchX;
+    title = "No Categories Found";
+    description = "We couldn't find any category matching your search criteria.";
   }
 
   return (
