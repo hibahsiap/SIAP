@@ -50,6 +50,11 @@ const Login = () => {
 
             const data = await res.json();
             const userRole = data.user?.role
+
+            // Simpan role agar bisa diakses di halaman NotFound)
+            if (userRole) {
+                localStorage.setItem("userRole", userRole);
+            }
             
             if (userRole === "ADMIN") {
                 router.push("admin/chat");

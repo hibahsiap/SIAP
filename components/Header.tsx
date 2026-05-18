@@ -22,14 +22,15 @@ export default function Header({ searchQuery, setSearchQuery }: HeaderProps) {
         />
       </div>
 
-      <Button variant="outline" className="flex items-center gap-2 border-[#D2D2D2] text-[#6B7280] h-10 hover:bg-gray-50">
+      <Button variant="outline" className="flex items-center gap-2 border-[#D2D2D2] text-[#6B7280] h-[40px] min-h-[40px] rounded-lg hover:bg-gray-50">
         <Filter className="h-4 w-4" />
         Filter
       </Button>
 
       <Select defaultValue="newest">
-        <SelectTrigger className="w-[180px] border-[#D2D2D2] text-[#6B7280] h-10 flex justify-between items-center px-4 focus:ring-0">
-          <div className="flex gap-1">
+        {/* Tambahkan h-[40px] dan min-h-[40px] di sini buat override bawaan Shadcn */}
+        <SelectTrigger className="w-[180px] border-[#D2D2D2] text-[#6B7280] h-[40px] min-h-[40px] flex justify-between items-center px-4 focus:ring-0 rounded-lg">
+          <div className="flex items-center gap-1">
             <span className="text-[#6B7280]">Sorted by:</span>
             <span className="font-semibold text-gray-900"><SelectValue placeholder="Sort" /></span>
           </div>

@@ -15,14 +15,19 @@ import TaskHeader from "@/components/TaskHeader"
 import TaskInfoRow from "@/components/TaskInfo"
 import TaskImagePreview from "@/components/ImagePreview"
 import TaskGallery from "@/components/TaskGallery"
-import StatusBadge from "@/components/StatusBadge"
-import IssueTypeBadge from "@/components/IssueBadge"
-import PriorityBadge from "@/components/PriorityBadge"
 import ReturnAdminModal from "@/components/ReturnAdminModal"
+import CustomModal from "@/components/CustomModal"
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 import { useReturnStore } from "@/store/useReturnStore"
 import { formatDate } from "@/lib/formatdate"
 import type { Task } from "@/types/task"
+import type { TaskStatus } from "@/components/StatusBadge"
+import type { IssueType } from "@/components/IssueBadge"
+import type { Priority } from "@/components/PriorityBadge"
 
 type Props = {
   task: Task
@@ -31,8 +36,36 @@ type Props = {
 export default function TaskDetailContent({ task }: Props) {
   const openReturnModal = useReturnStore((state) => state.open)
 
-  // 2. Buat state lokal untuk galeri, nilai awalnya dari task.gallery
+  // 1. State Edit Properties (Status, Issue, Priority)
+  const [status, setStatus] = useState<TaskStatus>(task.status)
+  const [issueType, setIssueType] = useState<IssueType>(task.issueType)
+  const [priority, setPriority] = useState<Priority>(task.priority)
+  
+  // 2. End Date State (Awalnya kosong kalau belum Done/Cancelled)
+  const [endDate, setEndDate] = useState<string>(
+    (task.status === "completed" || task.status === "cancelled") ? task.dueDate : ""
+  )
+
+  // 3. Gallery State
   const [galleryImages, setGalleryImages] = useState<string[]>(task.gallery || [])
+
+  // 4. Modals State
+  const [isAddImageOpen, setIsAddImageOpen] = useState(false)
+  const [newImageUrl, setNewImageUrl] = useState("")
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+  // -- LOGIC --
+
+  // Automatis isi End Date ke 'hari ini' kalau status Completed (Done) atau Cancelled
+  const handleStatusChange = (newStatus: TaskStatus) => {
+    setStatus(newStatus)
+    if (newStatus === "completed" || newStatus === "cancelled") {
+      const today = new Date().toISOString().split("T")[0]
+      setEndDate(today)
+    } else {
+      setEndDate("")
+    }
+  }
 
   const handleReturnClick = () => {
     openReturnModal(task.id)
@@ -43,16 +76,22 @@ export default function TaskDetailContent({ task }: Props) {
     await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
+  // Modal Add Image Logic
   const handleAddImage = () => {
-    // 3. Logika untuk nambah gambar ke UI
-    const newDummyImage = "/lubang1.jpg" // Sesuaikan dengan path gambar dummymu
-    
-    setGalleryImages((prevImages) => [...prevImages, newDummyImage])
-    console.log("Image added to gallery!")
+    setIsAddImageOpen(true)
   }
 
-  const handleImageClick = (index: number) => {
-    console.log("Image clicked:", index)
+  const submitNewImage = () => {
+    if (newImageUrl.trim()) {
+      setGalleryImages((prev) => [...prev, newImageUrl])
+      setNewImageUrl("")
+      setIsAddImageOpen(false)
+    }
+  }
+
+  // Logic membesarkan foto (Preview Lightbox)
+  const handleImageClick = (src: string) => {
+    setPreviewImage(src)
   }
 
   return (
@@ -71,51 +110,122 @@ export default function TaskDetailContent({ task }: Props) {
             <p className="leading-relaxed text-gray-700">{task.aspirasi}</p>
           </TaskInfoRow>
 
+          {/* Menambahkan aksi klik pada TaskImagePreview */}
           <TaskInfoRow icon={ImageIcon} label="Image" alignTop>
             <TaskImagePreview
               images={task.images}
-              onImageClick={handleImageClick}
+              onImageClick={(idx: number) => handleImageClick(task.images[idx])}
             />
           </TaskInfoRow>
 
           <div className="h-px bg-gray-100" />
 
+          {/* Edit Status */}
           <TaskInfoRow icon={Loader} label="Status">
-            <StatusBadge status={task.status} />
+            <Select value={status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
+                <SelectValue placeholder="Pilih Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed / Done</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
           </TaskInfoRow>
 
+          {/* Edit Issue Type */}
           <TaskInfoRow icon={CircleChevronDown} label="Issue Type">
-            <IssueTypeBadge type={task.issueType} />
+            <Select value={issueType} onValueChange={(val) => setIssueType(val as IssueType)}>
+              <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
+                <SelectValue placeholder="Pilih Issue Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="health">Health</SelectItem>
+                <SelectItem value="infrastructure">Infrastructure</SelectItem>
+                <SelectItem value="education">Education</SelectItem>
+                <SelectItem value="social">Social</SelectItem>
+                <SelectItem value="environment">Environment</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </TaskInfoRow>
 
+          {/* OPD (Tetap statis sesuai desain) */}
           <TaskInfoRow icon={Building2} label="OPD">
-            <span className="text-gray-700">{task.opd}</span>
+            <span className="text-gray-700 font-medium">{task.opd}</span>
           </TaskInfoRow>
 
+          {/* Edit Priority */}
           <TaskInfoRow icon={CircleChevronDown} label="Priority">
-            <PriorityBadge priority={task.priority} />
+            <Select value={priority} onValueChange={(val) => setPriority(val as Priority)}>
+              <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
+                <SelectValue placeholder="Pilih Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
           </TaskInfoRow>
 
           <TaskInfoRow icon={Calendar} label="Start Date">
             <span className="text-gray-700">{formatDate(task.startDate)}</span>
           </TaskInfoRow>
 
-          <TaskInfoRow icon={Calendar} label="Due Date">
-            <span className="text-gray-700">{formatDate(task.dueDate)}</span>
+          {/* Sudah diubah labelnya jadi End Date dan isinya dinamis */}
+          <TaskInfoRow icon={Calendar} label="End Date">
+            <span className="text-gray-700 font-medium">
+              {endDate ? formatDate(endDate) : "-"}
+            </span>
           </TaskInfoRow>
         </div>
 
-        {/* 4. Gunakan state galleryImages di sini, BUKAN task.gallery */}
         <div className="border-t border-gray-100 pt-6">
           <TaskGallery
             images={galleryImages} 
             onAddImage={handleAddImage}
-            onImageClick={handleImageClick}
+            onImageClick={(idx: number) => handleImageClick(galleryImages[idx])}
           />
         </div>
       </div>
 
       <ReturnAdminModal onConfirm={handleConfirmReturn} />
+
+      {/* --- MODAL ADD IMAGE --- */}
+      <CustomModal isOpen={isAddImageOpen} onClose={() => setIsAddImageOpen(false)} title="Add Image">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Image URL</label>
+            <Input 
+              placeholder="Paste URL gambar (misal: https://...)" 
+              value={newImageUrl} 
+              onChange={(e) => setNewImageUrl(e.target.value)} 
+            />
+          </div>
+          <div className="flex gap-3 justify-end mt-6">
+            <Button variant="outline" onClick={() => setIsAddImageOpen(false)} className="bg-gray-100 border-0">Cancel</Button>
+            <Button onClick={submitNewImage} className="bg-[#1a233a] text-white">Upload</Button>
+          </div>
+        </div>
+      </CustomModal>
+
+      {/* --- MODAL PREVIEW IMAGE (FOTO MENJADI BESAR) --- */}
+      <CustomModal isOpen={!!previewImage} onClose={() => setPreviewImage(null)} title="Image Preview" size="lg">
+        <div className="flex items-center justify-center p-2">
+          {previewImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img 
+              src={previewImage} 
+              alt="Preview" 
+              className="max-h-[70vh] w-auto max-w-full rounded-lg object-contain shadow-sm" 
+            />
+          )}
+        </div>
+      </CustomModal>
     </>
   )
 }
