@@ -33,7 +33,7 @@ export default function SearchEmptyState({ searchQuery, type = 'pending' }: Sear
   }
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 w-full py-32 px-4 text-center bg-white rounded-xl">
+    <div className="flex flex-col items-center justify-center flex-1 w-full min-py-8 max-py-32 px-4 text-center bg-white rounded-xl">
       
       {/* Wrapper Ilustrasi */}
       <div className="relative flex items-center justify-center mb-8">
