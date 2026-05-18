@@ -63,6 +63,7 @@ Deno.serve(async (req: Request) => {
       if (!channel) return new Response(JSON.stringify({ status: 'no channel' }), { status: 200 })
 
       for (const entry of body.entry ?? []) {
+        // --- Direct Message ---
         for (const event of entry.messaging ?? []) {
           if (!event.message || event.message.is_echo) continue
 
@@ -148,6 +149,49 @@ Deno.serve(async (req: Request) => {
             createdAt: new Date(),
             updatedAt: new Date(),
           })
+        }
+
+        // --- Comment & Mention ---
+        for (const change of entry.changes ?? []) {
+          const field: string = change.field
+          if (field !== 'comments' && field !== 'mentions') continue
+
+          const val = change.value
+          const commentId: string = val.id
+          const username: string = val.from?.username ?? val.from?.id ?? 'unknown'
+          const content: string = val.text ?? '[no text]'
+          const mediaId: string = val.media?.id ?? ''
+          const capturedAt = val.timestamp ? new Date(val.timestamp * 1000) : new Date()
+          const interactionType = field === 'mentions' ? 'MENTION' : 'COMMENT'
+
+          // Deduplikasi — skip jika comment ID sudah ada
+          const { data: existing } = await supabase
+            .from('SocialInteraction')
+            .select('id')
+            .eq('channelId', channel.id)
+            .eq('externalId', commentId)
+            .single()
+
+          if (existing) continue
+
+          const { error: insertError } = await supabase.from('SocialInteraction').insert({
+            id: crypto.randomUUID(),
+            interactionType,
+            externalId: commentId,
+            username,
+            content,
+            permalink: mediaId ? `https://www.instagram.com/p/${mediaId}/` : null,
+            isTicketCreated: false,
+            channelId: channel.id,
+            capturedAt,
+          })
+
+          if (insertError) {
+            console.error(`[Webhook] Failed to insert ${interactionType}:`, JSON.stringify(insertError))
+            continue
+          }
+
+          console.log(`[Webhook] ${interactionType} saved: ${commentId} from @${username}`)
         }
       }
 
