@@ -223,14 +223,14 @@ export default function KanbanBoard() {
   };
  
   return (
-    <div className="w-[80%] mb-4 flex flex-col gap-4 -mt-2 relative bg-green-400">
+    <div className=" mb-4 flex flex-col gap-4 -mt-2 relative">
       <div className="flex gap-1 justify-end items-center">
         <p className='font-semibold text-xs'>Scroll</p>
         <ArrowRight size={16}/>
       </div>
-      <div className="overflow-x-auto custom-scrollbar bg-blue-300">
+      <div className="w-full overflow-x-auto custom-scrollbar">
           
-          <div className="flex gap-4 w-300 mb-2">
+          <div className="flex gap-4 w-250 mb-2">
             {columns.map((column) => (
               <div
                 key={column.id}
