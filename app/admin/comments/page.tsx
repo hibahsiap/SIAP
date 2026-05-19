@@ -21,6 +21,14 @@ export default function SocialInteractionsPage() {
   const commentsData = [
     { id: "1", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
     { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
+    { id: "2", time: "2/27/2026 9:55:48 AM", username: "siti.pdkeotuiewj", message: "Coba isi pesan ini lagi", destination: "diskominfo_karanganyar" },
   ];
 
   const mentionsData = [

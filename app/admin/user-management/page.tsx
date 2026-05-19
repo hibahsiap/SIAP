@@ -11,6 +11,7 @@ import EmptyState from "@/components/EmptyState"
 import SearchEmptyState from "@/components/SearchEmpty"
 import { useUserStore, User } from "@/store/useUserStore"
 import { toast } from "sonner"
+import { Pagination } from "@/components/Paginations"
 
 function getInitials(name: string) {
   return name
@@ -29,6 +30,8 @@ export default function UserManagementPage() {
   } = useUserStore()
 
   const [searchQuery, setSearchQuery] = useState("")
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5
 
   useEffect(() => {
     fetchUsers()
@@ -41,6 +44,17 @@ export default function UserManagementPage() {
         user.email.toLowerCase().includes(searchQuery.toLowerCase())
     )
   }, [searchQuery, users])
+
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const handleDelete = async () => {
     if (!selectedUser) return
@@ -143,7 +157,7 @@ export default function UserManagementPage() {
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading...</div>
           ) : filteredUsers.length > 0 ? (
-            <TableTemplate columns={columns} data={filteredUsers as any} />
+            <TableTemplate columns={columns} data={paginatedUsers as any} />
           ) : searchQuery !== "" ? (
             <SearchEmptyState type="user" searchQuery={searchQuery} />
           ) : (
@@ -159,15 +173,15 @@ export default function UserManagementPage() {
           )}
         </div>
 
-        <div className="flex items-center justify-between px-8 py-5 border-t border-gray-200 bg-white mt-auto rounded-b-lg">
-          <p className="text-sm text-gray-500 font-medium">
-            Showing <span className="font-bold text-gray-900">{filteredUsers.length}</span> of <span className="font-bold text-gray-900">{users.length}</span> registered users
-          </p>
-          <div className="flex gap-1.5">
-            <Button variant="outline" size="icon" className="w-9 h-9 rounded-md text-gray-400 border-gray-200">{"<"}</Button>
-            <Button variant="default" size="icon" className="w-9 h-9 rounded-md bg-[#1a233a] text-white font-semibold">1</Button>
-            <Button variant="outline" size="icon" className="w-9 h-9 rounded-md text-gray-400 border-gray-200">{">"}</Button>
-          </div>
+        {/* Pagination */}
+        <div className="mt-auto">
+          <Pagination
+            totalItems={filteredUsers.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+          />
+
         </div>
       </div>
 
