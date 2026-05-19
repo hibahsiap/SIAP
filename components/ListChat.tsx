@@ -93,7 +93,7 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
                             <Link href={`/admin/chat/${chat.id}`} key={chat.id}>
                                 <ChatItem 
                                     {...chat}
-                                    isActive={pathname === `/chat/${chat.id}`} 
+                                    isActive={pathname === `/admin/chat/${chat.id}`} 
                                 />
                             </Link>
                         ))
@@ -102,7 +102,7 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
                             <Link href={`/opd/inbox/${chat.id}`} key={chat.id}>
                                 <ChatItem 
                                     {...chat}
-                                    isActive={pathname === `/inbox/${chat.id}`} 
+                                    isActive={pathname === `/opd/inbox/${chat.id}`} 
                                 />
                             </Link>
                         ))

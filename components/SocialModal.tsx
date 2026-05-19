@@ -10,7 +10,7 @@ import DeleteModal from "@/components/DeleteModal";
 
 export default function SocialTicketModal() {
   const { isCreateTicketModalOpen, closeCreateTicketModal, isDeleteModalOpen, closeDeleteModal, selectedItem, context } = InteractionStore();
-  const formattedItemName = context === 'comments' ? 'comment' : 'mention';
+  const formattedItemName = context === 'comments' ? 'comment' : context === 'mentions' ? 'mentions' : 'message';
 
   const handleConfirmDelete = () => {
     if (!selectedItem) return;
@@ -23,7 +23,7 @@ export default function SocialTicketModal() {
       <CustomModal 
         isOpen={isCreateTicketModalOpen} 
         onClose={closeCreateTicketModal} 
-        title={`Create New Ticket from ${context === 'comments' ? 'Comments' : 'Mentions'}`}
+        title={`Create New Ticket from ${context === 'comments' ? 'Comments' : context === 'mentions' ? 'Mentions' : 'Message'}`}
         size="lg"
       >
         <div className="space-y-4">

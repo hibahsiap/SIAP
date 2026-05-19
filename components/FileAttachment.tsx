@@ -41,17 +41,17 @@ export default function FileAttachment({ isOpen, onClose, onFileSelect }: Props)
 
   return (
     // Wrapper pop-up dengan absolute positioning
-    <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-gray-100 bg-white p-2 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+    <div className="flex flex-col rounded-[8px] border border-gray-100 bg-white p-1 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
       
       {/* Tombol Document */}
       <button
         onClick={handleDocumentClick}
-        className="flex w-full items-center gap-4 rounded-xl p-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+        className="flex w-full items-center gap-2 rounded-[4px] p-3 text-left transition-colors hover:bg-gray-200/70 active:bg-gray-200/70"
       >
         <div className="text-gray-700">
-          <FileText size={24} strokeWidth={2} />
+          <FileText size={16} strokeWidth={2} />
         </div>
-        <span className="text-[16px] font-medium tracking-wide text-gray-800">
+        <span className="text-[12px] font-medium tracking-wide text-gray-800">
           Document
         </span>
       </button>
@@ -59,12 +59,12 @@ export default function FileAttachment({ isOpen, onClose, onFileSelect }: Props)
       {/* Tombol Photo */}
       <button
         onClick={handlePhotoClick}
-        className="flex w-full items-center gap-4 rounded-xl p-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+        className="flex w-full items-center gap-2 rounded-[4px] p-3 text-left transition-colors hover:bg-gray-200/70 active:bg-gray-200/70"
       >
         <div className="text-gray-700">
-          <ImageIcon size={24} strokeWidth={2} />
+          <ImageIcon size={16} strokeWidth={2} />
         </div>
-        <span className="text-[16px] font-medium tracking-wide text-gray-800">
+        <span className="text-[12px] font-medium tracking-wide text-gray-800">
           Photo
         </span>
       </button>

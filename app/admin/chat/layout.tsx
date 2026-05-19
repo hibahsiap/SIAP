@@ -2,7 +2,7 @@ import ListChat from "@/components/ListChat";
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="p-2 flex h-screen overflow-hidden">
+    <div className="p-2 flex h-screen overflow-hidden bg-white">
       {/* Panel Tengah: List Chat (Lebar tetap atau % ) */}
       <ListChat role="ADMIN"/>
 

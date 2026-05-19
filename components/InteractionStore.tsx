@@ -4,8 +4,8 @@ interface InteractionStore {
   isCreateTicketModalOpen: boolean;
   isDeleteModalOpen: boolean;
   selectedItem: any | null;
-  context: 'comments' | 'mentions' | null;
-  openCreateTicketModal: (item: any, context: 'comments' | 'mentions') => void;
+  context: 'comments' | 'mentions' | 'message' | null;
+  openCreateTicketModal: (item: any, context: 'comments' | 'mentions' | 'message') => void;
   closeCreateTicketModal: () => void;
   openDeleteModal: (item: any, context: 'comments' | 'mentions') => void;
   closeDeleteModal: () => void;

@@ -1,5 +1,6 @@
 import { ChatBubble } from "@/components/ChatBubble";
 import { ChatHeader, ForwardControl } from "@/components/ChatHeader";
+import InputChat from "@/components/InputChat";
 import { chatData } from "@/constants/chatData";
 import { Plus, SendHorizontal } from "lucide-react";
 
@@ -19,8 +20,8 @@ export default async function ChatDetailPage({ params }: { params: Promise<{ cha
     );
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#F9F9F9] relative">
-      <ChatHeader chatId={chatId} name={chatInfo.name} phone="085123456789" role="OPD" />
+    <div className="flex-1 flex flex-col h-full bg-white relative">
+      <ChatHeader chatId={chatId} name={chatInfo.name} platform={chatInfo.platform} accountPlatform={chatInfo.accountPlatform} role="OPD" />
       
       <div className="flex-1 overflow-y-auto px-6 pb-24 pt-4 custom-scrollbar">
         
@@ -43,7 +44,7 @@ export default async function ChatDetailPage({ params }: { params: Promise<{ cha
       </div>
 
       {/* Input Area */}
-      <div className="absolute bottom-0 left-0 w-full p-4 bg-[#F9F9F9]">
+      {/* <div className="absolute bottom-0 left-0 w-full p-4 bg-white">
         <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-full px-4 py-2">
           <button className="text-gray-400 hover:text-slate-600">
             <Plus size={20} />
@@ -57,7 +58,9 @@ export default async function ChatDetailPage({ params }: { params: Promise<{ cha
             <SendHorizontal size={18} />
           </button>
         </div>
-      </div>
+      </div> */}
+      <InputChat/>
+      
     </div>
   );
 }

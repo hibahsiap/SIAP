@@ -6,8 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ToastFrame from "./ToastFrame";
 import ReturnAdminButton from "./ReturnAdminButton";
 import { DUMMY_TASK } from "@/constants/taskDummy";
+import Image from "next/image";
 
-export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone: string, role: 'ADMIN' | 'OPD', chatId: string }) => {
+export const ChatHeader = ({ name, role, chatId, platform, accountPlatform }: { name: string, role: 'ADMIN' | 'OPD', chatId: string, platform: string, accountPlatform: string}) => {
   const [urgency, setUrgency] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
@@ -44,14 +45,33 @@ export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone:
         </div>
         <div>
           <h3 className="font-bold text-slate-900 leading-tight">{name}</h3>
-          <p className="text-xs text-green-600 flex items-center gap-1 mt-0.5">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span> {phone}
-          </p>
+
+          {platform === 'whatsapp' ? (
+            <div className="text-green-500 text-xs flex items-center gap-1 mt-0.5">
+              <Image src="/images/whatsapp-icon.png" width={14} height={14} alt="WA" />
+              {accountPlatform}
+            </div>
+          ) : (
+            <div className="text-pink-500 text-xs flex items-center gap-1 mt-0.5">
+              <Image src="/images/instagram-icon.png" width={12} height={12} alt="IG" />
+              {accountPlatform}
+            </div>
+          )}
+      
         </div>
       </div>
       
       {role === 'ADMIN' ? (
         <div className="flex gap-2">
+          <div className="min-w-[100px]">
+            <TimeRange 
+              prefixLabel="Status"
+              options={statusOptions}
+              value={status}
+              onChange={setStatus}
+              variant="badge"
+            />
+          </div>
           <div className="min-w-[100px]">
             <TimeRange 
               prefixLabel="Urgency"
@@ -67,15 +87,6 @@ export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone:
               options={categoryOptions}
               value={category}
               onChange={setCategory}
-              variant="badge"
-            />
-          </div>
-          <div className="min-w-[100px]">
-            <TimeRange 
-              prefixLabel="Status"
-              options={statusOptions}
-              value={status}
-              onChange={setStatus}
               variant="badge"
             />
           </div>
@@ -118,13 +129,15 @@ export const ForwardControl = ({ chatId, name }: { chatId: string, name: string 
       </label>
       <div className="flex gap-2">
         <Select value={selectedOPD} onValueChange={setSelectedOPD}>
-          <SelectTrigger className="flex-1 bg-white border-gray-200 text-slate-600">
+          <SelectTrigger className="w-full flex-1 bg-white border-gray-200 text-slate-600">
             <SelectValue placeholder="Select OPD to Forward..." />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" className="max-h-40 overflow-y-auto custom-scrollbar">
             <SelectItem value="diskominfo">Diskominfo</SelectItem>
             <SelectItem value="sekda">Sekretariat Daerah</SelectItem>
             <SelectItem value="dinsos">Dinas Sosial</SelectItem>
+            <SelectItem value="disdik">Dinas Pendidikan</SelectItem>
+            <SelectItem value="disdag">Dinas Perdagangan</SelectItem>
           </SelectContent>
         </Select>
 

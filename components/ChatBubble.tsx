@@ -1,4 +1,8 @@
+"use client";
+
 import { Plus, Pencil, ArrowUp } from "lucide-react";
+import { InteractionStore } from "./InteractionStore";
+import CreateDeleteModals from "@/components/SocialModal";
 
 interface ChatBubbleProps {
   message: string;
@@ -7,9 +11,12 @@ interface ChatBubbleProps {
   isOPD?: boolean;
   senderName?: string;
   avatar?: string;
+  isAdminPage?: boolean;
 }
 
-export const ChatBubble = ({ message, time, isSender, isOPD, senderName, avatar }: ChatBubbleProps) => {
+export const ChatBubble = ({ message, time, isSender, isOPD, senderName, avatar, isAdminPage }: ChatBubbleProps) => {
+  const { openCreateTicketModal } = InteractionStore();
+  
   return (
     <div className={`flex items-end gap-3 mb-6 ${isSender || isOPD ? "flex-row-reverse" : "flex-row"}`}>
       {/* Avatar */}
@@ -19,11 +26,13 @@ export const ChatBubble = ({ message, time, isSender, isOPD, senderName, avatar 
 
       <div className={`max-w-[70%] flex flex-col ${isSender || isOPD ? "items-end" : "items-start"}`}>
         <div className="relative group flex items-center gap-2">
-          {/* Action Buttons (Hover) */}
-          {!isSender && !isOPD && (
-            <button className="p-1 rounded-full bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
-              <Plus size={14} />
-            </button>
+
+          {/* Edit/Up Icons for OPD Messages */}
+          {isAdminPage && isOPD && (
+            <div className="flex flex-col gap-2">
+              <Pencil size={14} className="text-gray-400" />
+              <ArrowUp size={14} className="text-gray-400" />
+            </div>
           )}
 
           {/* Bubble */}
@@ -34,17 +43,21 @@ export const ChatBubble = ({ message, time, isSender, isOPD, senderName, avatar 
           }`}>
             {message}
             <div className={`text-[10px] mt-2 flex items-center gap-1 ${isSender ? "text-slate-400" : "text-slate-500"}`}>
-              {time} {isSender && "• You"} {isOPD && `• Sent by ${senderName}`}
+              {time} {isSender && "• Sent by Admin"} {isOPD && `• Sent by ${senderName}`}
             </div>
           </div>
 
-          {/* Edit/Up Icons for OPD Messages */}
-          {isOPD && (
-            <div className="flex flex-col gap-1">
-              <Pencil size={14} className="text-gray-400" />
-              <ArrowUp size={14} className="text-gray-400" />
-            </div>
+          {/* Action Buttons (Hover) */}
+          {!isSender && !isOPD && isAdminPage && (
+            <button 
+              onClick={() => openCreateTicketModal({message}, 'message')} 
+              className="p-1 rounded-full bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <Plus size={14} />
+
+            </button>
           )}
+
+          <CreateDeleteModals />
         </div>
       </div>
     </div>
