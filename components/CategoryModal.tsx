@@ -61,10 +61,10 @@ export default function CategoryModals() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const emptyAdd = { category: "", opdName: "" }
+  const emptyAdd = { category: "", subCategory:"", opdName: "" }
   const [addForm, setAddForm] = useState(emptyAdd)
 
-  const [editForm, setEditForm] = useState({ category: "", opdName: "" })
+  const [editForm, setEditForm] = useState({ category: "", subCategory: "", opdName: "" })
 
   useEffect(() => {
     if (selectedUser) {
@@ -92,8 +92,8 @@ export default function CategoryModals() {
   }, [isAddModalOpen])
 
   const handleAdd = async () => {
-    if (!addForm.category || !addForm.opdName) {
-      toast.error("Category and OPD are required")
+    if (!addForm.category || !addForm.opdName || !addForm.subCategory) {
+      toast.error("Category, sub category, and OPD are required")
       return
     }
 
@@ -152,11 +152,13 @@ export default function CategoryModals() {
 
   return (
     <>
-      {/* ADD USER MODAL */}
+      {/* ADD CATEGORY MODAL */}
       <CustomModal isOpen={isAddModalOpen} onClose={closeAddModal} title="Add Category">
         <div className="space-y-6">
 
           <FormField label="Category" placeholder="Category Name" value={addForm.category} onChange={(v) => setAddForm({ ...addForm, category: v })} />
+
+          <FormField label="Sub Category" placeholder="Sub Category" value={addForm.subCategory} onChange={(v) => setAddForm({ ...addForm, subCategory: v })} />
           
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OPD</label>
@@ -187,6 +189,8 @@ export default function CategoryModals() {
           <>
             <div className="space-y-6">
               <FormField label="Category" value={editForm.category} onChange={(v) => setEditForm({ ...editForm, category: v })} />
+
+              <FormField label="Sub Category" placeholder="Sub Category" value={addForm.subCategory} onChange={(v) => setAddForm({ ...addForm, subCategory: v })} />
               
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OPD</label>

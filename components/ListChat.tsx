@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import SearchField from "./SearchField";
 import Image from "next/image";
 import { InteractionTabs } from "./InteractionTabs";
@@ -9,6 +9,12 @@ import { ChatItem } from "./ChatItem";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { chatData } from "@/constants/chatData";
+import { Search } from "@boxicons/react/index";
+import { Input } from "./ui/input";
+import { useUserStore } from "@/store/useUserStore";
+import SearchEmptyState from "./SearchEmpty";
+import EmptyState from "./EmptyState";
+import { SearchX, UserX } from "lucide-react";
 
 
 const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
@@ -19,6 +25,8 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
     const [sort, setSort] = useState("newest");
     const [filterStatus, setFilterStatus] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
+
+    const { isLoading } = useUserStore()
 
     const inboxTabs = [
     { id: "all", label: "All Chat" },
@@ -35,12 +43,26 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
     },
     ];
 
-    const filteredChats = chatData.filter((chat) => {
-        if (activeTab === "unread") return chat.unread;
-        if (activeTab === "whatsapp") return chat.platform === "whatsapp";
-        if (activeTab === "instagram") return chat.platform === "instagram";
-        return true;
-    });
+    const finalFilteredChats = useMemo(() => {
+        return chatData.filter((chat) => {
+            // 1. Filter berdasarkan Kategori Tab Interaksi
+            const matchesTab = 
+                activeTab === "all" ||
+                (activeTab === "unread" && chat.unread) ||
+                (activeTab === "whatsapp" && chat.platform === "whatsapp") ||
+                (activeTab === "instagram" && chat.platform === "instagram");
+
+            // 2. Filter berdasarkan Kolom Pencarian Nama
+            const matchesSearch = (chat.name || "")
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase());
+
+            // 3. Filter berdasarkan Status (Jika data dummy kamu memiliki properti status)
+            // const matchesStatus = filterStatus === "all" || chat.status === filterStatus;
+
+            return matchesTab && matchesSearch;
+        });
+    }, [activeTab, searchQuery]);
 
     return (
         <aside className="w-97.5 border-r flex flex-col h-full z-10">
@@ -49,11 +71,12 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
                 
                 <div className="relative">
                     <SearchField 
-                        placeholder="Search message..."
+                        placeholder="Search users..."
                         value={searchQuery}
                         onChange={setSearchQuery}
                         className="w-full" 
                     />
+
                 </div>
 
                 <div className="overflow-x-auto">
@@ -86,10 +109,13 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
                 </div>
             </div>
 
+            {/* DAFTAR CHAT HASIL FILTERING */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {filteredChats.length > 0 ? (
+                {isLoading ? (
+                    <div className="p-10 text-center text-gray-400 text-sm">Loading chats...</div>
+                ) : finalFilteredChats.length > 0 ? (
                     role === "ADMIN" ? (
-                        filteredChats.map((chat) => (
+                        finalFilteredChats.map((chat) => (
                             <Link href={`/admin/chat/${chat.id}`} key={chat.id}>
                                 <ChatItem 
                                     {...chat}
@@ -98,7 +124,7 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
                             </Link>
                         ))
                     ) : (
-                        filteredChats.map((chat) => (
+                        finalFilteredChats.map((chat) => (
                             <Link href={`/opd/inbox/${chat.id}`} key={chat.id}>
                                 <ChatItem 
                                     {...chat}
@@ -109,10 +135,16 @@ const ListChat = ({role} : {role: 'ADMIN' | 'OPD'}) => {
                     )
                 ) : (
                     <div className="p-10 text-center text-gray-400 text-sm">
-                    No messages found.
+                        {searchQuery !== "" ? 
+                            <div className="flex flex-col items-center justify-center gap-8">
+                                <UserX size={96} strokeWidth={1}/>
+                                <p className="text-base"> No results found for "<b>{searchQuery}</b>" </p>
+                            </div>
+                        : "No messages found."}
                     </div>
                 )}
             </div>
+
         </aside>
     )
 }
