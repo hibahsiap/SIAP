@@ -1,5 +1,48 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const WELCOME_TEMPLATE = `Halo! 👋 Selamat datang di layanan aspirasi publik Diskominfo Karanganyar.
+
+Kami siap membantu Anda. Silakan pilih jenis pesan dengan mengetik salah satu perintah berikut:
+
+/pengaduan — Sampaikan keluhan atau masalah
+/pertanyaan — Ajukan pertanyaan
+/saran — Berikan saran atau masukan
+
+Tim kami akan segera menindaklanjuti pesan Anda. Terima kasih! 🙏`
+
+const COMMAND_TEMPLATES: Record<string, string> = {
+  '/pengaduan': `Terima kasih telah memilih Pengaduan 📋
+
+Silakan copy dan isi form berikut, lalu kirimkan kembali:
+
+[FORM PENGADUAN]
+Nama lengkap:
+NIK:
+Alamat:
+Uraian pengaduan:
+Lokasi kejadian:
+
+Foto/bukti pendukung dapat dikirim setelah mengirim form ini.`,
+
+  '/pertanyaan': `Terima kasih telah memilih Pertanyaan ❓
+
+Silakan copy dan isi form berikut, lalu kirimkan kembali:
+
+[FORM PERTANYAAN]
+Nama lengkap:
+Topik pertanyaan:
+Pertanyaan:`,
+
+  '/saran': `Terima kasih telah memilih Saran 💡
+
+Silakan copy dan isi form berikut, lalu kirimkan kembali:
+
+[FORM SARAN]
+Nama lengkap:
+Bidang/layanan:
+Saran:`,
+}
+
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -19,6 +62,83 @@ async function verifySignature(rawBody: string, signatureHeader: string | null):
     .map(b => b.toString(16).padStart(2, '0'))
     .join('')
   return signatureHeader === expected
+}
+
+async function sendAutoReply(opts: {
+  supabase: ReturnType<typeof createClient>
+  channel: { id: string; accountId: string | null; accessToken: string | null }
+  conversationId: string
+  senderId: string
+  messageText: string
+  igGraphVersion: string
+  now: Date
+}) {
+  const { supabase, channel, conversationId, senderId, messageText, igGraphVersion, now } = opts
+
+  if (!channel.accessToken || !channel.accountId) return
+
+  // Cek last outbound message untuk anti-spam 24 jam
+  const { data: lastOutbound } = await supabase
+    .from('Message')
+    .select('createdAt')
+    .eq('conversationId', conversationId)
+    .eq('direction', 'OUTBOUND')
+    .order('createdAt', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const lastOutboundAt = lastOutbound ? new Date(lastOutbound.createdAt) : null
+  const isFirst24h = !lastOutboundAt || (now.getTime() - lastOutboundAt.getTime() > 24 * 60 * 60 * 1000)
+
+  let replyText: string | null = null
+
+  if (isFirst24h) {
+    replyText = WELCOME_TEMPLATE
+  } else {
+    const cmd = messageText.trim().toLowerCase()
+    replyText = COMMAND_TEMPLATES[cmd] ?? null
+  }
+
+  if (!replyText) return
+
+  // Kirim via Instagram Messaging API
+  const sendRes = await fetch(
+    `https://graph.instagram.com/${igGraphVersion}/${channel.accountId}/messages`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipient: { id: senderId },
+        message: { text: replyText },
+        access_token: channel.accessToken,
+      }),
+    }
+  )
+
+  if (!sendRes.ok) {
+    const errText = await sendRes.text()
+    console.warn(`[AutoReply] Failed to send: ${sendRes.status} ${errText}`)
+    return
+  }
+
+  // Simpan auto-reply ke DB sebagai OUTBOUND agar terhitung di 24h check berikutnya
+  const { error: replyErr } = await supabase.from('Message').insert({
+    id: crypto.randomUUID(),
+    content: replyText,
+    senderType: 'ADMIN',
+    direction: 'OUTBOUND',
+    conversationId,
+    sentAt: now,
+    isInternal: false,
+    isApproved: true,
+    updatedAt: now,
+  })
+
+  if (replyErr) {
+    console.error('[AutoReply] Failed to save reply to DB:', JSON.stringify(replyErr))
+  } else {
+    console.log(`[AutoReply] Sent ${isFirst24h ? 'welcome' : messageText.trim()} to ${senderId}`)
+  }
 }
 
 Deno.serve(async (req: Request) => {
@@ -243,6 +363,16 @@ Deno.serve(async (req: Request) => {
           })
           if (msgErr) {
             console.error('[Webhook] Failed to insert Message:', JSON.stringify(msgErr))
+          } else {
+            await sendAutoReply({
+              supabase,
+              channel,
+              conversationId,
+              senderId,
+              messageText: messageText || '',
+              igGraphVersion,
+              now,
+            })
           }
         }
 
@@ -268,12 +398,32 @@ Deno.serve(async (req: Request) => {
 
           if (existing) continue
 
+          // Fetch permalink dari Graph API karena media.id adalah numeric ID,
+          // bukan shortcode yang dipakai di URL publik Instagram
+          let permalink: string | null = null
+          if (mediaId && channel.accessToken) {
+            try {
+              const mediaRes = await fetch(
+                `https://graph.instagram.com/${igGraphVersion}/${mediaId}?fields=permalink&access_token=${encodeURIComponent(channel.accessToken)}`
+              )
+              if (mediaRes.ok) {
+                const mediaData = await mediaRes.json()
+                permalink = mediaData.permalink ?? null
+              } else {
+                console.warn(`[Webhook] Failed to fetch permalink for media ${mediaId}: ${mediaRes.status}`)
+              }
+            } catch (err) {
+              console.warn(`[Webhook] Error fetching permalink for media ${mediaId}:`, err)
+            }
+          }
+
           const { error: insertError } = await supabase.from('SocialInteraction').insert({
+            id: crypto.randomUUID(),
             interactionType,
             externalId: commentId,
             username,
             content,
-            permalink: mediaId ? `https://www.instagram.com/p/${mediaId}/` : null,
+            permalink,
             isTicketCreated: false,
             channelId: channel.id,
             capturedAt,

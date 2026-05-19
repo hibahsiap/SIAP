@@ -29,24 +29,24 @@ export const ChatBubble = ({ message, time, isSender, isOPD, senderName, avatar 
 
       <div className={`max-w-[70%] flex flex-col ${isSender || isOPD ? "items-end" : "items-start"}`}>
         <div className="relative group flex items-center gap-2">
-          {/* Action Buttons (Hover) */}
-          {!isSender && !isOPD && (
-            <button className="p-1 rounded-full bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
-              <Plus size={14} />
-            </button>
-          )}
-
           {/* Bubble */}
           <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
             isSender ? "bg-[#1e293b] text-white rounded-br-none" :
             isOPD ? "bg-[#e0f2fe] text-slate-800 border border-blue-100 rounded-br-none" :
             "bg-[#f1f5f9] text-slate-800 rounded-bl-none"
           }`}>
-            {message}
+            <span className="whitespace-pre-wrap">{message}</span>
             <div className={`text-[10px] mt-2 flex items-center gap-1 ${isSender ? "text-slate-400" : "text-slate-500"}`}>
               {time} {isSender && "• You"} {isOPD && senderName && `• Sent by ${senderName}`}
             </div>
           </div>
+
+          {/* Action Buttons (Hover) */}
+          {!isSender && !isOPD && (
+            <button className="p-1 rounded-full bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <Plus size={14} />
+            </button>
+          )}
 
           {/* Edit/Up Icons for OPD Messages */}
           {isOPD && (
