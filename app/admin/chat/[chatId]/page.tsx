@@ -2,6 +2,7 @@ import { ChatBubble } from "@/components/ChatBubble";
 import { ChatHeader, ForwardControl } from "@/components/ChatHeader";
 import InputChat from "@/components/InputChat";
 import { chatData } from "@/constants/chatData";
+import { ChatMessageList } from "@/components/ChatMessageList";
 import { Plus, SendHorizontal } from "lucide-react";
 
 export default async function ChatDetailPage({ params }: { params: Promise<{ chatId: string }>}) {
@@ -27,24 +28,11 @@ export default async function ChatDetailPage({ params }: { params: Promise<{ cha
 
         <ForwardControl chatId={chatId} name={chatInfo.name} />
         
-        {/* Dummy Chat History */}
-        <ChatBubble 
-            message="Lorem ipsum dolor sit amet consectetur. Est urna quam ornare egestas." 
-            time="10:45 AM"
-            isAdminPage 
-        />
-        <ChatBubble 
-            message="Lorem ipsum dolor sit amet consectetur. Non morbi ultrices tempor fames." 
-            time="11:05 AM" 
-            isSender 
-            isAdminPage
-        />
-        <ChatBubble 
-            message="Ut sociis egestas a amet. Sed porttitor blandit ullamcorper tempor eu pretium dui nibh." 
-            time="10:48 AM" 
-            isOPD 
-            senderName="OPD (Sekretariat Daerah)"
-            isAdminPage
+        <ChatMessageList initialMessages={[
+            { id: "msg-1", message: "Lorem ipsum dolor sit amet consectetur. Est urna quam ornare egestas.", time: "10:45 AM" },
+            { id: "msg-2", message: "Lorem ipsum dolor sit amet consectetur. Non morbi ultrices tempor fames.", time: "11:05 AM", isSender: true },
+            { id: "msg-3", message: "Ut sociis egestas a amet. Sed porttitor blandit ullamcorper.", time: "10:48 AM", isOPD: true, senderName: "OPD (Sekretariat Daerah)" },
+          ]} 
         />
       </div>
 
