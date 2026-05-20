@@ -108,9 +108,10 @@ export default function InboxPage() {
           {filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
               <div key={chat.id} onClick={() => setSelectedChat(chat)}>
-                <ChatItem 
+                <ChatItem
                   {...chat}
-                  isActive={selectedChat?.id === chat.id} 
+                  ticketCount={0}
+                  isActive={selectedChat?.id === chat.id}
                 />
               </div>
             ))

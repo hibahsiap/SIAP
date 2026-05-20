@@ -16,7 +16,6 @@ export type InboxTicketSummary = {
   id: string;
   ticketNumber: string;
   status: TicketStatus;
-  priority: string | null;
   urgency: string | null;
   type: string | null;
   category: { id: string; name: string } | null;
@@ -34,7 +33,7 @@ export type InboxConversation = {
     platform: InboxPlatform;
   };
   channel: { id: string; platform: InboxPlatform; accountHandle: string | null };
-  ticket: InboxTicketSummary | null;
+  ticketCount: number;
   lastMessage: {
     content: string;
     direction: MessageDirection;
@@ -45,6 +44,15 @@ export type InboxConversation = {
   lastMessageAt: string;
 };
 
+export type InboxMessageTicket = {
+  id: string;
+  ticketNumber: string;
+  status: TicketStatus;
+  urgency: string | null;
+  type: string | null;
+  assignedOpd: { name: string } | null;
+};
+
 export type InboxMessage = {
   id: string;
   content: string;
@@ -52,6 +60,9 @@ export type InboxMessage = {
   senderType: SenderType;
   isInternal: boolean;
   isApproved: boolean;
+  forwardedToTicketId: string | null;
+  forwardedToOpdName: string | null;
+  ticket: InboxMessageTicket | null;
   at: string;
   sender: {
     id: string;
@@ -61,10 +72,21 @@ export type InboxMessage = {
   } | null;
 };
 
+export type InboxTicketSummaryDetail = {
+  id: string;
+  ticketNumber: string;
+  status: TicketStatus;
+  urgency: string | null;
+  type: string | null;
+  category: { id: string; name: string } | null;
+  assignedOpd: { id: string; name: string } | null;
+};
+
 export type InboxConversationDetail = Omit<
   InboxConversation,
-  "lastMessage" | "unread" | "lastMessageAt"
+  "lastMessage" | "unread" | "lastMessageAt" | "ticketCount"
 > & {
+  tickets: InboxTicketSummaryDetail[];
   messages: InboxMessage[];
 };
 
@@ -216,6 +238,9 @@ export const useInboxStore = create<InboxState>((set, get) => ({
                       senderType: row.senderType,
                       isInternal: row.isInternal,
                       isApproved: row.isApproved,
+                      forwardedToTicketId: null,
+                      forwardedToOpdName: null,
+                      ticket: null,
                       at: row.sentAt ?? row.createdAt,
                       sender: null,
                     },

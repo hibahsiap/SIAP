@@ -13,7 +13,23 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("search")?.trim();
   const sort = searchParams.get("sort") === "oldest" ? "asc" : "desc";
 
-  const where: Prisma.ConversationWhereInput = {};
+  let opdFilter: Prisma.ConversationWhereInput = {};
+  let opdTicketIds: Set<string> | null = null;
+  if (auth.role === "OPD") {
+    const user = await prisma.user.findUnique({
+      where: { id: auth.userId },
+      select: { opdId: true },
+    });
+    if (!user?.opdId) return NextResponse.json([], { status: 200 });
+    opdFilter = { tickets: { some: { assignedOpdId: user.opdId } } };
+    const opdTickets = await prisma.ticket.findMany({
+      where: { assignedOpdId: user.opdId },
+      select: { id: true },
+    });
+    opdTicketIds = new Set(opdTickets.map((t) => t.id));
+  }
+
+  const where: Prisma.ConversationWhereInput = { ...opdFilter };
 
   if (platformParam && platformParam !== "all") {
     const platform = platformParam.toUpperCase() as ChannelPlatform;
@@ -40,21 +56,9 @@ export async function GET(req: NextRequest) {
         },
       },
       channel: { select: { id: true, platform: true, accountHandle: true } },
-      ticket: {
-        select: {
-          id: true,
-          ticketNumber: true,
-          status: true,
-          priority: true,
-          urgency: true,
-          type: true,
-          assignedOpd: { select: { id: true, name: true } },
-          category: { select: { id: true, name: true } },
-        },
-      },
+      _count: { select: { tickets: true } },
       messages: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
+        orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
         select: {
           id: true,
           content: true,
@@ -62,6 +66,7 @@ export async function GET(req: NextRequest) {
           senderType: true,
           createdAt: true,
           sentAt: true,
+          forwardedToTicketId: true,
         },
       },
     },
@@ -71,7 +76,12 @@ export async function GET(req: NextRequest) {
 
   const result = conversations
     .map((c) => {
-      const last = c.messages[0];
+      const visibleMessages = opdTicketIds
+        ? c.messages.filter(
+            (m) => m.forwardedToTicketId !== null && opdTicketIds!.has(m.forwardedToTicketId)
+          )
+        : c.messages;
+      const last = visibleMessages[0];
       return {
         id: c.id,
         citizen: {
@@ -83,18 +93,7 @@ export async function GET(req: NextRequest) {
           platform: c.citizen.contacts[0]?.platform ?? c.channel.platform,
         },
         channel: c.channel,
-        ticket: c.ticket
-          ? {
-              id: c.ticket.id,
-              ticketNumber: c.ticket.ticketNumber,
-              status: c.ticket.status,
-              priority: c.ticket.priority,
-              urgency: c.ticket.urgency,
-              type: c.ticket.type,
-              category: c.ticket.category,
-              assignedOpd: c.ticket.assignedOpd,
-            }
-          : null,
+        ticketCount: c._count.tickets,
         lastMessage: last
           ? {
               content: last.content,

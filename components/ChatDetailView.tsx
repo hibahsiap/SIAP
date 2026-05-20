@@ -15,7 +15,16 @@ export default function ChatDetailView({ activeChat, role }: { activeChat: any, 
       <div className="flex-1 overflow-y-auto px-6 pb-24 pt-2">
 
         {role === 'ADMIN' && (
-          <ForwardControl />
+          <ForwardControl
+            tickets={[]}
+            selectedTicketId=""
+            onSelectTicket={() => {}}
+            isSelectMode={false}
+            selectedCount={0}
+            isForwarding={false}
+            onToggleSelectMode={() => {}}
+            onForward={() => {}}
+          />
         )}
         
         {/* Dummy Chat History */}

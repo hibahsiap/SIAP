@@ -8,6 +8,7 @@ import { Pagination } from "@/components/Paginations";
 import { Plus, Trash2 } from "lucide-react";
 import { InteractionStore } from "@/components/InteractionStore";
 import CreateDeleteModals from "@/components/SocialModal";
+import { formatDateTime as formatTime } from "@/lib/formatdate";
 
 type SocialInteraction = {
   id: string;
@@ -19,16 +20,6 @@ type SocialInteraction = {
   channel: { id: string; platform: string; accountHandle: string | null };
   convertedTicketId: string | null;
 };
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleString("id-ID", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function SocialInteractionsPage() {
   const [activeTab, setActiveTab] = useState("comments");

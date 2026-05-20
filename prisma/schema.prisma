@@ -11,7 +11,6 @@ model Opd {
   name                String               @unique
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
-  aiClassifications   AiClassification[]
   categories          Category[]
   tickets             Ticket[]
   ticketVerifications TicketVerification[]
@@ -29,7 +28,6 @@ model User {
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   activityLogs        ActivityLog[]
-  aiVerifications     AiClassification[]   @relation("AiVerifiedBy")
   approvals           Approval[]
   attachments         Attachment[]
   messages            Message[]
@@ -87,7 +85,7 @@ model Conversation {
   citizen       Citizen   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   channel       Channel   @relation(fields: [channelId], references: [id])
   messages      Message[]
-  ticket        Ticket?
+  tickets       Ticket[]
 
   @@unique([citizenId, channelId])
   @@index([lastMessageAt])
@@ -111,21 +109,20 @@ model Ticket {
   title             String?
   description       String
   status            TicketStatus         @default(TO_DO)
-  priority          TicketPriority?
   urgency           TicketUrgency?
   type              TicketType?
   citizenId         String
   channelId         String
-  conversationId    String?              @unique
+  conversationId    String?
   categoryId        String?
   assignedOpdId     String?
+  location          String?
   startDate         DateTime?
   dueDate           DateTime?
   resolvedAt        DateTime?
   closedAt          DateTime?
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
-  aiClassifications AiClassification[]
   attachments       Attachment[]
   messages          Message[]
   sourceInteraction SocialInteraction?   @relation("TicketSource")
@@ -134,6 +131,7 @@ model Ticket {
   channel           Channel              @relation(fields: [channelId], references: [id])
   citizen           Citizen              @relation(fields: [citizenId], references: [id])
   conversation      Conversation?        @relation(fields: [conversationId], references: [id])
+  forwardedMessages Message[]            @relation("ForwardedMessages")
   progress          TicketProgress[]
   verifications     TicketVerification[]
 
@@ -178,7 +176,6 @@ model TicketVerification {
 
 model Approval {
   id          String          @id @default(uuid())
-  subjectType ApprovalSubject
   verdict     ApprovalVerdict
   decidedById String?
   decidedAt   DateTime        @default(now())
@@ -195,21 +192,24 @@ model Message {
   direction      MessageDirection
   isInternal     Boolean          @default(false)
   isApproved     Boolean          @default(true)
-  sentAt         DateTime?
-  ticketId       String?
-  conversationId String?
-  senderUserId   String?
-  approvalId     String?
+  sentAt              DateTime?
+  ticketId            String?
+  conversationId      String?
+  forwardedToTicketId String?
+  senderUserId        String?
+  approvalId          String?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  attachments    Attachment[]
-  approval       Approval?        @relation(fields: [approvalId], references: [id])
-  senderUser     User?            @relation(fields: [senderUserId], references: [id])
-  ticket         Ticket?          @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  conversation   Conversation?    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  attachments         Attachment[]
+  approval            Approval?        @relation(fields: [approvalId], references: [id])
+  senderUser          User?            @relation(fields: [senderUserId], references: [id])
+  ticket              Ticket?          @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  conversation        Conversation?    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  forwardedToTicket   Ticket?          @relation("ForwardedMessages", fields: [forwardedToTicketId], references: [id])
 
   @@index([ticketId])
   @@index([conversationId])
+  @@index([forwardedToTicketId])
   @@index([createdAt])
 }
 
@@ -239,7 +239,6 @@ model SocialInteraction {
   capturedAt        DateTime           @default(now())
   channelId         String
   convertedTicketId String?            @unique
-  aiClassifications AiClassification[]
   channel           Channel            @relation(fields: [channelId], references: [id])
   convertedTicket   Ticket?            @relation("TicketSource", fields: [convertedTicketId], references: [id])
 
@@ -249,28 +248,6 @@ model SocialInteraction {
   @@index([capturedAt])
 }
 
-model AiClassification {
-  id                String             @id @default(uuid())
-  subjectType       AiSubjectType
-  predictedType     TicketType?
-  predictedCategory String?
-  predictedUrgency  TicketUrgency?
-  confidence        Float
-  modelName         String
-  verified          Boolean            @default(false)
-  createdAt         DateTime           @default(now())
-  ticketId          String?
-  socialId          String?
-  predictedOpdId    String?
-  verifiedById      String?
-  predictedOpd      Opd?               @relation(fields: [predictedOpdId], references: [id])
-  socialInteraction SocialInteraction? @relation(fields: [socialId], references: [id], onDelete: Cascade)
-  ticket            Ticket?            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  verifiedBy        User?              @relation("AiVerifiedBy", fields: [verifiedById], references: [id])
-
-  @@index([ticketId])
-  @@index([socialId])
-}
 
 model ActivityLog {
   id          String   @id @default(uuid())
@@ -298,12 +275,6 @@ enum TicketStatus {
   ON_HOLD
   DONE
   CANCELLED
-}
-
-enum TicketPriority {
-  LOW
-  MEDIUM
-  HIGH
 }
 
 enum TicketUrgency {
@@ -341,19 +312,9 @@ enum InteractionType {
   MENTION
 }
 
-enum ApprovalSubject {
-  MESSAGE
-  QUESTION_MESSAGE
-}
-
 enum ApprovalVerdict {
   APPROVED
   REJECTED
-}
-
-enum AiSubjectType {
-  TICKET
-  SOCIAL_INTERACTION
 }
 
 enum VerificationVerdict {

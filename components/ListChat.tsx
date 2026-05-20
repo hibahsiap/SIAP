@@ -10,19 +10,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useInboxStore, type InboxConversation } from "@/store/useInboxStore";
 
-const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  TO_DO: { label: "To Do", color: "bg-red-100 text-red-700" },
-  IN_PROGRESS: { label: "In Progress", color: "bg-blue-100 text-blue-700" },
-  ON_HOLD: { label: "On Hold", color: "bg-orange-100 text-orange-700" },
-  DONE: { label: "Done", color: "bg-green-100 text-green-700" },
-  CANCELLED: { label: "Cancelled", color: "bg-gray-200 text-gray-700" },
-};
-
-const TYPE_LABEL: Record<string, { label: string; color: string }> = {
-  COMPLAINT: { label: "Complaint", color: "bg-pink-100 text-pink-700" },
-  QUESTION: { label: "Question", color: "bg-orange-100 text-orange-700" },
-  FEEDBACK: { label: "Feedback", color: "bg-purple-100 text-purple-700" },
-};
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -125,18 +112,6 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
         ) : (
           conversations.map((c) => {
             const platform = platformOf(c);
-            const status = c.ticket
-              ? STATUS_LABEL[c.ticket.status] ?? { label: c.ticket.status, color: "bg-gray-100 text-gray-700" }
-              : { label: "No Ticket", color: "bg-gray-100 text-gray-600" };
-            const type = c.ticket?.type
-              ? TYPE_LABEL[c.ticket.type] ?? { label: c.ticket.type, color: "bg-gray-100 text-gray-700" }
-              : { label: c.ticket?.category?.name ?? "Uncategorized", color: "bg-gray-100 text-gray-700" };
-            const flagColor =
-              c.ticket?.urgency === "HIGH" || c.ticket?.urgency === "CRITICAL"
-                ? "text-red-500"
-                : c.ticket?.urgency === "MEDIUM"
-                ? "text-orange-500"
-                : "text-green-500";
             const href = `${basePath}/${c.id}`;
 
             return (
@@ -146,13 +121,9 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
                   avatarUrl={c.citizen.profilePicUrl}
                   message={c.lastMessage?.content ?? "(no message)"}
                   time={timeAgo(c.lastMessage?.at ?? c.lastMessageAt)}
-                  status={status.label}
-                  statusColor={status.color}
-                  category={type.label}
-                  categoryColor={type.color}
-                  department={c.ticket?.assignedOpd?.name ?? "Unassigned"}
+                  ticketCount={c.ticketCount}
                   platform={platform}
-                  flagColor={flagColor}
+                  flagColor="text-green-500"
                   isActive={pathname === href}
                   unread={c.unread}
                 />

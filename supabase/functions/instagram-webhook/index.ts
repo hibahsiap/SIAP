@@ -254,27 +254,24 @@ Deno.serve(async (req: Request) => {
           if (contact) {
             citizenId = contact.citizenId
 
-            // Backfill username/profilePicUrl/displayName if missing
-            if (!contact.username || !contact.profilePicUrl) {
-              const profile = await fetchIgProfile(senderId)
-              const contactPatch: Record<string, string | null> = {}
-              if (!contact.username && profile.username) contactPatch.username = profile.username
-              if (!contact.profilePicUrl && profile.profilePicUrl) contactPatch.profilePicUrl = profile.profilePicUrl
+            const profile = await fetchIgProfile(senderId)
+            const contactPatch: Record<string, string | null> = {}
+            if (profile.username) contactPatch.username = profile.username
+            if (profile.profilePicUrl) contactPatch.profilePicUrl = profile.profilePicUrl
 
-              if (Object.keys(contactPatch).length > 0) {
-                await supabase
-                  .from('CitizenContact')
-                  .update(contactPatch)
-                  .eq('platform', 'INSTAGRAM')
-                  .eq('handle', senderId)
-              }
+            if (Object.keys(contactPatch).length > 0) {
+              await supabase
+                .from('CitizenContact')
+                .update(contactPatch)
+                .eq('platform', 'INSTAGRAM')
+                .eq('handle', senderId)
+            }
 
-              if (profile.name) {
-                await supabase
-                  .from('Citizen')
-                  .update({ displayName: profile.name, updatedAt: new Date() })
-                  .eq('id', citizenId)
-              }
+            if (profile.name) {
+              await supabase
+                .from('Citizen')
+                .update({ displayName: profile.name, updatedAt: new Date() })
+                .eq('id', citizenId)
             }
           } else {
             const profile = await fetchIgProfile(senderId)

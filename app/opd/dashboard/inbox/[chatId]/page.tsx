@@ -5,10 +5,7 @@ import { ChatHeader } from "@/components/ChatHeader";
 import { useInboxStore } from "@/store/useInboxStore";
 import { Plus, SendHorizontal } from "lucide-react";
 import { useEffect, useRef, useState, use } from "react";
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
+import { formatTime } from "@/lib/formatdate";
 
 export default function ChatDetailPage({
   params,

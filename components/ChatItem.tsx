@@ -6,11 +6,7 @@ interface ChatItemProps {
   name: string;
   message: string;
   time: string;
-  status: string;
-  statusColor: string;
-  category: string;
-  categoryColor: string;
-  department: string;
+  ticketCount: number;
   platform: 'whatsapp' | 'instagram';
   flagColor: string;
   avatarUrl?: string | null;
@@ -19,8 +15,7 @@ interface ChatItemProps {
 }
 
 export const ChatItem = ({
-  name, message, time, status, statusColor,
-  category, categoryColor, department, platform, flagColor, avatarUrl, isActive, unread
+  name, message, time, ticketCount, platform, flagColor, avatarUrl, isActive, unread
 }: ChatItemProps) => {
   const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D3B66&color=fff`;
   return (
@@ -69,15 +64,15 @@ export const ChatItem = ({
           <div className="flex items-center justify-between mt-3">
             {/* Badge */}
             <div className="flex flex-wrap gap-2">
-              <Badge className={statusColor}>
-                <span className="mr-1 text-[8px]">●</span>{status}
-              </Badge>
-              <Badge className={categoryColor}>
-                {category}
-              </Badge>
-              <Badge className="bg-gray-200 text-gray-700">
-                {department}
-              </Badge>
+              {ticketCount === 0 ? (
+                <Badge className="bg-gray-100 text-gray-500">
+                  No Ticket
+                </Badge>
+              ) : (
+                <Badge className="bg-blue-100 text-blue-700">
+                  {ticketCount} Ticket{ticketCount > 1 ? "s" : ""}
+                </Badge>
+              )}
             </div>
 
             {/* Unread Indicator */}

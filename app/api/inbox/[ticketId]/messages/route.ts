@@ -1,35 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-
-const IG_GRAPH_VERSION = process.env.INSTAGRAM_GRAPH_VERSION ?? "v25.0";
-
-async function sendInstagramDM(opts: {
-  accessToken: string;
-  recipientPsid: string;
-  text: string;
-}) {
-  const res = await fetch(
-    `https://graph.instagram.com/${IG_GRAPH_VERSION}/me/messages?access_token=${encodeURIComponent(
-      opts.accessToken
-    )}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        recipient: { id: opts.recipientPsid },
-        message: { text: opts.text },
-      }),
-    }
-  );
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(
-      `Instagram send failed (${res.status}): ${JSON.stringify(data)}`
-    );
-  }
-  return data as { message_id?: string; recipient_id?: string };
-}
+import { sendInstagramDM } from "@/lib/instagram";
 
 // Route param is `ticketId` historically; it identifies a Conversation.
 export async function POST(
@@ -68,6 +40,27 @@ export async function POST(
         direction: "OUTBOUND",
         isInternal: true,
         isApproved: true,
+        conversationId: conv.id,
+        senderUserId: auth.userId,
+        sentAt: now,
+      },
+    });
+    await prisma.conversation.update({
+      where: { id: conv.id },
+      data: { lastMessageAt: now },
+    });
+    return NextResponse.json(msg, { status: 201 });
+  }
+
+  // OPD messages need admin approval before delivery to citizen
+  if (senderType === "OPD") {
+    const msg = await prisma.message.create({
+      data: {
+        content,
+        senderType,
+        direction: "OUTBOUND",
+        isInternal: false,
+        isApproved: false,
         conversationId: conv.id,
         senderUserId: auth.userId,
         sentAt: now,
