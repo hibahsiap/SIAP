@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Pencil, ArrowUp, X } from "lucide-react";
+import { Plus, Pencil, ArrowUp} from "lucide-react";
 import { InteractionStore } from "./InteractionStore";
 import CreateDeleteModals from "@/components/SocialModal";
 import { useChatStore } from "@/constants/chatStore";
@@ -18,7 +18,7 @@ interface ChatBubbleProps {
 
 export const ChatBubble = ({ id, message, time, isSender, isOPD, senderName, avatar, isAdminPage }: ChatBubbleProps) => {
   const { openCreateTicketModal } = InteractionStore();
-  const { setEditingMessage, editingMessage } = useChatStore();
+  const { setEditingMessage, forwardMessage, editingMessage } = useChatStore();
 
   const isBeingEdited = editingMessage?.id === id;
 
@@ -51,6 +51,7 @@ export const ChatBubble = ({ id, message, time, isSender, isOPD, senderName, ava
               </button>
               <button
                 type="button"
+                onClick={() => forwardMessage(id)}
                 className="p-1 rounded-full text-gray-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                 title="Forward pesan"
               >
