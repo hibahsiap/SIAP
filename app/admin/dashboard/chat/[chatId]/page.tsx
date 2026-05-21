@@ -20,6 +20,7 @@ export default function ChatDetailPage({
     isLoadingDetail,
     detailError,
     fetchConversation,
+    fetchConversations,
     sendMessage,
     isSending,
     sendError,
@@ -153,8 +154,18 @@ export default function ChatDetailPage({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Forward gagal");
+      if (data?.forwarded === 0) {
+        // Nothing actually updated — usually because every selected message was
+        // already forwarded. Surface that instead of silently closing select mode.
+        throw new Error("No messages were forwarded (already forwarded?)");
+      }
       setIsSelectMode(false);
       setSelectedMessageIds(new Set());
+      setLastSelectedId(null);
+      // Forwarding is an UPDATE on existing messages, so the realtime listener
+      // (INSERT-only) won't push it. Refetch so the badges and pinned list update.
+      await fetchConversation(chatId);
+      fetchConversations();
     } catch (err) {
       setForwardError((err as Error).message);
     } finally {

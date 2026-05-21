@@ -260,6 +260,25 @@ export const useInboxStore = create<InboxState>((set, get) => ({
         )
         .on(
           "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "Message" },
+          (payload) => {
+            const row = payload.new as {
+              id: string;
+              conversationId: string | null;
+              forwardedToTicketId: string | null;
+            };
+            // Forward/approval are UPDATEs, not INSERTs, so without this listener the
+            // OPD never gains visibility into a newly forwarded message until refresh.
+            // Refetching applies the role-based filter on the server and updates badges.
+            const cur = get().current;
+            if (cur && row.conversationId === cur.id) {
+              get().fetchConversation(cur.id);
+            }
+            get().fetchConversations();
+          }
+        )
+        .on(
+          "postgres_changes",
           { event: "INSERT", schema: "public", table: "Conversation" },
           () => get().fetchConversations()
         )
