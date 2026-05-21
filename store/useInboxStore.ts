@@ -119,7 +119,7 @@ interface InboxState {
     opts?: { isInternal?: boolean }
   ) => Promise<void>;
 
-  subscribeRealtime: () => () => void;
+  subscribeRealtime: (role?: "ADMIN" | "OPD") => () => void;
 }
 
 function buildQuery(filters: InboxFilters): string {
@@ -201,7 +201,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
     }
   },
 
-  subscribeRealtime: () => {
+  subscribeRealtime: (role) => {
     let channel: RealtimeChannel | null = null;
     try {
       const supabase = getSupabaseBrowser();
@@ -226,27 +226,33 @@ export const useInboxStore = create<InboxState>((set, get) => ({
             const cur = get().current;
             if (cur && row.conversationId === cur.id) {
               if (cur.messages.some((m) => m.id === row.id)) return;
-              set({
-                current: {
-                  ...cur,
-                  messages: [
-                    ...cur.messages,
-                    {
-                      id: row.id,
-                      content: row.content,
-                      direction: row.direction,
-                      senderType: row.senderType,
-                      isInternal: row.isInternal,
-                      isApproved: row.isApproved,
-                      forwardedToTicketId: null,
-                      forwardedToOpdName: null,
-                      ticket: null,
-                      at: row.sentAt ?? row.createdAt,
-                      sender: null,
-                    },
-                  ],
-                },
-              });
+              // OPD must not see arbitrary new messages; re-fetch so the server
+              // can apply its role-based filter. Admin can append optimistically.
+              if (role === "OPD") {
+                get().fetchConversation(cur.id);
+              } else {
+                set({
+                  current: {
+                    ...cur,
+                    messages: [
+                      ...cur.messages,
+                      {
+                        id: row.id,
+                        content: row.content,
+                        direction: row.direction,
+                        senderType: row.senderType,
+                        isInternal: row.isInternal,
+                        isApproved: row.isApproved,
+                        forwardedToTicketId: null,
+                        forwardedToOpdName: null,
+                        ticket: null,
+                        at: row.sentAt ?? row.createdAt,
+                        sender: null,
+                      },
+                    ],
+                  },
+                });
+              }
             }
 
             get().fetchConversations();

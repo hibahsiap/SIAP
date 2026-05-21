@@ -126,7 +126,7 @@ export default function CreateTicketFromChatModal({
               </span>
             </div>
           )}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-slate-700 italic">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-slate-700 italic break-words">
             &ldquo;{messagePreview.slice(0, 120)}{messagePreview.length > 120 ? "…" : ""}&rdquo;
           </div>
         </div>
@@ -183,7 +183,7 @@ export default function CreateTicketFromChatModal({
           </Select>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <label className="font-semibold text-[12px] uppercase text-[#546064]">URGENCY</label>
             <Select value={urgency} onValueChange={setUrgency}>
@@ -215,14 +215,14 @@ export default function CreateTicketFromChatModal({
 
         {error && <p className="text-xs text-red-500">{error}</p>}
 
-        <div className="flex gap-3 pt-2">
-          <Button onClick={onClose} variant="outline" className="flex-1 h-[45px] rounded-lg">
+        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+          <Button onClick={onClose} variant="outline" className="w-full sm:flex-1 h-[45px] rounded-lg">
             CANCEL
           </Button>
           <Button
             onClick={handleCreate}
             disabled={isSubmitting || !opdId}
-            className="flex-1 h-[45px] bg-[#1a233a] rounded-lg text-white"
+            className="w-full sm:flex-1 h-[45px] bg-[#1a233a] rounded-lg text-white"
           >
             {isSubmitting ? "Creating…" : "CREATE TICKET"}
           </Button>

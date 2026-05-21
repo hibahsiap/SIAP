@@ -37,7 +37,7 @@ interface ChatBubbleProps {
   onCreateTicket?: () => void;
   isSelectMode?: boolean;
   isSelected?: boolean;
-  onToggleSelect?: () => void;
+  onToggleSelect?: (opts?: { shift?: boolean }) => void;
   ticket?: TicketBadge | null;
   forwardedToTicketId?: string | null;
   forwardedToOpdName?: string | null;
@@ -61,8 +61,27 @@ export const ChatBubble = ({
 
   const isInbound = !isSender && !isOPD;
 
+  const canSelect = isSelectMode && !forwardedToTicketId && (isInbound || isSender);
+
   return (
-    <div className={`flex items-end gap-3 mb-4 ${isSender || isOPD ? "flex-row-reverse" : "flex-row"}`}>
+    <div className="flex items-center gap-3 mb-4 min-w-0 max-w-full">
+      {/* Select-mode checkbox — always on the far left, regardless of sender direction */}
+      {isSelectMode && (
+        <div className="flex-shrink-0 w-5">
+          {canSelect && (
+            <button
+              onClick={(e) => onToggleSelect?.({ shift: e.shiftKey })}
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                isSelected ? "bg-[#1e293b] border-[#1e293b]" : "bg-white border-gray-400"
+              }`}
+            >
+              {isSelected && <Check size={12} className="text-white" />}
+            </button>
+          )}
+        </div>
+      )}
+
+    <div className={`flex-1 min-w-0 flex items-end gap-3 ${isSender || isOPD ? "flex-row-reverse" : "flex-row"}`}>
       {/* Avatar */}
       <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-200">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,7 +94,7 @@ export const ChatBubble = ({
         />
       </div>
 
-      <div className={`max-w-[70%] flex flex-col gap-1 ${isSender || isOPD ? "items-end" : "items-start"}`}>
+      <div className={`max-w-[70%] min-w-0 flex flex-col gap-1 ${isSender || isOPD ? "items-end" : "items-start"}`}>
         {/* Ticket badge — shown when this message created a ticket */}
         {ticket && isInbound && (
           <div className="flex flex-wrap items-center gap-1.5 px-1">
@@ -109,17 +128,6 @@ export const ChatBubble = ({
         )}
 
         <div className="relative group flex items-center gap-2">
-          {/* Checkbox LEFT — for inbound (user) messages */}
-          {isSelectMode && isInbound && !forwardedToTicketId && (
-            <button
-              onClick={onToggleSelect}
-              className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                isSelected ? "bg-[#1e293b] border-[#1e293b]" : "bg-white border-gray-400"
-              }`}
-            >
-              {isSelected && <Check size={12} className="text-white" />}
-            </button>
-          )}
           {/* Bubble */}
           {isEditing ? (
             <div className="flex flex-col gap-2 max-w-[340px]">
@@ -180,18 +188,6 @@ export const ChatBubble = ({
               }
             </button>
           )}
-          {/* Checkbox RIGHT — for sender (admin) messages */}
-          {isSelectMode && isSender && !forwardedToTicketId && (
-            <button
-              onClick={onToggleSelect}
-              className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                isSelected ? "bg-[#1e293b] border-[#1e293b]" : "bg-white border-gray-400"
-              }`}
-            >
-              {isSelected && <Check size={12} className="text-white" />}
-            </button>
-          )}
-
           {/* Edit/Approve for unapproved OPD messages (admin only) */}
           {isOPD && !isApproved && onEditApprove && (
             <div className="flex flex-col gap-1">
@@ -218,6 +214,7 @@ export const ChatBubble = ({
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 };

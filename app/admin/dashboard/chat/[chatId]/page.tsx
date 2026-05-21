@@ -3,7 +3,7 @@
 import { ChatBubble } from "@/components/ChatBubble";
 import { ChatHeader } from "@/components/ChatHeader";
 import { useInboxStore } from "@/store/useInboxStore";
-import { Plus, SendHorizontal } from "lucide-react";
+import { Pin, Plus, SendHorizontal, Ticket } from "lucide-react";
 import { useEffect, useRef, useState, use } from "react";
 import CreateTicketFromChatModal from "@/components/CreateTicketFromChatModal";
 import { formatTime, formatDateLabel, dayKey } from "@/lib/formatdate";
@@ -43,15 +43,25 @@ export default function ChatDetailPage({
   } | null>(null);
   const [classifyingMessageId, setClassifyingMessageId] = useState<string | null>(null);
 
+  // Track which ticket pins the admin has visited in this session so we can render
+  // an "unread" dot on the rest. Resets when the conversation changes.
+  const [readTicketIds, setReadTicketIds] = useState<Set<string>>(new Set());
+  // Cycling index into the pinned-messages list. Each click advances it.
+  const [pinIndex, setPinIndex] = useState(0);
+
   // Message selection for forwarding
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(new Set());
+  const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
   const [selectedTicketId, setSelectedTicketId] = useState("");
   const [isForwarding, setIsForwarding] = useState(false);
   const [forwardError, setForwardError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchConversation(chatId);
+    setReadTicketIds(new Set());
+    setSelectedTicketId("");
+    setPinIndex(0);
   }, [chatId, fetchConversation]);
 
   useEffect(() => {
@@ -87,15 +97,45 @@ export default function ChatDetailPage({
   const handleToggleSelectMode = () => {
     setIsSelectMode((prev) => !prev);
     setSelectedMessageIds(new Set());
+    setLastSelectedId(null);
   };
 
-  const handleToggleMessageSelect = (messageId: string) => {
+  // Only messages that the bubble actually allows selecting (inbound or admin outbound, not forwarded).
+  const selectableMessages = (current?.messages ?? []).filter(
+    (m) =>
+      !m.forwardedToTicketId &&
+      (m.direction === "INBOUND" || m.senderType === "ADMIN")
+  );
+
+  const handleToggleMessageSelect = (
+    messageId: string,
+    opts?: { shift?: boolean }
+  ) => {
     setSelectedMessageIds((prev) => {
       const next = new Set(prev);
+
+      if (opts?.shift && lastSelectedId && lastSelectedId !== messageId) {
+        const startIdx = selectableMessages.findIndex((m) => m.id === lastSelectedId);
+        const endIdx = selectableMessages.findIndex((m) => m.id === messageId);
+        if (startIdx !== -1 && endIdx !== -1) {
+          const [from, to] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+          // Range selection picks the action based on the new anchor: if it's currently
+          // unselected, the whole range becomes selected; otherwise the range is cleared.
+          const shouldSelect = !next.has(messageId);
+          for (let i = from; i <= to; i++) {
+            const id = selectableMessages[i].id;
+            if (shouldSelect) next.add(id);
+            else next.delete(id);
+          }
+          return next;
+        }
+      }
+
       if (next.has(messageId)) next.delete(messageId);
       else next.add(messageId);
       return next;
     });
+    setLastSelectedId(messageId);
   };
 
   const handleForward = async () => {
@@ -150,8 +190,49 @@ export default function ChatDetailPage({
     ? `${current.citizen.platform} · @${current.citizen.username}`
     : current.channel.platform;
 
+  // Latest pinned first — first click cycles to the most recent pinned message,
+  // then keeps moving backwards through older pins and wraps.
+  const pinnedMessages = [...current.messages.filter((m) => m.ticket)].reverse();
+  const safePinIndex = pinnedMessages.length > 0
+    ? pinIndex % pinnedMessages.length
+    : 0;
+  const currentPin = pinnedMessages[safePinIndex];
+
+  // ⚙️ Truncate setting for the pinned preview text.
+  // Change `max` here to control how many characters are shown before "...".
+  const truncatePreview = (text: string, max = 100) =>
+    text.length > max ? `${text.slice(0, max)}...` : text;
+
+  const scrollToMessage = (messageId: string) => {
+    const el = document.getElementById(`msg-${messageId}`);
+    const scroller = scrollerRef.current;
+    if (!el || !scroller) return;
+    // Scroll only within the chat container — never the page — by computing the
+    // target offset relative to the scroller and centering it.
+    const top =
+      el.offsetTop - scroller.offsetTop - scroller.clientHeight / 2 + el.clientHeight / 2;
+    scroller.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  };
+
+  const handleCyclePin = () => {
+    if (pinnedMessages.length === 0) return;
+    const target = pinnedMessages[safePinIndex];
+    if (target?.ticket) {
+      setSelectedTicketId(target.ticket.id);
+      setReadTicketIds((prev) => {
+        if (prev.has(target.ticket!.id)) return prev;
+        const next = new Set(prev);
+        next.add(target.ticket!.id);
+        return next;
+      });
+    }
+    if (target) scrollToMessage(target.id);
+    // Advance so the next click cycles to the older pinned message, wrapping at the end.                                            
+    setPinIndex((idx) => (idx + 1) % pinnedMessages.length);
+  };
+
   return (
-    <div className="flex-1 flex flex-col h-full relative">
+    <div className="flex-1 flex flex-col h-full relative min-w-0 max-w-full overflow-x-hidden">
       <ChatHeader
         chatId={current.id}
         name={current.citizen.name}
@@ -168,7 +249,49 @@ export default function ChatDetailPage({
         onForward={handleForward}
       />
 
-      <div ref={scrollerRef} className="flex-1 overflow-y-auto px-6 pt-6 pb-24 custom-scrollbar">
+      {currentPin && (
+        <div className="px-6 mt-4 mb-1">
+          <button
+            type="button"
+            onClick={handleCyclePin}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border-l-4 text-left transition-colors w-full min-w-0 max-w-full ${currentPin.ticket && selectedTicketId === currentPin.ticket.id
+              ? "bg-amber-100 border-amber-500 ring-1 ring-amber-300"
+              : "bg-amber-50 border-amber-400 hover:bg-amber-100"
+              }`}
+            title={
+              pinnedMessages.length > 1
+                ? `Pinned (${safePinIndex + 1}/${pinnedMessages.length}) — click to jump, click again for the next pin`
+                : "Pinned — click to jump to the source message"
+            }
+          >
+            <Pin size={14} className="text-amber-600 flex-shrink-0" />
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-700">
+                <Ticket size={10} className="flex-shrink-0" />
+                <span className="truncate">{currentPin.ticket?.ticketNumber ?? "Ticket"}</span>
+                {currentPin.ticket?.assignedOpd && (
+                  <span className="text-amber-500 font-normal truncate">
+                    · {currentPin.ticket.assignedOpd.name}
+                  </span>
+                )}
+                {pinnedMessages.length > 1 && (
+                  <span className="text-amber-500 font-normal flex-shrink-0">
+                    · {safePinIndex + 1}/{pinnedMessages.length}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
+                {truncatePreview(currentPin.content)}
+              </p>
+            </div>
+            {currentPin.ticket && !readTicketIds.has(currentPin.ticket.id) && (
+              <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" aria-label="Unread" />
+            )}
+          </button>
+        </div>
+      )}
+
+      <div ref={scrollerRef} className="flex-1 overflow-y-auto overflow-x-hidden min-w-0 px-6 pt-6 pb-24 custom-scrollbar">
         {forwardError && (
           <div className="py-2 text-xs text-red-500">{forwardError}</div>
         )}
@@ -191,7 +314,7 @@ export default function ChatDetailPage({
 
             if (m.direction === "INBOUND") {
               return (
-                <div key={m.id}>
+                <div key={m.id} id={`msg-${m.id}`}>
                   {dateSep}
                   <ChatBubble
                     message={m.content}
@@ -209,14 +332,14 @@ export default function ChatDetailPage({
                     isClassifying={classifyingMessageId === m.id}
                     isSelectMode={isSelectMode}
                     isSelected={selectedMessageIds.has(m.id)}
-                    onToggleSelect={() => handleToggleMessageSelect(m.id)}
+                    onToggleSelect={(opts) => handleToggleMessageSelect(m.id, opts)}
                   />
                 </div>
               );
             }
             if (m.senderType === "OPD") {
               return (
-                <div key={m.id}>
+                <div key={m.id} id={`msg-${m.id}`}>
                   {dateSep}
                   <ChatBubble
                     message={m.content}
@@ -246,7 +369,7 @@ export default function ChatDetailPage({
                   senderName={m.sender?.name ?? "Admin"}
                   isSelectMode={isSelectMode}
                   isSelected={selectedMessageIds.has(m.id)}
-                  onToggleSelect={() => handleToggleMessageSelect(m.id)}
+                  onToggleSelect={(opts) => handleToggleMessageSelect(m.id, opts)}
                 />
               </div>
             );

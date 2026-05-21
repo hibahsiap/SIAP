@@ -15,12 +15,14 @@ export async function GET(req: NextRequest) {
 
   let opdFilter: Prisma.ConversationWhereInput = {};
   let opdTicketIds: Set<string> | null = null;
+  let opdId: string | null = null;
   if (auth.role === "OPD") {
     const user = await prisma.user.findUnique({
       where: { id: auth.userId },
       select: { opdId: true },
     });
     if (!user?.opdId) return NextResponse.json([], { status: 200 });
+    opdId = user.opdId;
     opdFilter = { tickets: { some: { assignedOpdId: user.opdId } } };
     const opdTickets = await prisma.ticket.findMany({
       where: { assignedOpdId: user.opdId },
@@ -56,7 +58,11 @@ export async function GET(req: NextRequest) {
         },
       },
       channel: { select: { id: true, platform: true, accountHandle: true } },
-      _count: { select: { tickets: true } },
+      _count: {
+        select: opdId
+          ? { tickets: { where: { assignedOpdId: opdId } } }
+          : { tickets: true },
+      },
       messages: {
         orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
         select: {
@@ -67,6 +73,7 @@ export async function GET(req: NextRequest) {
           createdAt: true,
           sentAt: true,
           forwardedToTicketId: true,
+          senderUser: { select: { opdId: true } },
         },
       },
     },
@@ -78,10 +85,18 @@ export async function GET(req: NextRequest) {
     .map((c) => {
       const visibleMessages = opdTicketIds
         ? c.messages.filter(
-            (m) => m.forwardedToTicketId !== null && opdTicketIds!.has(m.forwardedToTicketId)
+            (m) =>
+              (m.forwardedToTicketId !== null && opdTicketIds!.has(m.forwardedToTicketId)) ||
+              (m.direction === "OUTBOUND" && m.senderUser?.opdId === opdId)
           )
         : c.messages;
       const last = visibleMessages[0];
+      // For OPD, the conversation's effective recency is the latest message THEY are
+      // allowed to see — not the global lastMessageAt, which would surface activity
+      // (admin replies, unrelated citizen messages) the OPD never receives.
+      const effectiveLastAt = last
+        ? (last.sentAt ?? last.createdAt)
+        : c.lastMessageAt;
       return {
         id: c.id,
         citizen: {
@@ -103,10 +118,20 @@ export async function GET(req: NextRequest) {
             }
           : null,
         unread: last?.direction === "INBOUND",
-        lastMessageAt: c.lastMessageAt,
+        lastMessageAt: opdTicketIds ? effectiveLastAt : c.lastMessageAt,
       };
     })
-    .filter((c) => (unreadOnly ? c.unread : true));
+    .filter((c) => {
+      // OPD: drop conversations with nothing they're allowed to see.
+      if (opdTicketIds && !c.lastMessage) return false;
+      return unreadOnly ? c.unread : true;
+    })
+    .sort((a, b) => {
+      if (!opdTicketIds) return 0; // Prisma already sorted for admin
+      const at = new Date(a.lastMessageAt).getTime();
+      const bt = new Date(b.lastMessageAt).getTime();
+      return sort === "asc" ? at - bt : bt - at;
+    });
 
   return NextResponse.json(result);
 }

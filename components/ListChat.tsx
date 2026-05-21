@@ -41,9 +41,9 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
 
   useEffect(() => {
     fetchConversations();
-    const unsub = subscribeRealtime();
+    const unsub = subscribeRealtime(role);
     return () => unsub();
-  }, [fetchConversations, subscribeRealtime]);
+  }, [fetchConversations, subscribeRealtime, role]);
 
   const inboxTabs = useMemo(
     () => [
