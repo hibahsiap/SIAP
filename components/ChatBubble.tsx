@@ -1,5 +1,5 @@
-import { Plus, Pencil, ArrowUp, Check, Forward, Ticket, Loader2, X } from "lucide-react";
-import { useState } from "react";
+import { Plus, Pencil, ArrowUp, Check, Forward, Ticket, Loader2, X, FileText } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const STATUS_LABEL: Record<string, string> = {
   TO_DO: "To Do", IN_PROGRESS: "In Progress", ON_HOLD: "On Hold", DONE: "Done", CANCELLED: "Cancelled",
@@ -27,6 +27,13 @@ type TicketBadge = {
   assignedOpd: { name: string } | null;
 };
 
+type BubbleAttachment = {
+  id: string;
+  url: string;
+  mimeType: string;
+  fileName: string;
+};
+
 interface ChatBubbleProps {
   message: string;
   time: string;
@@ -44,17 +51,33 @@ interface ChatBubbleProps {
   isClassifying?: boolean;
   isApproved?: boolean;
   onEditApprove?: (content: string) => Promise<void>;
+  attachments?: BubbleAttachment[];
 }
 
 export const ChatBubble = ({
   message, time, isSender, isOPD, senderName, avatar,
   onCreateTicket, isSelectMode, isSelected, onToggleSelect,
   ticket, forwardedToTicketId, forwardedToOpdName, isClassifying,
-  isApproved = true, onEditApprove,
+  isApproved = true, onEditApprove, attachments,
 }: ChatBubbleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewAttachment, setPreviewAttachment] = useState<BubbleAttachment | null>(null);
+
+  useEffect(() => {
+    if (!previewAttachment) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPreviewAttachment(null);
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [previewAttachment]);
 
   const fallbackName = isSender ? "You" : isOPD ? (senderName ?? "OPD") : (senderName ?? "User");
   const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(fallbackName)}&background=cbd5e1&color=1e293b`;
@@ -64,6 +87,7 @@ export const ChatBubble = ({
   const canSelect = isSelectMode && !forwardedToTicketId && (isInbound || isSender);
 
   return (
+    <>
     <div className="flex items-center gap-3 mb-4 min-w-0 max-w-full">
       {/* Select-mode checkbox — always on the far left, regardless of sender direction */}
       {isSelectMode && (
@@ -160,14 +184,54 @@ export const ChatBubble = ({
               </div>
             </div>
           ) : (
-          <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+          <div className={`p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
             isSender ? "bg-[#1e293b] text-white rounded-br-none" :
             isOPD && !isApproved ? "bg-[#e0f2fe] text-slate-800 border border-blue-200 border-dashed rounded-br-none opacity-70" :
             isOPD ? "bg-[#e0f2fe] text-slate-800 border border-blue-100 rounded-br-none" :
             ticket ? "bg-[#f1f5f9] text-slate-800 rounded-bl-none ring-1 ring-slate-300" :
             "bg-[#f1f5f9] text-slate-800 rounded-bl-none"
           }`}>
-            <span className="whitespace-pre-wrap break-all">{message}</span>
+            {attachments && attachments.length > 0 && (
+              <div className={`flex flex-col gap-2 ${message ? "mb-2" : ""}`}>
+                {attachments.map((a) => {
+                  if (a.mimeType.startsWith("image/")) {
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => setPreviewAttachment(a)}
+                        className="block cursor-zoom-in"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={a.url}
+                          alt={a.fileName}
+                          loading="lazy"
+                          className="max-w-[260px] max-h-[260px] rounded-lg object-cover"
+                        />
+                      </button>
+                    );
+                  }
+                  return (
+                    <a
+                      key={a.id}
+                      href={a.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${
+                        isSender ? "bg-white/10 text-white" : "bg-white/70 text-slate-700"
+                      }`}
+                    >
+                      <FileText size={14} className="flex-shrink-0" />
+                      <span className="truncate">{a.fileName}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+            {message && (
+              <span className="whitespace-pre-wrap break-all">{message}</span>
+            )}
             <div className={`text-[10px] mt-2 flex items-center gap-1 ${isSender ? "text-slate-400" : "text-slate-500"}`}>
               {time} {isSender && "• You"} {isOPD && senderName && `• Sent by ${senderName}`}
               {isOPD && !isApproved && <span className="ml-1 text-amber-500 font-semibold">• Pending approval</span>}
@@ -216,5 +280,29 @@ export const ChatBubble = ({
       </div>
     </div>
     </div>
+
+    {previewAttachment && (
+      <div
+        className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+        onClick={() => setPreviewAttachment(null)}
+      >
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setPreviewAttachment(null); }}
+          className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+          aria-label="Close preview"
+        >
+          <X size={20} />
+        </button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={previewAttachment.url}
+          alt={previewAttachment.fileName}
+          onClick={(e) => e.stopPropagation()}
+          className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+        />
+      </div>
+    )}
+    </>
   );
 };

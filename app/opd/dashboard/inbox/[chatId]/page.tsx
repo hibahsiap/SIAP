@@ -3,9 +3,10 @@
 import { ChatBubble } from "@/components/ChatBubble";
 import { ChatHeader } from "@/components/ChatHeader";
 import { useInboxStore } from "@/store/useInboxStore";
-import { Pin, Plus, SendHorizontal, Ticket } from "lucide-react";
+import { Pin, Plus, SendHorizontal, Ticket, X as XIcon, Loader2 as Spinner } from "lucide-react";
 import { useEffect, useRef, useState, use } from "react";
 import { formatTime } from "@/lib/formatdate";
+import FileAttachment from "@/components/FileAttachment";
 
 export default function ChatDetailPage({
   params,
@@ -30,6 +31,17 @@ export default function ChatDetailPage({
   const [readTicketIds, setReadTicketIds] = useState<Set<string>>(new Set());
   const [pinIndex, setPinIndex] = useState(0);
 
+  const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
+  const [pendingAttachment, setPendingAttachment] = useState<{
+    url: string;
+    mimeType: string;
+    fileName: string;
+    sizeBytes: number;
+    previewUrl: string;
+  } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   useEffect(() => {
     fetchConversation(chatId);
     setActiveTicketId("");
@@ -45,9 +57,42 @@ export default function ChatDetailPage({
 
   const handleSend = async () => {
     const text = draft.trim();
-    if (!text || isSending) return;
+    if (isSending || isUploading) return;
+    if (!text && !pendingAttachment) return;
+    const snapshotAttachment = pendingAttachment
+      ? {
+          url: pendingAttachment.url,
+          mimeType: pendingAttachment.mimeType,
+          fileName: pendingAttachment.fileName,
+          sizeBytes: pendingAttachment.sizeBytes,
+        }
+      : undefined;
     setDraft("");
-    await sendMessage(chatId, text);
+    setPendingAttachment(null);
+    await sendMessage(chatId, text, snapshotAttachment ? { attachment: snapshotAttachment } : undefined);
+  };
+
+  const handleFilePicked = async (file: File) => {
+    setUploadError(null);
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`/api/inbox/${chatId}/upload`, { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      setPendingAttachment({
+        url: data.url,
+        mimeType: data.mimeType,
+        fileName: data.fileName,
+        sizeBytes: data.sizeBytes,
+        previewUrl: URL.createObjectURL(file),
+      });
+    } catch (err) {
+      setUploadError((err as Error).message);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   if (isLoadingDetail && !current) {
@@ -179,6 +224,7 @@ export default function ChatDetailPage({
                     senderName={current.citizen.name}
                     avatar={current.citizen.profilePicUrl}
                     ticket={m.ticket}
+                    attachments={m.attachments}
                   />
                 </div>
               );
@@ -191,6 +237,7 @@ export default function ChatDetailPage({
                     time={time}
                     isOPD
                     senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
+                    attachments={m.attachments}
                   />
                 </div>
               );
@@ -202,6 +249,7 @@ export default function ChatDetailPage({
                   time={time}
                   isSender
                   senderName={m.sender?.name ?? "Admin"}
+                  attachments={m.attachments}
                 />
               </div>
             );
@@ -210,13 +258,54 @@ export default function ChatDetailPage({
       </div>
 
       <div className="absolute bottom-0 left-0 w-full p-4 bg-[#F9F9F9]">
-        {sendError && (
-          <div className="text-xs text-red-500 mb-2 px-2">{sendError}</div>
+        {(sendError || uploadError) && (
+          <div className="text-xs text-red-500 mb-2 px-2">{sendError ?? uploadError}</div>
         )}
-        <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-full px-4 py-2">
-          <button className="text-gray-400 hover:text-slate-600" type="button">
-            <Plus size={20} />
-          </button>
+        {pendingAttachment && (
+          <div className="mb-2 inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1.5 pr-2 shadow-sm">
+            {pendingAttachment.mimeType.startsWith("image/") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={pendingAttachment.previewUrl}
+                alt={pendingAttachment.fileName}
+                className="w-12 h-12 rounded object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded bg-slate-100 flex items-center justify-center text-[10px] text-slate-500">
+                FILE
+              </div>
+            )}
+            <span className="text-xs text-slate-700 max-w-[160px] truncate">
+              {pendingAttachment.fileName}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPendingAttachment(null)}
+              className="text-slate-400 hover:text-slate-600"
+              aria-label="Remove attachment"
+            >
+              <XIcon size={14} />
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 relative">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setAttachmentMenuOpen((v) => !v)}
+              disabled={isUploading}
+              className="text-gray-400 hover:text-slate-600 disabled:opacity-50"
+            >
+              {isUploading ? <Spinner size={20} className="animate-spin" /> : <Plus size={20} />}
+            </button>
+            <div className="absolute bottom-full left-0 mb-2">
+              <FileAttachment
+                isOpen={attachmentMenuOpen}
+                onClose={() => setAttachmentMenuOpen(false)}
+                onFileSelect={(file) => handleFilePicked(file)}
+              />
+            </div>
+          </div>
           <input
             type="text"
             value={draft}
@@ -233,7 +322,7 @@ export default function ChatDetailPage({
           />
           <button
             onClick={handleSend}
-            disabled={isSending || !draft.trim()}
+            disabled={isSending || isUploading || (!draft.trim() && !pendingAttachment)}
             className="bg-[#1e293b] p-2 rounded-full text-white disabled:opacity-50"
             type="button"
           >

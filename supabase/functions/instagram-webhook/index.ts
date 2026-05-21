@@ -346,10 +346,69 @@ Deno.serve(async (req: Request) => {
             conversationId = newConv.id
           }
 
-          // Simpan pesan ke conversation
+          // PROSES ATTACHMENT DULU sebelum insert Message, supaya begitu realtime
+          // mengirim event Message INSERT ke client, semua row Attachment sudah ada
+          // di DB. Tanpa ini, client sempat menampilkan bubble kosong selama
+          // beberapa ratus ms sampai second saat IG-fetch + storage-upload berjalan.
+          const messageId = crypto.randomUUID()
+          const rawAttachments = event.message.attachments ?? []
+          const preparedAttachments: Array<{
+            id: string
+            url: string
+            fileName: string
+            mimeType: string
+            sizeBytes: number
+            messageId: string
+            uploadedAt: Date
+          }> = []
+
+          for (const att of rawAttachments) {
+            const igUrl: string | undefined = att.payload?.url
+            if (!igUrl) continue
+            const kind: string = att.type ?? 'file'
+            try {
+              const fileRes = await fetch(igUrl)
+              if (!fileRes.ok) {
+                console.warn(`[Webhook] Attachment fetch failed (${fileRes.status}) for ${igUrl}`)
+                continue
+              }
+              const bytes = new Uint8Array(await fileRes.arrayBuffer())
+              const mime = fileRes.headers.get('content-type')
+                ?? (kind === 'image' ? 'image/jpeg' : 'application/octet-stream')
+              const ext = mime.split('/')[1]?.split(';')[0] ?? 'bin'
+              const fileName = `${crypto.randomUUID()}.${ext}`
+              const path = `dm/${conversationId}/${fileName}`
+
+              const { error: upErr } = await supabase.storage
+                .from('dm-media')
+                .upload(path, bytes, { contentType: mime, upsert: false })
+              if (upErr) {
+                console.error('[Webhook] Storage upload failed:', JSON.stringify(upErr))
+                continue
+              }
+
+              const { data: pub } = supabase.storage.from('dm-media').getPublicUrl(path)
+
+              preparedAttachments.push({
+                id: crypto.randomUUID(),
+                url: pub.publicUrl,
+                fileName,
+                mimeType: mime,
+                sizeBytes: bytes.byteLength,
+                messageId,
+                uploadedAt: now,
+              })
+              console.log(`[Webhook] Prepared ${kind} attachment ${fileName}`)
+            } catch (err) {
+              console.warn(`[Webhook] Attachment processing error:`, err)
+            }
+          }
+
+          // Setelah semua attachment ter-upload ke Storage, insert Message
+          // (yang memicu realtime), lalu langsung insert semua Attachment row.
           const { error: msgErr } = await supabase.from('Message').insert({
-            id: crypto.randomUUID(),
-            content: messageText || '[Media attachment]',
+            id: messageId,
+            content: messageText,
             senderType: 'WARGA',
             direction: 'INBOUND',
             conversationId,
@@ -360,17 +419,29 @@ Deno.serve(async (req: Request) => {
           })
           if (msgErr) {
             console.error('[Webhook] Failed to insert Message:', JSON.stringify(msgErr))
-          } else {
-            await sendAutoReply({
-              supabase,
-              channel,
-              conversationId,
-              senderId,
-              messageText: messageText || '',
-              igGraphVersion,
-              now,
-            })
+            continue
           }
+
+          if (preparedAttachments.length > 0) {
+            const { error: attErr } = await supabase
+              .from('Attachment')
+              .insert(preparedAttachments)
+            if (attErr) {
+              console.error('[Webhook] Failed to insert Attachments batch:', JSON.stringify(attErr))
+            } else {
+              console.log(`[Webhook] Stored ${preparedAttachments.length} attachment(s) for message ${messageId}`)
+            }
+          }
+
+          await sendAutoReply({
+            supabase,
+            channel,
+            conversationId,
+            senderId,
+            messageText: messageText || '',
+            igGraphVersion,
+            now,
+          })
         }
 
         // --- Comment & Mention ---

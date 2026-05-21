@@ -53,6 +53,13 @@ export type InboxMessageTicket = {
   assignedOpd: { name: string } | null;
 };
 
+export type InboxAttachment = {
+  id: string;
+  url: string;
+  mimeType: string;
+  fileName: string;
+};
+
 export type InboxMessage = {
   id: string;
   content: string;
@@ -70,6 +77,7 @@ export type InboxMessage = {
     role: "ADMIN" | "OPD";
     opdName: string | null;
   } | null;
+  attachments: InboxAttachment[];
 };
 
 export type InboxTicketSummaryDetail = {
@@ -116,7 +124,15 @@ interface InboxState {
   sendMessage: (
     conversationId: string,
     content: string,
-    opts?: { isInternal?: boolean }
+    opts?: {
+      isInternal?: boolean;
+      attachment?: {
+        url: string;
+        mimeType: string;
+        fileName: string;
+        sizeBytes: number;
+      };
+    }
   ) => Promise<void>;
 
   subscribeRealtime: (role?: "ADMIN" | "OPD") => () => void;
@@ -185,7 +201,11 @@ export const useInboxStore = create<InboxState>((set, get) => ({
       const res = await fetch(`/api/inbox/${conversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, isInternal: opts?.isInternal ?? false }),
+        body: JSON.stringify({
+          content,
+          isInternal: opts?.isInternal ?? false,
+          attachment: opts?.attachment,
+        }),
       });
       const data = await res.json();
       if (!res.ok && res.status !== 207) {
@@ -226,9 +246,13 @@ export const useInboxStore = create<InboxState>((set, get) => ({
             const cur = get().current;
             if (cur && row.conversationId === cur.id) {
               if (cur.messages.some((m) => m.id === row.id)) return;
-              // OPD must not see arbitrary new messages; re-fetch so the server
-              // can apply its role-based filter. Admin can append optimistically.
-              if (role === "OPD") {
+              // INBOUND messages can carry attachments yang baru di-insert ke DB
+              // sesaat setelah Message row-nya. Kalau kita append optimistic dengan
+              // attachments: [], bubble muncul kosong dulu. Refetch saja agar
+              // payload yang sampai ke UI selalu lengkap (Message + Attachments
+              // sudah ter-join oleh server). OPD tetap refetch untuk filter
+              // role-based di server.
+              if (role === "OPD" || row.direction === "INBOUND") {
                 get().fetchConversation(cur.id);
               } else {
                 set({
@@ -248,6 +272,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
                         ticket: null,
                         at: row.sentAt ?? row.createdAt,
                         sender: null,
+                        attachments: [],
                       },
                     ],
                   },
@@ -275,6 +300,22 @@ export const useInboxStore = create<InboxState>((set, get) => ({
               get().fetchConversation(cur.id);
             }
             get().fetchConversations();
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "Attachment" },
+          (payload) => {
+            // The IG webhook inserts the Message row first, then uploads each
+            // attachment and inserts Attachment rows. The Message INSERT listener
+            // above sees the message before attachments exist, so the bubble
+            // initially renders empty. Refetch when an Attachment lands on a
+            // message we're currently viewing.
+            const row = payload.new as { messageId: string | null };
+            const cur = get().current;
+            if (cur && row.messageId && cur.messages.some((m) => m.id === row.messageId)) {
+              get().fetchConversation(cur.id);
+            }
           }
         )
         .on(

@@ -57,6 +57,9 @@ export async function GET(
           forwardedToTicket: {
             select: { assignedOpd: { select: { name: true } } },
           },
+          attachments: {
+            select: { id: true, url: true, mimeType: true, fileName: true },
+          },
         },
       },
     },
@@ -127,6 +130,7 @@ export async function GET(
             opdName: m.senderUser.opd?.name ?? null,
           }
         : null,
+      attachments: m.attachments,
     })),
   });
 }

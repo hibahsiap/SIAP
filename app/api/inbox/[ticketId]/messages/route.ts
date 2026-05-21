@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-import { sendInstagramDM } from "@/lib/instagram";
+import { sendInstagramDM, sendInstagramAttachment } from "@/lib/instagram";
 
 // Route param is `ticketId` historically; it identifies a Conversation.
 export async function POST(
@@ -15,9 +15,15 @@ export async function POST(
   const body = await req.json().catch(() => ({}));
   const content: string = (body?.content ?? "").toString().trim();
   const isInternal: boolean = Boolean(body?.isInternal);
+  const attachment: {
+    url?: string;
+    mimeType?: string;
+    fileName?: string;
+    sizeBytes?: number;
+  } | null = body?.attachment && typeof body.attachment === "object" ? body.attachment : null;
 
-  if (!content) {
-    return NextResponse.json({ error: "Content is required" }, { status: 400 });
+  if (!content && !attachment?.url) {
+    return NextResponse.json({ error: "Content or attachment is required" }, { status: 400 });
   }
 
   const conv = await prisma.conversation.findUnique({
@@ -32,6 +38,21 @@ export async function POST(
   const senderType = auth.role === "ADMIN" ? "ADMIN" : "OPD";
   const now = new Date();
 
+  // Helper: persist Attachment row tied to the freshly-created message.
+  const linkAttachment = async (messageId: string) => {
+    if (!attachment?.url) return;
+    await prisma.attachment.create({
+      data: {
+        url: attachment.url,
+        fileName: attachment.fileName ?? "upload",
+        mimeType: attachment.mimeType ?? "application/octet-stream",
+        sizeBytes: attachment.sizeBytes ?? 0,
+        messageId,
+        uploadedById: auth.userId,
+      },
+    });
+  };
+
   if (isInternal) {
     const msg = await prisma.message.create({
       data: {
@@ -45,6 +66,7 @@ export async function POST(
         sentAt: now,
       },
     });
+    await linkAttachment(msg.id);
     await prisma.conversation.update({
       where: { id: conv.id },
       data: { lastMessageAt: now },
@@ -66,6 +88,7 @@ export async function POST(
         sentAt: now,
       },
     });
+    await linkAttachment(msg.id);
     await prisma.conversation.update({
       where: { id: conv.id },
       data: { lastMessageAt: now },
@@ -91,11 +114,30 @@ export async function POST(
     }
 
     try {
-      await sendInstagramDM({
-        accessToken: conv.channel.accessToken,
-        recipientPsid: recipient.handle,
-        text: content,
-      });
+      // Instagram requires one API call per attachment, separate from the text.
+      // Send the image first (if any) so the citizen sees it above the caption.
+      if (attachment?.url) {
+        const igType = attachment.mimeType?.startsWith("image/")
+          ? "image"
+          : attachment.mimeType?.startsWith("video/")
+          ? "video"
+          : attachment.mimeType?.startsWith("audio/")
+          ? "audio"
+          : "file";
+        await sendInstagramAttachment({
+          accessToken: conv.channel.accessToken,
+          recipientPsid: recipient.handle,
+          type: igType,
+          url: attachment.url,
+        });
+      }
+      if (content) {
+        await sendInstagramDM({
+          accessToken: conv.channel.accessToken,
+          recipientPsid: recipient.handle,
+          text: content,
+        });
+      }
     } catch (err) {
       console.error("[Instagram DM send]", err);
       deliveryError = err instanceof Error ? err.message : "Unknown error";
@@ -116,6 +158,8 @@ export async function POST(
       sentAt: now,
     },
   });
+
+  await linkAttachment(msg.id);
 
   await prisma.conversation.update({
     where: { id: conv.id },
