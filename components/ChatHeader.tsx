@@ -1,46 +1,54 @@
 "use client";
 
-import { TimeRange } from "@/components/TimeRange";
-import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import ToastFrame from "./ToastFrame";
 import ReturnAdminButton from "./ReturnAdminButton";
 import { DUMMY_TASK } from "@/constants/taskDummy";
 
-export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone: string, role: 'ADMIN' | 'OPD', chatId: string }) => {
-  const [urgency, setUrgency] = useState("");
-  const [category, setCategory] = useState("");
-  const [status, setStatus] = useState("");
+interface ChatHeaderAdminProps {
+  tickets: { id: string; ticketNumber: string; assignedOpd: { id: string; name: string } | null }[];
+  selectedTicketId: string;
+  onSelectTicket: (id: string) => void;
+  isSelectMode: boolean;
+  selectedCount: number;
+  isForwarding: boolean;
+  onToggleSelectMode: () => void;
+  onForward: () => void;
+}
 
-  const urgencyOptions = [
-    { value: 'low', label: 'Low', colorClass: 'bg-green-100 text-green-700' },
-    { value: 'medium', label: 'Medium', colorClass: 'bg-yellow-100 text-yellow-700' },
-    { value: 'high', label: 'High', colorClass: 'bg-red-100 text-red-700' },
-  ];
+export const ChatHeader = ({
+  name, phone, role, chatId, avatarUrl,
+  tickets, selectedTicketId, onSelectTicket,
+  isSelectMode, selectedCount, isForwarding,
+  onToggleSelectMode, onForward,
+}: {
+  name: string;
+  phone: string;
+  role: 'ADMIN' | 'OPD';
+  chatId: string;
+  avatarUrl?: string | null;
+} & Partial<ChatHeaderAdminProps>) => {
+  const task = { ...DUMMY_TASK, chatId };
 
-  const categoryOptions = [
-    { value: 'question', label: 'Question', colorClass: 'bg-orange-100 text-orange-800' },
-    { value: 'feedback', label: 'Feedback', colorClass: 'bg-purple-100 text-purple-700' },
-    { value: 'complaint', label: 'Complaint', colorClass: 'bg-pink-100 text-pink-700' },
-  ];
-
-  const statusOptions = [
-    { value: 'todo', label: 'To Do', colorClass: 'bg-red-100 text-red-700' },
-    { value: 'inprogress', label: 'In Progress', colorClass: 'bg-blue-100 text-blue-700' },
-    { value: 'done', label: 'Done', colorClass: 'bg-green-100 text-green-700' },
-    { value: 'onhold', label: 'On Hold', colorClass: 'bg-orange-100 text-orange-800' },
-    { value: 'cancelled', label: 'Cancelled', colorClass: 'bg-gray-200 text-gray-700' },
-  ];
-
-  // const { chatId } = await params
-  const task = { ...DUMMY_TASK, chatId }
-
-  // Header Chat
   return (
-    <div className="p-4 border-b flex justify-between items-center">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold">
-          {name.charAt(0)}
+    <div className="p-4 border-b flex justify-between items-center gap-4">
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-800 flex items-center justify-center text-white font-bold flex-shrink-0">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt={name}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const t = e.currentTarget as HTMLImageElement;
+                t.style.display = 'none';
+                (t.parentElement as HTMLElement).textContent = name.charAt(0);
+              }}
+            />
+          ) : (
+            name.charAt(0)
+          )}
         </div>
         <div>
           <h3 className="font-bold text-slate-900 leading-tight">{name}</h3>
@@ -49,99 +57,138 @@ export const ChatHeader = ({ name, phone, role, chatId }: { name: string, phone:
           </p>
         </div>
       </div>
-      
+
       {role === 'ADMIN' ? (
-        <div className="flex gap-2">
-          <div className="min-w-[100px]">
-            <TimeRange 
-              prefixLabel="Urgency"
-              options={urgencyOptions}
-              value={urgency}
-              onChange={setUrgency}
-              variant="badge"
-            />
-          </div>
-          <div className="min-w-[100px]">
-            <TimeRange 
-              prefixLabel="Category"
-              options={categoryOptions}
-              value={category}
-              onChange={setCategory}
-              variant="badge"
-            />
-          </div>
-          <div className="min-w-[100px]">
-            <TimeRange 
-              prefixLabel="Status"
-              options={statusOptions}
-              value={status}
-              onChange={setStatus}
-              variant="badge"
-            />
-          </div>
+        <div className="flex items-center gap-2 flex-1 justify-end">
+          {!isSelectMode ? (
+            <>
+              <Select value={selectedTicketId ?? ""} onValueChange={onSelectTicket}>
+                <SelectTrigger className="w-64 bg-white border-gray-200 text-slate-600 text-sm h-9">
+                  <SelectValue placeholder={tickets && tickets.length > 0 ? "Select ticket to forward to..." : "No ticket yet"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(tickets ?? []).map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.ticketNumber} — {t.assignedOpd?.name ?? "Unassigned"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <button
+                onClick={onToggleSelectMode}
+                disabled={!selectedTicketId}
+                className="bg-[#1e293b] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#0f172a] disabled:opacity-40 transition-all h-9"
+              >
+                Select Messages
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="text-xs text-slate-500">
+                {selectedCount ?? 0} message{(selectedCount ?? 0) !== 1 ? "s" : ""} selected
+              </span>
+              <button
+                onClick={onToggleSelectMode}
+                className="text-sm border border-gray-300 px-4 py-2 rounded-lg h-9 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onForward}
+                disabled={selectedCount === 0 || isForwarding}
+                className="bg-[#1e293b] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#0f172a] disabled:opacity-40 transition-all flex items-center gap-2 h-9"
+              >
+                {isForwarding && (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                Forward{(selectedCount ?? 0) > 0 ? ` (${selectedCount})` : ""}
+              </button>
+            </>
+          )}
         </div>
       ) : (
-        <ReturnAdminButton task={task}/>
+        <ReturnAdminButton task={task} />
       )}
     </div>
   );
 };
 
-// Forward Chat
-export const ForwardControl = () => {
-  const [selectedOPD, setSelectedOPD] = useState<string>("");
-  const [triggerToast, setTriggerToast] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(true);
+interface ForwardControlProps {
+  tickets: { id: string; ticketNumber: string; assignedOpd: { id: string; name: string } | null }[];
+  selectedTicketId: string;
+  onSelectTicket: (id: string) => void;
+  isSelectMode: boolean;
+  selectedCount: number;
+  isForwarding: boolean;
+  onToggleSelectMode: () => void;
+  onForward: () => void;
+}
 
-  const handleForward = () => {
-    if (!selectedOPD) {
-      // alert("Silakan pilih OPD tujuan terlebih dahulu!");
-      setTriggerToast(false); // Reset dulu
-      setIsSuccess(false);    // Set status error/cancel
-      setTimeout(() => setTriggerToast(true), 10); // Jalankan toast
-      return;
-    }
-    
-    // Masukkan API
-    console.log("Meneruskan pesan ke:", selectedOPD);
-    // alert(`Pesan berhasil diteruskan ke ${selectedOPD}`);
-    // alert("Profil berhasil diperbarui!");
-    setTriggerToast(false); // Reset dulu
-    setIsSuccess(true);     // Set status sukses
-    setTimeout(() => setTriggerToast(true), 10); // Jalankan toast
-  };
-
+export const ForwardControl = ({
+  tickets,
+  selectedTicketId,
+  onSelectTicket,
+  isSelectMode,
+  selectedCount,
+  isForwarding,
+  onToggleSelectMode,
+  onForward,
+}: ForwardControlProps) => {
   return (
     <div className="m-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
       <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 px-1">
-        Internal Routing
+        Forward to OPD
       </label>
-      <div className="flex gap-2">
-        <Select value={selectedOPD} onValueChange={setSelectedOPD}>
-          <SelectTrigger className="flex-1 bg-white border-gray-200 text-slate-600">
-            <SelectValue placeholder="Select OPD to Forward..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="diskominfo">Diskominfo</SelectItem>
-            <SelectItem value="sekda">Sekretariat Daerah</SelectItem>
-            <SelectItem value="dinsos">Dinas Sosial</SelectItem>
-          </SelectContent>
-        </Select>
 
-        <button 
-          onClick={handleForward}
-          className="bg-[#1e293b] text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-[#0f172a] active:scale-95 transition-all shadow-sm"
-        >
-          Forward Chat
-        </button>
-        {triggerToast && (
-          <ToastFrame 
-            isSuccess={isSuccess} 
-            id="Budi P-0012" 
-            process={isSuccess ? "updated" : undefined} 
-          />
-        )}
-      </div>
+      {tickets.length === 0 ? (
+        <p className="text-xs text-gray-400">
+          No ticket linked yet. Use the <strong>+</strong> button on a message to create a ticket first.
+        </p>
+      ) : !isSelectMode ? (
+        <div className="flex gap-2">
+          <Select value={selectedTicketId} onValueChange={onSelectTicket}>
+            <SelectTrigger className="flex-1 bg-white border-gray-200 text-slate-600 text-sm">
+              <SelectValue placeholder="Select ticket to forward to..." />
+            </SelectTrigger>
+            <SelectContent>
+              {tickets.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.ticketNumber} — {t.assignedOpd?.name ?? "Unassigned"}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <button
+            onClick={onToggleSelectMode}
+            disabled={!selectedTicketId}
+            className="bg-[#1e293b] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#0f172a] disabled:opacity-40 transition-all shadow-sm"
+          >
+            Select Messages
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-2 items-center">
+          <span className="text-xs text-slate-500 flex-1">
+            {selectedCount} message{selectedCount !== 1 ? "s" : ""} selected
+          </span>
+          <button
+            onClick={onToggleSelectMode}
+            className="text-sm border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onForward}
+            disabled={selectedCount === 0 || isForwarding}
+            className="bg-[#1e293b] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#0f172a] disabled:opacity-40 transition-all flex items-center gap-2"
+          >
+            {isForwarding && (
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            Forward{selectedCount > 0 ? ` (${selectedCount})` : ""}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

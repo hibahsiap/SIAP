@@ -12,11 +12,11 @@ interface CustomModalProps {
 export default function CustomModal({ isOpen, onClose, title, children, isAlert = false }: CustomModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent 
+      <DialogContent
         className={
-          isAlert 
-            ? "sm:max-w-[400px] p-8 bg-white rounded-2xl flex flex-col items-center text-center" 
-            : "sm:max-w-[450px] p-6 bg-white rounded-xl"
+          isAlert
+            ? "w-[calc(100%-2rem)] sm:max-w-[400px] max-h-[90vh] overflow-y-auto p-6 sm:p-8 bg-white rounded-2xl flex flex-col items-center text-center"
+            : "w-[calc(100%-2rem)] sm:max-w-[450px] max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-white rounded-xl"
         }
       >
         <DialogHeader className={isAlert ? "w-full flex flex-col items-center" : "mb-4"}>

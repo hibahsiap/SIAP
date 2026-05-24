@@ -1,5 +1,48 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const WELCOME_TEMPLATE = `Halo! 👋 Selamat datang di layanan aspirasi publik Diskominfo Karanganyar.
+
+Kami siap membantu Anda. Silakan pilih jenis pesan dengan mengetik salah satu perintah berikut:
+
+/pengaduan — Sampaikan keluhan atau masalah
+/pertanyaan — Ajukan pertanyaan
+/saran — Berikan saran atau masukan
+
+Tim kami akan segera menindaklanjuti pesan Anda. Terima kasih! 🙏`
+
+const COMMAND_TEMPLATES: Record<string, string> = {
+  '/pengaduan': `Terima kasih telah memilih Pengaduan 📋
+
+Silakan copy dan isi form berikut, lalu kirimkan kembali:
+
+[FORM PENGADUAN]
+Nama lengkap:
+NIK:
+Alamat:
+Uraian pengaduan:
+Lokasi kejadian:
+
+Foto/bukti pendukung dapat dikirim setelah mengirim form ini.`,
+
+  '/pertanyaan': `Terima kasih telah memilih Pertanyaan ❓
+
+Silakan copy dan isi form berikut, lalu kirimkan kembali:
+
+[FORM PERTANYAAN]
+Nama lengkap:
+Topik pertanyaan:
+Pertanyaan:`,
+
+  '/saran': `Terima kasih telah memilih Saran 💡
+
+Silakan copy dan isi form berikut, lalu kirimkan kembali:
+
+[FORM SARAN]
+Nama lengkap:
+Bidang/layanan:
+Saran:`,
+}
+
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -19,6 +62,83 @@ async function verifySignature(rawBody: string, signatureHeader: string | null):
     .map(b => b.toString(16).padStart(2, '0'))
     .join('')
   return signatureHeader === expected
+}
+
+async function sendAutoReply(opts: {
+  supabase: ReturnType<typeof createClient>
+  channel: { id: string; accountId: string | null; accessToken: string | null }
+  conversationId: string
+  senderId: string
+  messageText: string
+  igGraphVersion: string
+  now: Date
+}) {
+  const { supabase, channel, conversationId, senderId, messageText, igGraphVersion, now } = opts
+
+  if (!channel.accessToken || !channel.accountId) return
+
+  // Cek last outbound message untuk anti-spam 24 jam
+  const { data: lastOutbound } = await supabase
+    .from('Message')
+    .select('createdAt')
+    .eq('conversationId', conversationId)
+    .eq('direction', 'OUTBOUND')
+    .order('createdAt', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const lastOutboundAt = lastOutbound ? new Date(lastOutbound.createdAt) : null
+  const isFirst24h = !lastOutboundAt || (now.getTime() - lastOutboundAt.getTime() > 24 * 60 * 60 * 1000)
+
+  let replyText: string | null = null
+
+  if (isFirst24h) {
+    replyText = WELCOME_TEMPLATE
+  } else {
+    const cmd = messageText.trim().toLowerCase()
+    replyText = COMMAND_TEMPLATES[cmd] ?? null
+  }
+
+  if (!replyText) return
+
+  // Kirim via Instagram Messaging API
+  const sendRes = await fetch(
+    `https://graph.instagram.com/${igGraphVersion}/${channel.accountId}/messages`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipient: { id: senderId },
+        message: { text: replyText },
+        access_token: channel.accessToken,
+      }),
+    }
+  )
+
+  if (!sendRes.ok) {
+    const errText = await sendRes.text()
+    console.warn(`[AutoReply] Failed to send: ${sendRes.status} ${errText}`)
+    return
+  }
+
+  // Simpan auto-reply ke DB sebagai OUTBOUND agar terhitung di 24h check berikutnya
+  const { error: replyErr } = await supabase.from('Message').insert({
+    id: crypto.randomUUID(),
+    content: replyText,
+    senderType: 'ADMIN',
+    direction: 'OUTBOUND',
+    conversationId,
+    sentAt: now,
+    isInternal: false,
+    isApproved: true,
+    updatedAt: now,
+  })
+
+  if (replyErr) {
+    console.error('[AutoReply] Failed to save reply to DB:', JSON.stringify(replyErr))
+  } else {
+    console.log(`[AutoReply] Sent ${isFirst24h ? 'welcome' : messageText.trim()} to ${senderId}`)
+  }
 }
 
 Deno.serve(async (req: Request) => {
@@ -53,101 +173,274 @@ Deno.serve(async (req: Request) => {
         return new Response('Invalid object', { status: 400 })
       }
 
-      // Ambil channel Instagram dari DB
       const { data: channel } = await supabase
         .from('Channel')
-        .select('id')
+        .select('id, accessToken, accountId')
         .eq('platform', 'INSTAGRAM')
         .single()
 
       if (!channel) return new Response(JSON.stringify({ status: 'no channel' }), { status: 200 })
 
+      const igGraphVersion = Deno.env.get('INSTAGRAM_GRAPH_VERSION') ?? 'v25.0'
+
+      async function fetchIgProfile(psid: string): Promise<{
+        name?: string
+        username?: string
+        profilePicUrl?: string
+      }> {
+        if (!channel.accessToken) return {}
+        try {
+          const profileUrl =
+            `https://graph.instagram.com/${igGraphVersion}/${psid}` +
+            `?fields=name,username,profile_pic&access_token=${encodeURIComponent(channel.accessToken)}`
+          const res = await fetch(profileUrl)
+          if (!res.ok) {
+            const errText = await res.text()
+            console.warn(`[Webhook] Profile fetch failed for ${psid}: ${res.status} ${errText}`)
+            return {}
+          }
+          const data = await res.json()
+          return {
+            name: data.name,
+            username: data.username,
+            profilePicUrl: data.profile_pic,
+          }
+        } catch (err) {
+          console.warn(`[Webhook] Profile fetch error for ${psid}:`, err)
+          return {}
+        }
+      }
+
+      console.log(`[Webhook] Processing ${body.entry?.length ?? 0} entries`)
+
       for (const entry of body.entry ?? []) {
+        const messagingEvents = entry.messaging ?? []
+        console.log(`[Webhook] Entry ${entry.id} has ${messagingEvents.length} messaging event(s)`)
+
         // --- Direct Message ---
-        for (const event of entry.messaging ?? []) {
-          if (!event.message || event.message.is_echo) continue
+        for (const event of messagingEvents) {
+          if (!event.message) {
+            console.log('[Webhook] Skip: no message in event')
+            continue
+          }
+          if (event.message.is_echo) {
+            console.log('[Webhook] Skip: echo')
+            continue
+          }
 
-          const senderId: string = event.sender.id
+          const senderId: string = event.sender?.id ?? ''
+          if (!senderId) {
+            console.log('[Webhook] Skip: no sender.id')
+            continue
+          }
           const messageText: string = event.message.text ?? ''
+          console.log(`[Webhook] DM from ${senderId}: ${messageText.slice(0, 80)}`)
 
-          // Cari citizen berdasarkan Instagram handle
-          const { data: contact } = await supabase
+          // Cari CitizenContact berdasarkan PSID. maybeSingle = null saat 0 row, tanpa error palsu.
+          const { data: contact, error: contactSelErr } = await supabase
             .from('CitizenContact')
-            .select('citizenId')
+            .select('citizenId, username, profilePicUrl')
             .eq('platform', 'INSTAGRAM')
             .eq('handle', senderId)
-            .single()
+            .maybeSingle()
+
+          if (contactSelErr) {
+            console.error('[Webhook] Failed to query CitizenContact:', JSON.stringify(contactSelErr))
+            continue
+          }
 
           let citizenId: string
 
           if (contact) {
             citizenId = contact.citizenId
+
+            const profile = await fetchIgProfile(senderId)
+            const contactPatch: Record<string, string | null> = {}
+            if (profile.username) contactPatch.username = profile.username
+            if (profile.profilePicUrl) contactPatch.profilePicUrl = profile.profilePicUrl
+
+            if (Object.keys(contactPatch).length > 0) {
+              await supabase
+                .from('CitizenContact')
+                .update(contactPatch)
+                .eq('platform', 'INSTAGRAM')
+                .eq('handle', senderId)
+            }
+
+            if (profile.name) {
+              await supabase
+                .from('Citizen')
+                .update({ displayName: profile.name, updatedAt: new Date() })
+                .eq('id', citizenId)
+            }
           } else {
-            // Buat citizen baru
-            const { data: newCitizen } = await supabase
+            const profile = await fetchIgProfile(senderId)
+            const displayName =
+              profile.name?.trim() ||
+              (profile.username ? `@${profile.username}` : 'Instagram User')
+
+            const { data: newCitizen, error: citizenErr } = await supabase
               .from('Citizen')
-              .insert({ displayName: 'Instagram User', createdAt: new Date(), updatedAt: new Date() })
+              .insert({ displayName, updatedAt: new Date() })
               .select('id')
               .single()
+            if (citizenErr || !newCitizen) {
+              console.error('[Webhook] Failed to insert Citizen:', JSON.stringify(citizenErr))
+              continue
+            }
+            citizenId = newCitizen.id
 
-            citizenId = newCitizen!.id
-
-            await supabase
-              .from('CitizenContact')
-              .insert({ platform: 'INSTAGRAM', handle: senderId, citizenId, createdAt: new Date() })
+            const { error: contactErr } = await supabase.from('CitizenContact').insert({
+              platform: 'INSTAGRAM',
+              handle: senderId,
+              username: profile.username ?? null,
+              profilePicUrl: profile.profilePicUrl ?? null,
+              citizenId,
+            })
+            if (contactErr) {
+              console.error('[Webhook] Failed to insert CitizenContact:', JSON.stringify(contactErr))
+              continue
+            }
           }
 
-          // Cari tiket aktif untuk citizen ini
-          const { data: ticket } = await supabase
-            .from('Ticket')
+          // Upsert Conversation (citizen × channel). Tickets are created manually by admin later.
+          const sentAt = event.timestamp ? new Date(event.timestamp) : new Date()
+          const now = new Date()
+
+          const { data: conv, error: convSelErr } = await supabase
+            .from('Conversation')
             .select('id')
             .eq('citizenId', citizenId)
             .eq('channelId', channel.id)
-            .in('status', ['TO_DO', 'IN_PROGRESS'])
-            .order('createdAt', { ascending: false })
-            .limit(1)
-            .single()
+            .maybeSingle()
 
-          let ticketId: string
+          if (convSelErr) {
+            console.error('[Webhook] Failed to query Conversation:', JSON.stringify(convSelErr))
+            continue
+          }
 
-          if (ticket) {
-            ticketId = ticket.id
+          let conversationId: string
+
+          if (conv) {
+            conversationId = conv.id
+            await supabase
+              .from('Conversation')
+              .update({ lastMessageAt: sentAt, updatedAt: now })
+              .eq('id', conversationId)
           } else {
-            // Buat tiket baru
-            const { count } = await supabase
-              .from('Ticket')
-              .select('*', { count: 'exact', head: true })
-
-            const ticketNumber = `TKT-${String((count ?? 0) + 1).padStart(5, '0')}`
-
-            const { data: newTicket } = await supabase
-              .from('Ticket')
+            const { data: newConv, error: convInsErr } = await supabase
+              .from('Conversation')
               .insert({
-                ticketNumber,
-                description: messageText || '[Media attachment]',
+                id: crypto.randomUUID(),
                 citizenId,
                 channelId: channel.id,
-                status: 'TO_DO',
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                lastMessageAt: sentAt,
+                updatedAt: now,
               })
               .select('id')
               .single()
-
-            ticketId = newTicket!.id
+            if (convInsErr || !newConv) {
+              console.error('[Webhook] Failed to insert Conversation:', JSON.stringify(convInsErr))
+              continue
+            }
+            conversationId = newConv.id
           }
 
-          // Simpan pesan
-          await supabase.from('Message').insert({
-            content: messageText || '[Media attachment]',
+          // PROSES ATTACHMENT DULU sebelum insert Message, supaya begitu realtime
+          // mengirim event Message INSERT ke client, semua row Attachment sudah ada
+          // di DB. Tanpa ini, client sempat menampilkan bubble kosong selama
+          // beberapa ratus ms sampai second saat IG-fetch + storage-upload berjalan.
+          const messageId = crypto.randomUUID()
+          const rawAttachments = event.message.attachments ?? []
+          const preparedAttachments: Array<{
+            id: string
+            url: string
+            fileName: string
+            mimeType: string
+            sizeBytes: number
+            messageId: string
+            uploadedAt: Date
+          }> = []
+
+          for (const att of rawAttachments) {
+            const igUrl: string | undefined = att.payload?.url
+            if (!igUrl) continue
+            const kind: string = att.type ?? 'file'
+            try {
+              const fileRes = await fetch(igUrl)
+              if (!fileRes.ok) {
+                console.warn(`[Webhook] Attachment fetch failed (${fileRes.status}) for ${igUrl}`)
+                continue
+              }
+              const bytes = new Uint8Array(await fileRes.arrayBuffer())
+              const mime = fileRes.headers.get('content-type')
+                ?? (kind === 'image' ? 'image/jpeg' : 'application/octet-stream')
+              const ext = mime.split('/')[1]?.split(';')[0] ?? 'bin'
+              const fileName = `${crypto.randomUUID()}.${ext}`
+              const path = `dm/${conversationId}/${fileName}`
+
+              const { error: upErr } = await supabase.storage
+                .from('dm-media')
+                .upload(path, bytes, { contentType: mime, upsert: false })
+              if (upErr) {
+                console.error('[Webhook] Storage upload failed:', JSON.stringify(upErr))
+                continue
+              }
+
+              const { data: pub } = supabase.storage.from('dm-media').getPublicUrl(path)
+
+              preparedAttachments.push({
+                id: crypto.randomUUID(),
+                url: pub.publicUrl,
+                fileName,
+                mimeType: mime,
+                sizeBytes: bytes.byteLength,
+                messageId,
+                uploadedAt: now,
+              })
+              console.log(`[Webhook] Prepared ${kind} attachment ${fileName}`)
+            } catch (err) {
+              console.warn(`[Webhook] Attachment processing error:`, err)
+            }
+          }
+
+          // Setelah semua attachment ter-upload ke Storage, insert Message
+          // (yang memicu realtime), lalu langsung insert semua Attachment row.
+          const { error: msgErr } = await supabase.from('Message').insert({
+            id: messageId,
+            content: messageText,
             senderType: 'WARGA',
             direction: 'INBOUND',
-            ticketId,
-            sentAt: new Date(event.timestamp),
+            conversationId,
+            sentAt,
             isInternal: false,
             isApproved: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            updatedAt: now,
+          })
+          if (msgErr) {
+            console.error('[Webhook] Failed to insert Message:', JSON.stringify(msgErr))
+            continue
+          }
+
+          if (preparedAttachments.length > 0) {
+            const { error: attErr } = await supabase
+              .from('Attachment')
+              .insert(preparedAttachments)
+            if (attErr) {
+              console.error('[Webhook] Failed to insert Attachments batch:', JSON.stringify(attErr))
+            } else {
+              console.log(`[Webhook] Stored ${preparedAttachments.length} attachment(s) for message ${messageId}`)
+            }
+          }
+
+          await sendAutoReply({
+            supabase,
+            channel,
+            conversationId,
+            senderId,
+            messageText: messageText || '',
+            igGraphVersion,
+            now,
           })
         }
 
@@ -164,15 +457,33 @@ Deno.serve(async (req: Request) => {
           const capturedAt = val.timestamp ? new Date(val.timestamp * 1000) : new Date()
           const interactionType = field === 'mentions' ? 'MENTION' : 'COMMENT'
 
-          // Deduplikasi — skip jika comment ID sudah ada
           const { data: existing } = await supabase
             .from('SocialInteraction')
             .select('id')
             .eq('channelId', channel.id)
             .eq('externalId', commentId)
-            .single()
+            .maybeSingle()
 
           if (existing) continue
+
+          // Fetch permalink dari Graph API karena media.id adalah numeric ID,
+          // bukan shortcode yang dipakai di URL publik Instagram
+          let permalink: string | null = null
+          if (mediaId && channel.accessToken) {
+            try {
+              const mediaRes = await fetch(
+                `https://graph.instagram.com/${igGraphVersion}/${mediaId}?fields=permalink&access_token=${encodeURIComponent(channel.accessToken)}`
+              )
+              if (mediaRes.ok) {
+                const mediaData = await mediaRes.json()
+                permalink = mediaData.permalink ?? null
+              } else {
+                console.warn(`[Webhook] Failed to fetch permalink for media ${mediaId}: ${mediaRes.status}`)
+              }
+            } catch (err) {
+              console.warn(`[Webhook] Error fetching permalink for media ${mediaId}:`, err)
+            }
+          }
 
           const { error: insertError } = await supabase.from('SocialInteraction').insert({
             id: crypto.randomUUID(),
@@ -180,7 +491,7 @@ Deno.serve(async (req: Request) => {
             externalId: commentId,
             username,
             content,
-            permalink: mediaId ? `https://www.instagram.com/p/${mediaId}/` : null,
+            permalink,
             isTicketCreated: false,
             channelId: channel.id,
             capturedAt,
@@ -195,14 +506,12 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // Meta butuh response 200 dalam 20 detik
       return new Response(JSON.stringify({ status: 'ok' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       })
     } catch (err) {
       console.error('[Webhook Error]', err)
-      // Tetap return 200 agar Meta tidak terus retry
       return new Response(JSON.stringify({ status: 'error' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },

@@ -13,6 +13,7 @@ import {
   IdCard,
 } from "lucide-react";
 import { ProfileStore } from "@/components/ProfileStore";
+import { formatTime, formatDate } from "@/lib/formatdate";
 
 function iconForAction(action: string) {
   if (action.includes('PASSWORD')) return Lock;
@@ -53,9 +54,8 @@ export function ActivityLog() {
       <div className="space-y-8 relative z-10">
         {logs.map((log) => {
           const Icon = iconForAction(log.action);
-          const d = new Date(log.createdAt);
-          const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const date = d.toLocaleDateString();
+          const time = formatTime(log.createdAt);
+          const date = formatDate(log.createdAt);
           return (
             <div key={log.id} className="flex gap-2">
               <div className="text-right w-[80px] shrink-0">
