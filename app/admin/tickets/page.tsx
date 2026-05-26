@@ -1,17 +1,19 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link'; 
 import Header from '@/components/Header'; 
 import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
 import EmptyState from '@/components/EmptyState';
 import SearchEmptyState from '@/components/SearchEmpty';
 import DeleteAlertModal from '@/components/DeleteModal';
-import EditTicketModal from '@/components/EditTicketModal'; 
-import ForwardTicketModal from '@/components/ForwardTicketModal'; // Import modal baru
+import EditTicketModal from '@/components/EditTicketModal';
+import FilterSidebar from '@/components/Filter'; 
+import ForwardTicketModal from '@/components/ForwardTicketModal'; 
 import { Trash2, Edit2, Forward } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
 import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
-import { toast } from "sonner"; // Opsional untuk notifikasi sukses
+import { toast } from "sonner"; 
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
@@ -51,8 +53,10 @@ export default function TicketsPage() {
   const { openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false); // State modal forward
+  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false); 
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
+
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const currentData = useMemo(() => {
     if (activeTab === 'pending') return pendingTickets;
@@ -68,12 +72,9 @@ export default function TicketsPage() {
     });
   }, [currentData, searchQuery]);
 
-  // Fungsi saat tombol MOVE di dalam modal diklik
   const handleForwardConfirm = () => {
     setIsForwardModalOpen(false);
     toast.success("Ticket successfully forwarded to All Tickets");
-    // Di sini kamu bisa selipkan fungsi panggil API backend mu nanti, contoh:
-    // await forwardTicket(selectedTicket.id)
   };
 
   const columns = useMemo<ColumnDefinition[]>(() => {
@@ -90,7 +91,17 @@ export default function TicketsPage() {
 
     if (activeTab === 'pending') {
       return [
-        { header: "Title", key: "taskName", className: "text-center", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
+        { 
+          header: "Title", 
+          key: "taskName", 
+          className: "text-center", 
+          // Diubah menjadi Link agar bisa diklik ke detail
+          cell: (val, row: any) => (
+            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+              {val}
+            </Link>
+          ) 
+        },
         { header: "OPD", key: "opd", className: "text-center" }, 
         { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
         { header: "Issue Type", key: "issueType", className: "text-center", cell: (val) => getBadge(val, 'issue') },
@@ -99,7 +110,6 @@ export default function TicketsPage() {
         { header: "Actions", key: "action", className: "text-center", cell: (_, row) => (
             <div className="flex items-center justify-center gap-4">
               <button onClick={() => { setSelectedTicket(row); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
-              {/* Hubungkan fungsi klik forward di sini */}
               <button onClick={() => { setSelectedTicket(row); setIsForwardModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Forward className="w-4 h-4" /></button>
             </div>
           )
@@ -107,18 +117,38 @@ export default function TicketsPage() {
       ];
     } else if (activeTab === 'all') {
       return [
-        { header: "Title", key: "taskName", className: "text-center", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
+        { 
+          header: "Title", 
+          key: "taskName", 
+          className: "text-center", 
+          // Diubah menjadi Link
+          cell: (val, row: any) => (
+            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+              {val}
+            </Link>
+          ) 
+        },
         { header: "OPD", key: "opd", className: "text-center" }, 
         { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
         { header: "Issue Type", key: "issueType", className: "text-center", cell: (val) => getBadge(val, 'issue') },
         { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
-        { header: "Star date", key: "startDate", className: "text-center" },
+        { header: "Start date", key: "startDate", className: "text-center" },
         { header: "Due date", key: "dueDate", className: "text-center" },
         messageColumn
       ];
     } else {
       return [
-        { header: "Pengirim", key: "pengirim", className: "text-center", cell: (val) => <span className="whitespace-normal min-w-[100px] inline-block font-bold">{val}</span> },
+        { 
+          header: "Pengirim", 
+          key: "pengirim", 
+          className: "text-center", 
+          // Pengirim juga kita buat bisa diklik ke detail tiket
+          cell: (val, row: any) => (
+            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[100px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+              {val}
+            </Link>
+          ) 
+        },
         { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
         { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
         messageColumn,
@@ -151,7 +181,10 @@ export default function TicketsPage() {
           ))}
         </div>
         <div className="w-full md:w-auto">
-            <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> 
+            <Header 
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery} 
+            onFilterClick={() => setIsFilterOpen(true)} /> 
         </div>
       </div>
 
@@ -185,11 +218,15 @@ export default function TicketsPage() {
         ticketData={selectedTicket}
       />
 
-      {/* Sisipkan pemanggilan modal forward baru di sini */}
       <ForwardTicketModal 
         isOpen={isForwardModalOpen}
         onClose={() => setIsForwardModalOpen(false)}
         onConfirm={handleForwardConfirm}
+      />
+
+      <FilterSidebar 
+        isOpen={isFilterOpen} 
+        onClose={() => setIsFilterOpen(false)} 
       />
       
     </div>
