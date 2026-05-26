@@ -8,6 +8,7 @@ import SearchEmptyState from '@/components/SearchEmpty';
 import DeleteAlertModal from '@/components/DeleteModal';
 import { ArrowUpRight, Loader, CircleChevronDown, Calendar, Trash2, Edit2, Forward } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
+import FilterSidebar from '@/components/Filter'; 
 import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
 import KanbanBoard from '@/components/spectrumui/kanbanboard';
 
@@ -47,7 +48,7 @@ export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState<TabCategory>('kanban');
   const [searchQuery, setSearchQuery] = useState("");
   const { openEditModal, openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
-
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const currentData = useMemo(() => {
     if (activeTab === 'all') return allTickets;
     return aspirationTickets;
@@ -125,7 +126,7 @@ export default function TicketsPage() {
           ))}
         </div>
         <div className="w-auto">
-            <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> 
+            <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} onFilterClick={() => setIsFilterOpen(true)}/> 
         </div>
       </div>
 
@@ -152,6 +153,11 @@ export default function TicketsPage() {
         onClose={closeDeleteModal} 
         onConfirm={() => { closeDeleteModal(); }} 
         itemName={activeTab === 'aspirations' ? "aspiration message" : "task"} 
+      />
+
+      <FilterSidebar 
+        isOpen={isFilterOpen} 
+        onClose={() => setIsFilterOpen(false)} 
       />
       
     </div>
