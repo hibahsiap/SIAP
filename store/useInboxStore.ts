@@ -39,6 +39,7 @@ export type InboxConversation = {
     direction: MessageDirection;
     senderType: SenderType;
     at: string;
+    hasAttachment: boolean;
   } | null;
   unread: boolean;
   lastMessageAt: string;
@@ -78,6 +79,7 @@ export type InboxMessage = {
     opdName: string | null;
   } | null;
   attachments: InboxAttachment[];
+  approval: { verdict: string; reason: string | null } | null;
 };
 
 export type InboxTicketSummaryDetail = {
@@ -273,6 +275,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
                         at: row.sentAt ?? row.createdAt,
                         sender: null,
                         attachments: [],
+                        approval: null,
                       },
                     ],
                   },

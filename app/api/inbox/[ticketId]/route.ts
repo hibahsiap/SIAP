@@ -60,6 +60,9 @@ export async function GET(
           attachments: {
             select: { id: true, url: true, mimeType: true, fileName: true },
           },
+          approval: {
+            select: { verdict: true, reason: true },
+          },
         },
       },
     },
@@ -131,6 +134,9 @@ export async function GET(
           }
         : null,
       attachments: m.attachments,
+      approval: m.approval
+        ? { verdict: m.approval.verdict, reason: m.approval.reason }
+        : null,
     })),
   });
 }

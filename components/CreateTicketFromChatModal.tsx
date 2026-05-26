@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CustomModal from "@/components/CustomModal";
 import Field from "@/components/Field";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { X, ImageIcon } from "lucide-react";
 
 interface AiResult {
   title?: string | null;
@@ -49,6 +50,9 @@ export default function CreateTicketFromChatModal({
   const [error, setError] = useState<string | null>(null);
   const [opds, setOpds] = useState<Opd[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -60,6 +64,11 @@ export default function CreateTicketFromChatModal({
     setUrgency(aiResult?.urgency ?? "");
     setType(aiResult?.type ?? "");
     setError(null);
+    setSelectedFiles([]);
+    setPreviews((prev) => {
+      prev.forEach((url) => URL.revokeObjectURL(url));
+      return [];
+    });
     Promise.all([
       fetch("/api/opd").then((r) => r.json()),
       fetch("/api/category").then((r) => r.json()),
@@ -80,11 +89,53 @@ export default function CreateTicketFromChatModal({
     });
   }, [isOpen, messagePreview, aiResult]);
 
+  const MAX_IMAGES = 5;
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    const remaining = MAX_IMAGES - selectedFiles.length;
+    const toAdd = files.slice(0, remaining);
+    if (toAdd.length < files.length) {
+      setError(`Maksimal ${MAX_IMAGES} gambar. Hanya ${remaining} yang ditambahkan.`);
+    }
+    setSelectedFiles((prev) => [...prev, ...toAdd]);
+    toAdd.forEach((f) => {
+      setPreviews((prev) => [...prev, URL.createObjectURL(f)]);
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeFile = (i: number) => {
+    setSelectedFiles((prev) => prev.filter((_, idx) => idx !== i));
+    setPreviews((prev) => {
+      const url = prev[i];
+      URL.revokeObjectURL(url);
+      return prev.filter((_, idx) => idx !== i);
+    });
+  };
+
   const handleCreate = async () => {
     if (!opdId) { setError("Please select an OPD first"); return; }
     setIsSubmitting(true);
     setError(null);
     try {
+      const uploadedAttachments: { url: string; fileName: string; mimeType: string; sizeBytes: number }[] = [];
+      if (selectedFiles.length > 0) {
+        for (const file of selectedFiles) {
+          const fd = new FormData();
+          fd.append("file", file);
+          const upRes = await fetch("/api/upload", { method: "POST", body: fd });
+          const upData = await upRes.json();
+          if (!upRes.ok) throw new Error(upData.error ?? "Upload gambar gagal");
+          uploadedAttachments.push({
+            url: upData.url,
+            fileName: upData.fileName,
+            mimeType: upData.mimeType,
+            sizeBytes: upData.sizeBytes,
+          });
+        }
+      }
+
       const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,6 +149,7 @@ export default function CreateTicketFromChatModal({
           categoryId: categoryId || undefined,
           urgency: urgency || undefined,
           type: type || undefined,
+          attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
         }),
       });
       const data = await res.json();
@@ -146,6 +198,49 @@ export default function CreateTicketFromChatModal({
             placeholder="Describe the issue..."
             className="min-h-[80px] border-[#D2D2D2] rounded-lg text-sm resize-none"
           />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="font-semibold text-[12px] uppercase text-[#546064]">
+            IMAGES ({selectedFiles.length}/{MAX_IMAGES})
+          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <div className="flex flex-wrap gap-2">
+            {previews.map((url, i) => (
+              <div key={i} className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={`Preview ${i + 1}`}
+                  className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeFile(i)}
+                  className="absolute -top-1.5 -right-1.5 p-0.5 rounded-full bg-red-500 text-white hover:bg-red-600"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+            {selectedFiles.length < MAX_IMAGES && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-0.5 text-gray-400 hover:border-[#1a233a] hover:text-[#1a233a] transition-colors"
+              >
+                <ImageIcon size={18} />
+                <span className="text-[9px] font-medium">Add</span>
+              </button>
+            )}
+          </div>
         </div>
 
         <Field

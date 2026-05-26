@@ -114,12 +114,18 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
             const platform = platformOf(c);
             const href = `${basePath}/${c.id}`;
 
-            return (
+              return (
               <Link href={href} key={c.id}>
                 <ChatItem
                   name={c.citizen.name}
                   avatarUrl={c.citizen.profilePicUrl}
-                  message={c.lastMessage?.content ?? "(no message)"}
+                  message={
+                    c.lastMessage?.content
+                      ? c.lastMessage.content
+                      : c.lastMessage?.hasAttachment
+                      ? "[Image]"
+                      : "(no message)"
+                  }
                   time={timeAgo(c.lastMessage?.at ?? c.lastMessageAt)}
                   ticketCount={c.ticketCount}
                   platform={platform}

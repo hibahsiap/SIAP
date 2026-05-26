@@ -13,7 +13,12 @@ export async function PATCH(
 
   const { ticketId: conversationId, messageId } = await params;
   const body = await req.json().catch(() => ({}));
-  const { content, approve } = body as { content?: string; approve?: boolean };
+  const { content, approve, reject, reason } = body as {
+    content?: string;
+    approve?: boolean;
+    reject?: boolean;
+    reason?: string;
+  };
 
   const message = await prisma.message.findUnique({
     where: { id: messageId },
@@ -87,5 +92,28 @@ export async function PATCH(
     );
   }
 
-  return NextResponse.json({ error: "Provide content or approve=true" }, { status: 400 });
+  // Reject
+  if (reject) {
+    if (message.approvalId)
+      return NextResponse.json({ error: "Message already acted upon" }, { status: 400 });
+    if (!reason?.trim())
+      return NextResponse.json({ error: "Reason is required for rejection" }, { status: 400 });
+
+    const rejection = await prisma.approval.create({
+      data: {
+        verdict: "REJECTED",
+        decidedById: auth.userId,
+        reason: reason.trim(),
+      },
+    });
+
+    await prisma.message.update({
+      where: { id: messageId },
+      data: { approvalId: rejection.id },
+    });
+
+    return NextResponse.json({ id: messageId, rejected: true }, { status: 200 });
+  }
+
+  return NextResponse.json({ error: "Provide content, approve=true, or reject=true" }, { status: 400 });
 }

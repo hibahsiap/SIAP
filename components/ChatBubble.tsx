@@ -1,4 +1,4 @@
-import { Plus, Pencil, ArrowUp, Check, Forward, Ticket, Loader2, X, FileText } from "lucide-react";
+import { Plus, Pencil, ArrowUp, Check, Forward, Ticket, Loader2, X, FileText, Download, Ban } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -51,6 +51,8 @@ interface ChatBubbleProps {
   isClassifying?: boolean;
   isApproved?: boolean;
   onEditApprove?: (content: string) => Promise<void>;
+  onReject?: (reason: string) => Promise<void>;
+  approval?: { verdict: string; reason: string | null } | null;
   attachments?: BubbleAttachment[];
 }
 
@@ -58,12 +60,34 @@ export const ChatBubble = ({
   message, time, isSender, isOPD, senderName, avatar,
   onCreateTicket, isSelectMode, isSelected, onToggleSelect,
   ticket, forwardedToTicketId, forwardedToOpdName, isClassifying,
-  isApproved = true, onEditApprove, attachments,
+  isApproved = true, onEditApprove, onReject, approval, attachments,
 }: ChatBubbleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<BubbleAttachment | null>(null);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const isRejected = approval?.verdict === "REJECTED";
+  const isPending = isOPD && !isApproved && !isRejected;
+
+  const handleDownload = async (a: BubbleAttachment) => {
+    try {
+      const res = await fetch(a.url);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = a.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(a.url, "_blank");
+    }
+  };
 
   useEffect(() => {
     if (!previewAttachment) return;
@@ -186,7 +210,8 @@ export const ChatBubble = ({
           ) : (
           <div className={`p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
             isSender ? "bg-[#1e293b] text-white rounded-br-none" :
-            isOPD && !isApproved ? "bg-[#e0f2fe] text-slate-800 border border-blue-200 border-dashed rounded-br-none opacity-70" :
+            isOPD && isRejected ? "bg-red-50 text-slate-600 border border-red-200 rounded-br-none opacity-60" :
+            isOPD && isPending ? "bg-[#e0f2fe] text-slate-800 border border-blue-200 border-dashed rounded-br-none opacity-70" :
             isOPD ? "bg-[#e0f2fe] text-slate-800 border border-blue-100 rounded-br-none" :
             ticket ? "bg-[#f1f5f9] text-slate-800 rounded-bl-none ring-1 ring-slate-300" :
             "bg-[#f1f5f9] text-slate-800 rounded-bl-none"
@@ -196,20 +221,29 @@ export const ChatBubble = ({
                 {attachments.map((a) => {
                   if (a.mimeType.startsWith("image/")) {
                     return (
-                      <button
-                        key={a.id}
-                        type="button"
-                        onClick={() => setPreviewAttachment(a)}
-                        className="block cursor-zoom-in"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={a.url}
-                          alt={a.fileName}
-                          loading="lazy"
-                          className="max-w-[260px] max-h-[260px] rounded-lg object-cover"
-                        />
-                      </button>
+                      <div key={a.id} className="relative group/img inline-block">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewAttachment(a)}
+                          className="block cursor-zoom-in"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={a.url}
+                            alt={a.fileName}
+                            loading="lazy"
+                            className="max-w-[260px] max-h-[260px] rounded-lg object-cover"
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleDownload(a); }}
+                          className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover/img:opacity-100 transition-opacity"
+                          title="Download"
+                        >
+                          <Download size={14} />
+                        </button>
+                      </div>
                     );
                   }
                   return (
@@ -234,7 +268,12 @@ export const ChatBubble = ({
             )}
             <div className={`text-[10px] mt-2 flex items-center gap-1 ${isSender ? "text-slate-400" : "text-slate-500"}`}>
               {time} {isSender && "• You"} {isOPD && senderName && `• Sent by ${senderName}`}
-              {isOPD && !isApproved && <span className="ml-1 text-amber-500 font-semibold">• Pending approval</span>}
+              {isPending && <span className="ml-1 text-amber-500 font-semibold">• Pending approval</span>}
+              {isRejected && (
+                <span className="ml-1 text-red-500 font-semibold">
+                  • Rejected{approval?.reason ? ` — ${approval.reason}` : ""}
+                </span>
+              )}
             </div>
           </div>
           )}
@@ -252,28 +291,74 @@ export const ChatBubble = ({
               }
             </button>
           )}
-          {/* Edit/Approve for unapproved OPD messages (admin only) */}
-          {isOPD && !isApproved && onEditApprove && (
+          {/* Edit/Approve/Reject for unapproved OPD messages (admin only) */}
+          {isOPD && isPending && onEditApprove && (
             <div className="flex flex-col gap-1">
-              <button
-                onClick={() => { setIsEditing(true); setEditContent(message); }}
-                className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500"
-                title="Edit"
-              >
-                <Pencil size={13} />
-              </button>
-              <button
-                disabled={isSubmitting}
-                onClick={async () => {
-                  setIsSubmitting(true);
-                  await onEditApprove(message);
-                  setIsSubmitting(false);
-                }}
-                className="p-1 rounded-full bg-green-100 hover:bg-green-200 text-green-700 disabled:opacity-50"
-                title="Approve & Send"
-              >
-                {isSubmitting ? <Loader2 size={13} className="animate-spin" /> : <ArrowUp size={13} />}
-              </button>
+              {isRejecting ? (
+                <div className="flex flex-col gap-2 w-[200px] bg-white border border-red-200 rounded-xl p-3 shadow-sm">
+                  <label className="text-[11px] font-semibold text-red-600 uppercase">Reject Reason</label>
+                  <textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    placeholder="Required…"
+                    className="w-full p-2 rounded-lg border border-red-200 text-xs resize-none outline-none focus:ring-2 focus:ring-red-300 min-h-[50px]"
+                    autoFocus
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={() => { setIsRejecting(false); setRejectReason(""); }}
+                      className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs bg-slate-100 hover:bg-slate-200 text-slate-600"
+                    >
+                      <X size={12} /> Cancel
+                    </button>
+                    <button
+                      disabled={isSubmitting || !rejectReason.trim()}
+                      onClick={async () => {
+                        setIsSubmitting(true);
+                          await onReject?.(rejectReason.trim());
+                        setIsRejecting(false);
+                        setRejectReason("");
+                        setIsSubmitting(false);
+                      }}
+                      className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                    >
+                      {isSubmitting ? <Loader2 size={12} className="animate-spin" /> : "Reject"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => { setIsEditing(true); setEditContent(message); }}
+                    className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500"
+                    title="Edit"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                  <button
+                    disabled={isSubmitting}
+                    onClick={async () => {
+                      setIsSubmitting(true);
+                      await onEditApprove(message);
+                      setIsSubmitting(false);
+                    }}
+                    className="p-1 rounded-full bg-green-100 hover:bg-green-200 text-green-700 disabled:opacity-50"
+                    title="Approve & Send"
+                  >
+                    {isSubmitting ? <Loader2 size={13} className="animate-spin" /> : <ArrowUp size={13} />}
+                  </button>
+                  {onReject && (
+                    <button
+                      disabled={isSubmitting}
+                      onClick={() => setIsRejecting(true)}
+                      className="p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 disabled:opacity-50"
+                      title="Reject"
+                    >
+                      <Ban size={13} />
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>
@@ -286,14 +371,24 @@ export const ChatBubble = ({
         className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
         onClick={() => setPreviewAttachment(null)}
       >
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); setPreviewAttachment(null); }}
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
-          aria-label="Close preview"
-        >
-          <X size={20} />
-        </button>
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleDownload(previewAttachment)}
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+            title="Download"
+          >
+            <Download size={20} />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setPreviewAttachment(null); }}
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+            aria-label="Close preview"
+          >
+            <X size={20} />
+          </button>
+        </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={previewAttachment.url}

@@ -400,22 +400,31 @@ export default function ChatDetailPage({
               return (
                 <div key={m.id} id={`msg-${m.id}`}>
                   {dateSep}
-                  <ChatBubble
-                    message={m.content}
-                    time={time}
-                    isOPD
-                    senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
-                    isApproved={m.isApproved}
-                    onEditApprove={!m.isApproved ? async (content) => {
-                      await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ content, approve: true }),
-                      });
-                      fetchConversation(chatId);
-                    } : undefined}
-                    attachments={m.attachments}
-                  />
+                    <ChatBubble
+                      message={m.content}
+                      time={time}
+                      isOPD
+                      senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
+                      isApproved={m.isApproved}
+                      approval={m.approval}
+                      onEditApprove={!m.isApproved ? async (content) => {
+                        await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ content, approve: true }),
+                        });
+                        fetchConversation(chatId);
+                      } : undefined}
+                      onReject={!m.isApproved ? async (reason: string) => {
+                        await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ reject: true, reason }),
+                        });
+                        fetchConversation(chatId);
+                      } : undefined}
+                      attachments={m.attachments}
+                    />
                 </div>
               );
             }
@@ -479,13 +488,11 @@ export default function ChatDetailPage({
             >
               {isUploading ? <Spinner size={20} className="animate-spin" /> : <Plus size={20} />}
             </button>
-            <div className="absolute bottom-full left-0 mb-2">
-              <FileAttachment
-                isOpen={attachmentMenuOpen}
-                onClose={() => setAttachmentMenuOpen(false)}
-                onFileSelect={(file) => handleFilePicked(file)}
-              />
-            </div>
+            <FileAttachment
+              isOpen={attachmentMenuOpen}
+              onClose={() => setAttachmentMenuOpen(false)}
+              onFileSelect={(file) => handleFilePicked(file)}
+            />
           </div>
           <input
             type="text"

@@ -9,8 +9,15 @@ export async function POST(req: NextRequest) {
   if (!auth || auth.role !== "ADMIN")
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { conversationId, messageId, opdId, title, description, location, categoryId, urgency, type } =
-    await req.json();
+  const {
+    conversationId, messageId, opdId, title, description, location, categoryId, urgency, type,
+    attachments,
+  }: {
+    conversationId: string; messageId: string; opdId: string;
+    title?: string; description?: string; location?: string; categoryId?: string;
+    urgency?: string; type?: string;
+    attachments?: { url: string; fileName: string; mimeType: string; sizeBytes: number }[];
+  } = await req.json();
 
   if (!conversationId || !messageId || !opdId)
     return NextResponse.json({ error: "conversationId, messageId, opdId are required" }, { status: 400 });
@@ -51,6 +58,18 @@ export async function POST(req: NextRequest) {
         updatedAt: new Date(),
       },
     });
+
+    if (attachments && attachments.length > 0) {
+      await tx.attachment.createMany({
+        data: attachments.map((a) => ({
+          url: a.url,
+          fileName: a.fileName,
+          mimeType: a.mimeType,
+          sizeBytes: a.sizeBytes,
+          ticketId: ticket.id,
+        })),
+      });
+    }
 
     // Mark trigger message: ticketId = created from this message; forwardedToTicketId = OPD can see it
     await tx.message.update({

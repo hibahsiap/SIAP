@@ -41,7 +41,7 @@ export default function FileAttachment({ isOpen, onClose, onFileSelect }: Props)
 
   return (
     // Wrapper pop-up dengan absolute positioning
-    <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-gray-100 bg-white p-2 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+    <div className="absolute bottom-full left-0 z-50 mb-2 w-56 rounded-2xl border border-gray-100 bg-white p-2 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
       
       {/* Tombol Document */}
       <button

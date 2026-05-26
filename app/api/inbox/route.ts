@@ -74,6 +74,7 @@ export async function GET(req: NextRequest) {
           sentAt: true,
           forwardedToTicketId: true,
           senderUser: { select: { opdId: true } },
+          attachments: { select: { mimeType: true } },
         },
       },
     },
@@ -115,6 +116,7 @@ export async function GET(req: NextRequest) {
               direction: last.direction,
               senderType: last.senderType,
               at: last.sentAt ?? last.createdAt,
+              hasAttachment: last.attachments.length > 0,
             }
           : null,
         unread: last?.direction === "INBOUND",
