@@ -7,6 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Calendar, GripVertical, MessageCircle, Paperclip, Plus } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { useRouter } from 'next/navigation';
+import UpdateProgressModal from '../UpdateProgressModal';
+import ToastFrame from '../ToastFrame';
+// import ToastFrame from './ToastFrame';
 
 
 interface Task {
@@ -33,7 +36,7 @@ const sampleData: Column[] = [
   {
     id: "todo",
     title: "To Do",
-    bg: "#FFEBEB",
+    bg: "#FDF6F6",
     text: "#6D3531",
     dot: "#E56458",
     badge: "#F7D9D5",
@@ -61,7 +64,7 @@ const sampleData: Column[] = [
   {
     id: "progress",
     title: "In Progress",
-    bg: "#E8F6FF",
+    bg: "#F3F9FD",
     text: "#264A72",
     dot: "#2783DE",
     badge: "#C1DEF5",
@@ -80,7 +83,7 @@ const sampleData: Column[] = [
   {
     id: "done",
     title: "Done",
-    bg: "#EAFFF1",
+    bg: "#F6F9F7",
     text: "#2A533C",
     dot: "#46A171",
     badge: "#D7E6DD",
@@ -99,7 +102,7 @@ const sampleData: Column[] = [
   {
     id: "hold",
     title: "On Hold",
-    bg: "#FFF7EF",
+    bg: "#FAF8F6",
     text: "#584437",
     dot: "#B68965",
     badge: "#E7D9CF",
@@ -115,11 +118,48 @@ const sampleData: Column[] = [
       },
     ],
   },
+  {
+    id: "cancel",
+    title: "Canceled",
+    bg: "#F9F8F7",
+    text: "#494846",
+    dot: "#8E8B86",
+    badge: "#E1DFDC",
+    tasks: [
+      {
+        id: "6",
+        taskName: "Marak Penipuan",
+        message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+        status: "hold",
+        issueType: ["Social"],
+        startDate: "2024-01-15",
+        priority: "medium",
+      },
+    ],
+  },
 ]
+
+const priorityColors = {
+  low: "border-green-400 bg-green-50 text-green-700",
+  medium: "border-amber-400 bg-amber-50 text-amber-700",
+  high: "border-red-400 bg-red-50 text-red-700",
+};
 
 export default function KanbanBoard() {
   const [columns, setColumns] = useState<Column[]>(sampleData);
   const router = useRouter();
+
+  // Menyimpan data perpindahan yang akan dieksekusi setelah modal di-save
+  const [pendingMove, setPendingMove] = useState<{
+    task: Task;
+    sourceColumnId: string;
+    targetColumnId: string;
+  } | null>(null);
+
+  const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+
+  // STATE BARU: Untuk mentrigger Toast di level KanbanBoard
+  const [toastData, setToastData] = useState<{ id: string; name: string } | null>(null);
 
   const handleDragStart = (e: React.DragEvent, task: Task, columnId: string) => {
     e.dataTransfer.setData('text/plain', JSON.stringify({ task, sourceColumnId: columnId }));
@@ -136,28 +176,61 @@ export default function KanbanBoard() {
 
     if (sourceColumnId === targetColumnId) return;
 
+    // Langsung simpan data perpindahan & buka UpdateProgressModal
+    setPendingMove({ task, sourceColumnId, targetColumnId });
+    setIsProgressModalOpen(true);
+  };
+
+  // Fungsi penanganan akhir saat tombol "Save Changes" diklik di dalam modal
+  const handleFinalProgressSave = (data: { files: File[]; description: string }) => {
+    if (!pendingMove) return;
+
+    const { task, sourceColumnId, targetColumnId } = pendingMove;
+
     setColumns((prev) =>
       prev.map((col) => {
+        // 1. Bersihkan dari bodi kolom asal
         if (col.id === sourceColumnId) {
           return { ...col, tasks: col.tasks.filter((t) => t.id !== task.id) };
         }
-        if (col.id === targetColumnId) {
-          return { ...col, tasks: [...col.tasks, task] };
+        
+        // 2. Tambah ke bodi kolom baru dan perbarui isi pesan teksnya
+        if (col.id === targetColumnId) { 
+          return {
+            ...col,
+            tasks: [...col.tasks, { ...task, description: data.description, status: targetColumnId as any }]
+          };
         }
         return col;
-      }),
+      })
     );
+
+    // Kirim data gabungan berkas gambar bukti & deskripsi teks baru ke Backend
+    console.log("Files ready to API upload:", data.files);
+    console.log("New description updated:", data.description);
+
+    // 3. SET DATA TOAST DI LEVEL KANBANBOARD SEBELUM MODAL RE-SET
+    setToastData({ id: task.id, name: task.taskName });
+
+    // Reset total seluruh state modal (Modal menutup dengan aman)
+    setIsProgressModalOpen(false);
+    setPendingMove(null);
+
+    // Otomatis hilangkan toast setelah beberapa detik (misal 4 detik)
+    setTimeout(() => {
+      setToastData(null);
+    }, 4000);
   };
  
   return (
-    <div className="w-240 mb-4 flex flex-col gap-4 -mt-2">
+    <div className=" mb-4 flex flex-col gap-4 -mt-2 relative">
       <div className="flex gap-1 justify-end items-center">
         <p className='font-semibold text-xs'>Scroll</p>
         <ArrowRight size={16}/>
       </div>
-      <div className="overflow-x-auto custom-scrollbar">
+      <div className="w-full overflow-x-auto custom-scrollbar">
           
-          <div className="flex gap-4 w-300 mb-2">
+          <div className="flex gap-4 w-250 mb-2">
             {columns.map((column) => (
               <div
                 key={column.id}
@@ -189,15 +262,20 @@ export default function KanbanBoard() {
                       draggable
                       onDragStart={(e) => handleDragStart(e, task, column.id)}
                       onClick={() => {
-                        router.push(`/opd/dashboard/task/${task.id}`)
+                        router.push(`/opd/task/${task.id}`)
                       }}
                     >
                       <CardContent className="px-3 py-1">
                         <div className="space-y-3.5">
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-center justify-between gap-1">
                             <h4 className="font-semibold text-neutral-900 text-sm leading-tight">
                               {task.taskName}
                             </h4>
+                            <p className={`border px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                task.priority ? priorityColors[task.priority] : 'border-neutral-300 bg-neutral-50 text-neutral-600'
+                              }`}>
+                                {task.priority}
+                            </p>
                           </div>
 
                           {task.message && (
@@ -211,7 +289,7 @@ export default function KanbanBoard() {
                               {task.issueType.map((issue) => (
                                 <Badge
                                   key={issue}
-                                  className="text-[10px] bg-yellow-200 text-neutral-800 border-yellow-400 backdrop-blur-sm"
+                                  className="text-[10px] bg-[#F0DFAC] text-[#655121] border-[#655121] backdrop-blur-sm"
                                 >
                                   {issue}
                                 </Badge>
@@ -241,6 +319,29 @@ export default function KanbanBoard() {
         
       </div>
 
+      {/* SINGLE UPDATE PROGRESS MODAL */}
+      {pendingMove && (
+        <UpdateProgressModal
+          isOpen={isProgressModalOpen}
+          onClose={() => {
+            setIsProgressModalOpen(false);
+            setPendingMove(null);
+          }}
+          task={pendingMove.task}
+          onSave={handleFinalProgressSave}
+        />
+      )}
+
+      {/* RENDER TOAST DI LEVEL KANBANBOARD (Aman dari unmount modal) */}
+      {toastData && (
+        <ToastFrame 
+          isSuccess={true} 
+          id={toastData.id} 
+          name={toastData.name}
+          process="updated" 
+        />
+      )}
+      
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { InteractionStore } from "@/components/InteractionStore";
 import CreateDeleteModals from "@/components/SocialModal";
 import { formatDateTime as formatTime } from "@/lib/formatdate";
+import { DateRange } from "@/components/DateRangePicker";
 
 type SocialInteraction = {
   id: string;
@@ -23,6 +24,8 @@ type SocialInteraction = {
 
 export default function SocialInteractionsPage() {
   const [activeTab, setActiveTab] = useState("comments");
+  const [selectedRange, setSelectedRange] = useState('all');
+  const [customDateRange, setCustomDateRange] = useState<DateRange>({ from: null, to: null });
   const [currentPage, setCurrentPage] = useState(1);
   const [data, setData] = useState<SocialInteraction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +59,26 @@ export default function SocialInteractionsPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  const timeOptions = [
+    { value: 'all', label: 'All Time' },
+    { value: 'today', label: 'Today' },
+    { value: 'week', label: 'This Week' },
+    { value: 'month', label: 'This Month' },
+    { value: 'custom', label: 'Custom Range' },
+  ];
+
+  // Handle time range change — receives both the value and optional date range
+  const handleTimeRangeChange = (value: string, dateRange?: DateRange) => {
+    setSelectedRange(value);
+    if (value === 'custom' && dateRange) {
+      setCustomDateRange(dateRange);
+      // TODO: use customDateRange.from & customDateRange.to to filter your data
+    } else {
+      setCustomDateRange({ from: null, to: null });
+    }
+    setCurrentPage(1);
+  };
 
   const columns: ColumnDefinition[] = [
     {
@@ -107,26 +130,24 @@ export default function SocialInteractionsPage() {
         <p className="text-gray-500 text-sm">Manage comments from social media here</p>
       </div>
 
+      {/* Interaction Tabs dan Time Range */}
       <div className="flex justify-between items-center mb-8">
         <InteractionTabs
-          tabs={[
-            { id: "comments", label: "Comments" },
-            { id: "mentions", label: "Mentions" },
-          ]}
+          tabs={[{ id: 'comments', label: 'Comments' }, { id: 'mentions', label: 'Mentions' }]}
           activeTab={activeTab}
-          onChange={(id) => setActiveTab(id)}
+          onChange={(id) => {
+            setActiveTab(id);
+            setCurrentPage(1);
+          }}
         />
         <TimeRange
-          options={[
-            { value: "newest", label: "Newest" },
-            { value: "oldest", label: "Oldest" },
-          ]}
-          value="newest"
-          onChange={() => {}}
-          prefixLabel="Sort by :"
+          options={timeOptions}
+          value={selectedRange}
+          onChange={handleTimeRangeChange}
         />
       </div>
 
+      {/* Main Container */}
       <div className="bg-white rounded-t-lg border border-gray-100 shadow-sm min-h-[550px] flex flex-col">
         <div className="p-6 pb-0">
           <h2 className="text-2xl font-bold text-[#041942] mb-6 capitalize tracking-tight">
@@ -145,6 +166,7 @@ export default function SocialInteractionsPage() {
           </div>
         </div>
 
+        {/* Pagination */}
         <div className="mt-auto">
           <Pagination
             totalItems={data.length}

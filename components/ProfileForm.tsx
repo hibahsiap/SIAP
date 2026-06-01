@@ -205,7 +205,7 @@ export default function ProfileForm() {
               <Button
                 variant="secondary"
                 size="lg"
-                className="w-32"
+                className="w-32 h-10"
                 onClick={handleCancel}
                 disabled={saving}
               >
@@ -213,7 +213,7 @@ export default function ProfileForm() {
               </Button>
               <Button
                 size="lg"
-                className="w-32 bg-[#1D2F58] hover:bg-[#041942]"
+                className="w-32 h-10 bg-[#1D2F58] hover:bg-[#041942]"
                 onClick={handleSave}
                 disabled={saving || !loaded}
               >

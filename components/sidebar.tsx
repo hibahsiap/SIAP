@@ -46,8 +46,8 @@ export default function Sidebar({
 
   useEffect(() => {
     const isInboxRoute =
-      pathname.includes('/admin/dashboard/chat') ||
-      pathname.includes('/admin/dashboard/comments');
+      pathname.includes('/admin/chat') ||
+      pathname.includes('/admin/comments');
 
     if (isInboxRoute) {
       setIsSubMenuOpen(true);
@@ -106,8 +106,8 @@ export default function Sidebar({
           <div className="space-y-1">
             <div
               onClick={() => setIsSubMenuOpen(!isSubMenuOpen)}
-              className={`flex items-center justify-between px-4 py-3 rounded-[4px] cursor-pointer transition-all ${pathname.includes('/admin/dashboard/chat') ||
-                pathname.includes('/admin/dashboard/comments')
+              className={`flex items-center justify-between px-4 py-3 rounded-[4px] cursor-pointer transition-all ${pathname.includes('/admin/chat') ||
+                pathname.includes('/admin/comments')
                 ? 'text-white'
                 : 'text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white'
                 }`}
@@ -128,16 +128,16 @@ export default function Sidebar({
             {isSubMenuOpen && (
               <div className="pl-1 space-y-1 border-l ml-6 border-slate-600 transition-all">
                 <Link
-                  href="/admin/dashboard/chat"
-                  className={getLinkStyle('/admin/dashboard/chat')}
+                  href="/admin/chat"
+                  className={getLinkStyle('/admin/chat')}
                 >
                   <MessagesSquare size={16} />
                   Chat
                 </Link>
 
                 <Link
-                  href="/admin/dashboard/comments"
-                  className={getLinkStyle('/admin/dashboard/comments')}
+                  href="/admin/comments"
+                  className={getLinkStyle('/admin/comments')}
                 >
                   <MessageSquareMore size={16} />
                   Comments
@@ -164,16 +164,16 @@ export default function Sidebar({
         {role === 'ADMIN' ? (
           <>
             <Link
-              href="/admin/dashboard/settings"
-              className={getLinkStyle('/admin/dashboard/settings')}
+              href="/admin/settings"
+              className={getLinkStyle('/admin/settings')}
             >
               <Settings size={20} />
               <span className="text-sm">Settings</span>
             </Link>
 
-            <div className={getLinkProfileStyle('/admin/dashboard/profile')}>
+            <div className={getLinkProfileStyle('/admin/profile')}>
               <Link
-                href="/admin/dashboard/profile"
+                href="/admin/profile"
                 className="w-full flex items-center gap-3 min-w-0"
               >
                 <User size={20} />
@@ -186,16 +186,16 @@ export default function Sidebar({
                 type="button"
                 onClick={handleLogout}
                 aria-label="Logout"
-                className="cursor-pointer transition-colors duration-200 hover:text-red-500"
+                className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer"
               >
                 <LogOut size={20} />
               </button>
             </div>
           </>
         ) : (
-          <div className={getLinkProfileStyle('/opd/dashboard/profile')}>
+          <div className={getLinkProfileStyle('/opd/profile')}>
             <Link
-              href="/opd/dashboard/profile"
+              href="/opd/profile"
               className="w-full flex items-center gap-3 min-w-0"
             >
               <User size={20} />
@@ -208,7 +208,7 @@ export default function Sidebar({
               type="button"
               onClick={handleLogout}
               aria-label="Logout"
-              className="group cursor-pointer"
+              className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer"
             >
               <LogOut size={20} className="transition-colors duration-200 group-hover:text-red-500" />
             </button>

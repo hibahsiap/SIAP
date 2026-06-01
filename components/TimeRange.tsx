@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { DateRangePicker, DateRange, formatDateRange } from "@/components/DateRangePicker";
+import { ChevronDown } from "lucide-react";
 
 interface TimeOption {
   value: string;
@@ -11,7 +13,7 @@ interface TimeOption {
 interface TimeRangeSelectorProps {
   options: TimeOption[];
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, dateRange?: DateRange) => void;
   prefixLabel?: string;
   variant?: 'default' | 'badge';
 }
@@ -25,7 +27,13 @@ export const TimeRange = ({
 }: TimeRangeSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const selectedOption = options.find(opt => opt.value === value);
+
+  // State khusus default variant untuk calendar
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [dateRange, setDateRange]       = useState<DateRange>({ from: null, to: null });
+  const [appliedRange, setAppliedRange] = useState<DateRange>({ from: null, to: null });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -37,28 +45,103 @@ export const TimeRange = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Default Dropdown
+  // ─── Default Dropdown (Modernized) ────────────────────────────────────────────
   if (variant === 'default') {
+    const handleOptionSelect = (selected: string) => {
+      if (selected === 'custom') {
+        setCalendarOpen(true);
+      } else {
+        setAppliedRange({ from: null, to: null });
+        onChange(selected);
+      }
+      setIsOpen(false);
+    };
+
+    const handleApply = (range: DateRange) => {
+      setAppliedRange(range);
+      setCalendarOpen(false);
+      onChange('custom', range);
+    };
+
+    const handleCancel = () => {
+      setCalendarOpen(false);
+      setDateRange(appliedRange); 
+    };
+
+    const customLabel =
+      value === 'custom' && appliedRange.from && appliedRange.to
+        ? formatDateRange(appliedRange)
+        : 'Custom Range';
+
+    const displayLabel = value === 'custom' 
+      ? customLabel 
+      : (selectedOption?.label ?? options[0]?.label ?? 'Select');
+
     return (
-      <div className="flex items-center gap-2 border border-gray-200 rounded px-3 py-2 bg-white">
-        {prefixLabel && <span className="text-xs text-gray-500">{prefixLabel}</span>}
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="text-xs font-medium outline-none bg-transparent cursor-pointer"
+      <div className="relative" ref={dropdownRef}>
+        {/* Modern trigger button */}
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-white hover:bg-gray-50 transition-colors cursor-pointer select-none min-w-[120px]"
         >
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+          {prefixLabel && (
+            <span className="text-xs text-gray-500 font-medium whitespace-nowrap">{prefixLabel}</span>
+          )}
+          <span className="text-xs font-semibold text-slate-800 whitespace-nowrap">{displayLabel}</span>
+          <ChevronDown
+            size={12}
+            className={`text-gray-400 transition-transform duration-200 ml-auto ${isOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {/* Dropdown menu — positioned directly below trigger */}
+        {isOpen && (
+          <div
+            className="absolute left-0 z-[99] w-full min-w-[140px] bg-white border border-gray-100 shadow-lg rounded-lg py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            style={{ top: '100%', marginTop: '4px' }}
+          >
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleOptionSelect(opt.value)}
+                className={`w-full px-3 py-2 text-xs font-medium cursor-pointer transition-colors text-left flex items-center gap-2 ${
+                  value === opt.value
+                    ? 'bg-slate-50 text-slate-900'
+                    : 'text-slate-600 hover:bg-gray-50'
+                }`}
+              >
+                {value === opt.value && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#1D2F58]" />
+                )}
+                {opt.value === 'custom' ? customLabel : opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <DateRangePicker
+          open={calendarOpen}
+          onOpenChange={(open) => { if (!open) handleCancel(); }}
+          value={dateRange}
+          onChange={setDateRange}
+          onApply={handleApply}
+          onCancel={handleCancel}
+          align="end"
+          trigger={<span className="absolute right-0 top-full" />}
+        />
       </div>
     );
   }
 
-  // Badge Header Chat
+  // ─── Badge Header Chat ────────────────────────
   return (
     <div className="relative" ref={dropdownRef}>
-      <div
+      <button
+        ref={triggerRef}
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center justify-between rounded-xl px-3 py-2 transition-all cursor-pointer select-none ${
           selectedOption?.colorClass || 'bg-[#F4F7F9] text-[#64748B]'
@@ -67,33 +150,34 @@ export const TimeRange = ({
         <span className="text-[12px] font-semibold truncate pr-2">
           {selectedOption ? selectedOption.label : prefixLabel}
         </span>
-        <svg
+        <ChevronDown
+          size={10}
           className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          width="8" height="5" viewBox="0 0 10 6" fill="none"
-        >
-          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
+        />
+      </button>
 
       {isOpen && (
-        <div className="absolute z-[99] mt-2 w-full min-w-[120px] bg-white border border-gray-100 shadow-xl rounded-xl py-1 overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div
+          className="absolute left-0 z-[99] w-full min-w-[120px] bg-white border border-gray-100 shadow-xl rounded-xl py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+          style={{ top: '100%', marginTop: '4px' }}
+        >
           {options.map((opt) => (
-            <div
+            <button
               key={opt.value}
+              type="button"
               onClick={() => {
                 onChange(opt.value);
                 setIsOpen(false);
               }}
-              className={`px-4 py-2 text-[12px] font-medium cursor-pointer transition-colors hover:bg-gray-50 flex items-center gap-2 ${
-                value === opt.value ? 'bg-gray-50 text-slate-900' : 'text-slate-600'
+              className={`w-full px-4 py-2 text-[12px] font-medium cursor-pointer transition-colors text-left flex items-center gap-2 ${
+                value === opt.value ? 'bg-gray-50 text-slate-900' : 'text-slate-600 hover:bg-gray-50'
               }`}
             >
-
               {opt.colorClass && (
                 <div className={`w-2 h-2 rounded-full ${opt.colorClass.split(' ')[0]}`}></div>
               )}
               {opt.label}
-            </div>
+            </button>
           ))}
         </div>
       )}

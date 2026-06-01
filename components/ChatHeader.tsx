@@ -3,6 +3,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReturnAdminButton from "./ReturnAdminButton";
 import { DUMMY_TASK } from "@/constants/taskDummy";
+import Image from "next/image";
 
 interface ChatHeaderAdminProps {
   tickets: { id: string; ticketNumber: string; assignedOpd: { id: string; name: string } | null }[];
@@ -52,9 +53,7 @@ export const ChatHeader = ({
         </div>
         <div>
           <h3 className="font-bold text-slate-900 leading-tight">{name}</h3>
-          <p className="text-xs text-green-600 flex items-center gap-1 mt-0.5">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span> {phone}
-          </p>
+          <p className="text-xs text-gray-400">{phone}</p>
         </div>
       </div>
 

@@ -19,7 +19,7 @@ export const ChatItem = ({
 }: ChatItemProps) => {
   const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D3B66&color=fff`;
   return (
-    <div className={`p-4 border-b cursor-pointer transition-all ${isActive ? 'bg-blue-50' : 'bg-[#F9F9F9] hover:bg-gray-200/60'}`}>
+    <div className={`p-4 border-b cursor-pointer transition-all ${isActive ? 'bg-gray-200/75' : 'bg-white hover:bg-gray-200/75'}`}>
       <div className="flex gap-3">
         {/* Avatar & Flag Area */}
         <div className="flex flex-col items-center flex-shrink-0">

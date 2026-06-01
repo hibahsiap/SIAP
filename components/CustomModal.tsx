@@ -7,19 +7,26 @@ interface CustomModalProps {
   title: string;
   children: ReactNode;
   isAlert?: boolean;
+  size?: 'sm' | 'md' | 'lg';  
 }
 
-export default function CustomModal({ isOpen, onClose, title, children, isAlert = false }: CustomModalProps) {
+const sizeClass = {
+  sm: 'sm:max-w-[350px]',
+  md: 'sm:max-w-[450px]',
+  lg: 'sm:max-w-[540px]',
+}
+
+export default function CustomModal({ isOpen, onClose, title, children, isAlert = false, size = 'md' }: CustomModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className={
           isAlert
             ? "w-[calc(100%-2rem)] sm:max-w-[400px] max-h-[90vh] overflow-y-auto p-6 sm:p-8 bg-white rounded-2xl flex flex-col items-center text-center"
-            : "w-[calc(100%-2rem)] sm:max-w-[450px] max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-white rounded-xl"
+            : `w-[calc(100%-2rem)] ${sizeClass[size]} max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-white rounded-xl`
         }
       >
-        <DialogHeader className={isAlert ? "w-full flex flex-col items-center" : "mb-4"}>
+        <DialogHeader className={isAlert ? "w-full flex flex-col items-center" : "mb-2"}>
           <DialogTitle className={isAlert ? "text-2xl font-bold text-gray-900 mb-2" : "text-xl font-bold text-[#1a233a]"}>
             {title}
           </DialogTitle>

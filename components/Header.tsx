@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface HeaderProps {
   searchQuery: string;
   setSearchQuery: (val: string) => void;
+  onFilterClick?: () => void; // <-- 1. Tambahkan prop ini
 }
 
-export default function Header({ searchQuery, setSearchQuery }: HeaderProps) {
+export default function Header({ searchQuery, setSearchQuery, onFilterClick }: HeaderProps) { // <-- 2. Panggil di sini
   return (
     <div className="flex flex-row justify-end items-center gap-3 font-sans">
       <div className="w-full md:w-64">
@@ -22,14 +23,19 @@ export default function Header({ searchQuery, setSearchQuery }: HeaderProps) {
         />
       </div>
 
-      <Button variant="outline" className="flex items-center gap-2 border-[#D2D2D2] text-[#6B7280] h-10 hover:bg-gray-50">
+      {/* 3. Masukkan event onClick ke Button Filter */}
+      <Button 
+        variant="outline" 
+        onClick={onFilterClick} 
+        className="flex items-center gap-2 border-[#D2D2D2] text-[#6B7280] h-[40px] min-h-[40px] rounded-[12px] hover:bg-gray-50"
+      >
         <Filter className="h-4 w-4" />
         Filter
       </Button>
 
       <Select defaultValue="newest">
-        <SelectTrigger className="w-[180px] border-[#D2D2D2] text-[#6B7280] h-10 flex justify-between items-center px-4 focus:ring-0">
-          <div className="flex gap-1">
+        <SelectTrigger className="w-[180px] border-[#D2D2D2] text-[#6B7280] h-[40px] min-h-[40px] flex justify-between items-center px-4 focus:ring-0 rounded-[12px]">
+          <div className="flex items-center gap-1">
             <span className="text-[#6B7280]">Sorted by:</span>
             <span className="font-semibold text-gray-900"><SelectValue placeholder="Sort" /></span>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SearchField from "./SearchField";
 import Image from "next/image";
 import { InteractionTabs } from "./InteractionTabs";
@@ -39,6 +39,8 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
     subscribeRealtime,
   } = useInboxStore();
 
+  const [filterStatus, setFilterStatus] = useState("all");
+
   useEffect(() => {
     fetchConversations();
     const unsub = subscribeRealtime(role);
@@ -63,7 +65,8 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
     []
   );
 
-  const basePath = role === "ADMIN" ? "/admin/dashboard/chat" : "/opd/dashboard/inbox";
+  // Updated paths to match new route structure (without /dashboard/)
+  const basePath = role === "ADMIN" ? "/admin/chat" : "/opd/inbox";
 
   return (
     <aside className="w-97.5 border-r flex flex-col h-full z-10">
@@ -98,6 +101,17 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
             value={filters.sort}
             onChange={(v: string) => setFilters({ sort: v as typeof filters.sort })}
             prefixLabel="Sort by :"
+          />
+          <TimeRange
+            prefixLabel="Status :"
+            options={[
+              { label: "All Status", value: "all" },
+              { label: "To Do", value: "to_do" },
+              { label: "In Progress", value: "in_progress" },
+              { label: "Done", value: "done" },
+            ]}
+            value={filterStatus}
+            onChange={(v: string) => setFilterStatus(v)}
           />
         </div>
       </div>

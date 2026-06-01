@@ -48,7 +48,20 @@ const Login = () => {
                 return;
             }
 
-            router.push("/dashboard/user-management");
+            const data = await res.json();
+            const userRole = data.user?.role
+
+            // Simpan role agar bisa diakses di halaman NotFound)
+            if (userRole) {
+                localStorage.setItem("userRole", userRole);
+            }
+            
+            if (userRole === "ADMIN") {
+                router.push("admin/chat");
+            } else {
+                router.push("opd/inbox");
+            }
+
         } catch {
             setError("An unexpected error occurred");
             setLoading(false);
@@ -70,7 +83,7 @@ const Login = () => {
 
             {/* form login */}
             <div className="bg-white flex flex-col items-center justify-center text-[#041942] p-7 gap-8 w-full h-full">
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 w-full">
                     <h1 className="text-[#041942] font-bold text-2xl tracking-wide">Login</h1>
                     <p className="text-[#75777F] text-xs font-light ">Please enter your credentials to access the portal dashboard.</p>
                 </div>

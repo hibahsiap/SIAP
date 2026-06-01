@@ -6,7 +6,7 @@ export interface ColumnDefinition {
     header: ReactNode;
     key: string;
     cell?: (value: any, rowData: TableRowData) => ReactNode; 
-    className?: string;
+    className?: string; 
 }
 
 interface TableTemplateProps {
@@ -16,17 +16,18 @@ interface TableTemplateProps {
 
 const TableTemplate = ({columns, data}: TableTemplateProps) => {
     return (
-        <div className="font-sans w-250">
-            <div className="overflow-x-auto scrollbar-hide">
-                <Table>
+
+        <div className="font-sans w-full"> 
+            <div className="overflow-x-auto scrollbar-hide w-full">
+                <Table className="w-full">
                     <TableHeader>
                         <TableRow className="border-b border-[#e7e6e6] hover:bg-transparent">
                             {columns.map((col, idx) => (
                                 <TableHead 
                                     key={col.key} 
-                                    className={`capitalize text-[#1D2F58] text-[14px] tracking-wide h-12 text-center align-middle ${idx !== columns.length - 1 ? 'border-r border-[#e7e6e6]' : ''}`}
+                                    className={`capitalize text-[#1D2F58] text-[13px] font-bold tracking-wide h-12 align-middle ${col.className || 'text-center'} ${idx !== columns.length - 1 ? 'border-r border-[#e7e6e6]' : ''}`}
                                 >
-                                    <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                    <div className={`flex items-center gap-1.5 whitespace-nowrap ${col.className?.includes('text-left') ? 'justify-start' : 'justify-center'}`}>
                                         {col.header}
                                     </div>
                                 </TableHead>
@@ -40,7 +41,7 @@ const TableTemplate = ({columns, data}: TableTemplateProps) => {
                                     {columns.map((col, idx) => (
                                         <TableCell 
                                             key={col.key}
-                                            className={`text-[#1D2F58] font-bold text-[14px] text-center align-middle p-4 ${idx !== columns.length - 1 ? 'border-r border-[#e7e6e6]' : ''}`}
+                                            className={`text-[#1D2F58] font-bold text-[13px] align-middle p-4 ${col.className || 'text-center'} ${idx !== columns.length - 1 ? 'border-r border-[#e7e6e6]' : ''}`}
                                         >
                                             {col.cell ? col.cell(row[col.key as keyof TableRowData], row) : row[col.key as keyof TableRowData]}
                                         </TableCell>
