@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-import { sendInstagramDM } from "@/lib/instagram";
+import { sendInstagramDM, sendInstagramAttachment } from "@/lib/instagram";
 
 export async function PATCH(
   req: NextRequest,
@@ -57,11 +57,29 @@ export async function PATCH(
       const recipient = conv.citizen.contacts.find((c) => c.platform === "INSTAGRAM");
       if (recipient) {
         try {
-          await sendInstagramDM({
-            accessToken: conv.channel.accessToken,
-            recipientPsid: recipient.handle,
-            text: finalContent,
-          });
+          const attachments = await prisma.attachment.findMany({ where: { messageId } });
+          for (const att of attachments) {
+            const igType = att.mimeType?.startsWith("image/")
+              ? "image"
+              : att.mimeType?.startsWith("video/")
+              ? "video"
+              : att.mimeType?.startsWith("audio/")
+              ? "audio"
+              : "file";
+            await sendInstagramAttachment({
+              accessToken: conv.channel.accessToken,
+              recipientPsid: recipient.handle,
+              type: igType,
+              url: att.url,
+            });
+          }
+          if (finalContent) {
+            await sendInstagramDM({
+              accessToken: conv.channel.accessToken,
+              recipientPsid: recipient.handle,
+              text: finalContent,
+            });
+          }
         } catch (err) {
           console.error("[Approval IG send]", err);
           deliveryError = err instanceof Error ? err.message : "Unknown error";

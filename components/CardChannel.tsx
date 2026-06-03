@@ -72,20 +72,20 @@ const CardChannel = ({ icon, data, onDisconnect }: CardChannelProps) => {
   return (
     <motion.div
       initial={false}
-      animate={{ height: data.isActive ? 176 : 136 }}
+      animate={{ height: data.isActive ? 160 : 124 }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
-      className={`flex flex-col gap-3 py-4 px-5 overflow-hidden rounded-[15px] ${colorCard[platform]} shadow-sm shadow-black/40`}
+      className={`flex flex-col gap-2.5 p-4 overflow-hidden rounded-[15px] ${colorCard[platform]} shadow-sm shadow-black/40`}
     >
       <div className="flex flex-row gap-1.5 items-center">
-        <Icon size={28} className={colorText[platform]} />
-        <p className="text-[#041942] font-semibold text-lg">
+        <Icon size={20} className={colorText[platform]} />
+        <p className="text-[#041942] font-bold text-sm tracking-wide capitalize">
           {platformLabel[platform]} Integration
         </p>
       </div>
 
       <motion.div
         initial={false}
-        animate={{ height: data.isActive ? 100 : 60 }}
+        animate={{ height: data.isActive ? 96 : 60 }}
         transition={{ duration: 0.5, ease: "easeInOut" }}
         className={`${colorCardInside[platform]} rounded-lg p-3 flex flex-row items-center justify-between`}
       >
@@ -99,19 +99,21 @@ const CardChannel = ({ icon, data, onDisconnect }: CardChannelProps) => {
               transition={{ duration: 0.3 }}
               className="w-full flex flex-row items-center justify-between"
             >
-              <div className={`flex flex-col gap-0.5 ${colorText[platform]}`}>
-                <p className="font-semibold">{platformLabel[platform]} Connected</p>
-                {data.accountHandle && <p className="text-sm">{data.accountHandle}</p>}
-                {data.accountId && <p className="text-xs opacity-70">ID: {data.accountId}</p>}
+              <div className={`flex flex-col gap-1 ${colorText[platform]}`}>
+                <p className="font-semibold text-sm capitalize">{platformLabel[platform]} Connected</p>
+                {data.accountHandle && <p className="text-[12px]">Account: {data.accountHandle}</p>}
+                {data.accountId && <p className="text-[12px]">ID: {data.accountId}</p>}
               </div>
-              <button
-                onClick={handleDisconnect}
-                disabled={loading}
-                className="flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-md transition-colors disabled:opacity-50"
-              >
-                {loading && <Loader2 size={12} className="animate-spin" />}
-                Disconnect
-              </button>
+              <div className="w-24">
+                <button
+                  onClick={handleDisconnect}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-1 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-md transition-colors disabled:opacity-50"
+                >
+                  {loading && <Loader2 size={12} className="animate-spin" />}
+                  Disconnect
+                </button>
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -125,12 +127,14 @@ const CardChannel = ({ icon, data, onDisconnect }: CardChannelProps) => {
               <p className={`font-semibold text-sm ${colorText[platform]}`}>
                 Connect your channel
               </p>
-              <button
-                onClick={handleConnect}
-                className="px-3 py-1.5 bg-white text-[#041942] border-2 border-[#d2d2d2] text-xs font-bold rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Connect
-              </button>
+              <div className="w-24">
+                <button
+                  onClick={handleConnect}
+                  className="w-full py-1.5 bg-white text-[#041942] border-2 border-[#d2d2d2] text-xs font-semibold rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Connect
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

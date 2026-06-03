@@ -113,16 +113,6 @@ export default function UserManagementPage() {
       ),
     },
     {
-      header: "OPD",
-      key: "opd",
-      className: "text-center",
-      cell: (val) => (
-        <div className="text-gray-500 font-medium">
-          {val?.name ?? <span className="text-gray-300">—</span>}
-        </div>
-      ),
-    },
-    {
       header: "ACTIONS",
       key: "actions",
       className: "text-right pr-8 w-[150px]",
@@ -141,7 +131,7 @@ export default function UserManagementPage() {
 
   return (
     <div className="p-4 bg-gray-50/50 min-h-screen">
-      
+
       {/* BAGIAN HEADER */}
       <div className="bg-white px-8 py-6 rounded-t-lg border border-gray-200 border-b-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold tracking-tight text-[#14234b]">User Management</h2>

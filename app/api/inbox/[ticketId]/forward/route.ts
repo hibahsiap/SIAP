@@ -19,8 +19,8 @@ export async function PATCH(
   if (!ticketId)
     return NextResponse.json({ error: "ticketId is required" }, { status: 400 });
 
-  const ticket = await prisma.ticket.findFirst({
-    where: { id: ticketId, conversationId },
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
   });
   if (!ticket)
     return NextResponse.json({ error: "Ticket not found in this conversation" }, { status: 404 });

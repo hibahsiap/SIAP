@@ -55,7 +55,7 @@ export async function GET(
             },
           },
           forwardedToTicket: {
-            select: { assignedOpd: { select: { name: true } } },
+            select: { id: true, assignedOpdId: true, assignedOpd: { select: { id: true, name: true } } },
           },
           attachments: {
             select: { id: true, url: true, mimeType: true, fileName: true },
@@ -83,13 +83,21 @@ export async function GET(
         .filter((t) => t.assignedOpd?.id === user?.opdId)
         .map((t) => t.id)
     );
-    if (opdTicketIds.size === 0)
+
+    const hasForwardedToOpd = conv.messages.some(
+      (m) => m.forwardedToTicket?.assignedOpdId === user?.opdId
+    );
+    const hasSentMessage = conv.messages.some(
+      (m) => m.senderUser?.opdId === user?.opdId
+    );
+
+    if (opdTicketIds.size === 0 && !hasForwardedToOpd && !hasSentMessage)
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     messages = conv.messages.filter(
       (m) =>
         (m.direction === "OUTBOUND" && m.senderUser?.opdId === user?.opdId) ||
-        (m.forwardedToTicketId !== null && opdTicketIds.has(m.forwardedToTicketId))
+        (m.forwardedToTicketId !== null && (opdTicketIds.has(m.forwardedToTicketId) || m.forwardedToTicket?.assignedOpdId === user?.opdId))
     );
   }
 

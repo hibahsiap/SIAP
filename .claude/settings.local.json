@@ -5,7 +5,8 @@
       "Bash(npx prisma *)",
       "Bash(npx tsc *)",
       "Bash(npm run *)",
-      "Bash(grep -E \"\\(ChatBubble|useInboxStore|ListChat|admin\\\\\\\\\\\\\\\\dashboard\\\\\\\\\\\\\\\\chat|opd\\\\\\\\\\\\\\\\dashboard\\\\\\\\\\\\\\\\inbox\\)\" -A 2)"
+      "Bash(grep -E \"\\(ChatBubble|useInboxStore|ListChat|admin\\\\\\\\\\\\\\\\dashboard\\\\\\\\\\\\\\\\chat|opd\\\\\\\\\\\\\\\\dashboard\\\\\\\\\\\\\\\\inbox\\)\" -A 2)",
+      "Bash(rtk git *)"
     ]
   }
 }
