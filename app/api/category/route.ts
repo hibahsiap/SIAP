@@ -28,11 +28,12 @@ export async function POST(req: NextRequest) {
 
   const { name, defaultOpdId } = await req.json();
   if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  if (!defaultOpdId) return NextResponse.json({ error: "Default OPD is required" }, { status: 400 });
 
   const slug = generateSlug(name);
 
   const category = await prisma.category.create({
-    data: { name, slug, defaultOpdId: defaultOpdId || null },
+    data: { name, slug, defaultOpdId },
     include: { defaultOpd: { select: { id: true, name: true } } },
   });
   return NextResponse.json(category, { status: 201 });

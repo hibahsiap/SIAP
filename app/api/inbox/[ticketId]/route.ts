@@ -120,6 +120,7 @@ export async function GET(
       senderType: m.senderType,
       isInternal: m.isInternal,
       isApproved: m.isApproved,
+      isRead: m.isRead,
       forwardedToTicketId: m.forwardedToTicketId,
       forwardedToOpdName: m.forwardedToTicket?.assignedOpd?.name ?? null,
       ticket: m.ticket

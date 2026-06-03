@@ -75,6 +75,7 @@ export async function GET(req: NextRequest) {
           forwardedToTicketId: true,
           senderUser: { select: { opdId: true } },
           attachments: { select: { mimeType: true } },
+          isRead: true,
         },
       },
     },
@@ -95,9 +96,13 @@ export async function GET(req: NextRequest) {
       // For OPD, the conversation's effective recency is the latest message THEY are
       // allowed to see — not the global lastMessageAt, which would surface activity
       // (admin replies, unrelated citizen messages) the OPD never receives.
-      const effectiveLastAt = last
+        const effectiveLastAt = last
         ? (last.sentAt ?? last.createdAt)
         : c.lastMessageAt;
+
+      // Unread count is exactly the number of unread inbound messages they can see
+      const unreadCount = visibleMessages.filter((m) => m.direction === "INBOUND" && !m.isRead).length;
+
       return {
         id: c.id,
         citizen: {
@@ -119,14 +124,14 @@ export async function GET(req: NextRequest) {
               hasAttachment: last.attachments.length > 0,
             }
           : null,
-        unread: last?.direction === "INBOUND",
+        unreadCount,
         lastMessageAt: opdTicketIds ? effectiveLastAt : c.lastMessageAt,
       };
     })
     .filter((c) => {
       // OPD: drop conversations with nothing they're allowed to see.
       if (opdTicketIds && !c.lastMessage) return false;
-      return unreadOnly ? c.unread : true;
+      return unreadOnly ? c.unreadCount > 0 : true;
     })
     .sort((a, b) => {
       if (!opdTicketIds) return 0; // Prisma already sorted for admin

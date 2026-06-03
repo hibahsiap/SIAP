@@ -192,6 +192,7 @@ model Message {
   direction      MessageDirection
   isInternal     Boolean          @default(false)
   isApproved     Boolean          @default(true)
+  isRead         Boolean          @default(false)
   sentAt              DateTime?
   ticketId            String?
   conversationId      String?

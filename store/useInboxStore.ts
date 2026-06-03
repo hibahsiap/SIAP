@@ -41,7 +41,7 @@ export type InboxConversation = {
     at: string;
     hasAttachment: boolean;
   } | null;
-  unread: boolean;
+  unreadCount: number;
   lastMessageAt: string;
 };
 
@@ -68,6 +68,7 @@ export type InboxMessage = {
   senderType: SenderType;
   isInternal: boolean;
   isApproved: boolean;
+  isRead: boolean;
   forwardedToTicketId: string | null;
   forwardedToOpdName: string | null;
   ticket: InboxMessageTicket | null;
@@ -94,7 +95,7 @@ export type InboxTicketSummaryDetail = {
 
 export type InboxConversationDetail = Omit<
   InboxConversation,
-  "lastMessage" | "unread" | "lastMessageAt" | "ticketCount"
+  "lastMessage" | "unreadCount" | "lastMessageAt" | "ticketCount"
 > & {
   tickets: InboxTicketSummaryDetail[];
   messages: InboxMessage[];
@@ -136,6 +137,7 @@ interface InboxState {
       };
     }
   ) => Promise<void>;
+  markAsRead: (conversationId: string) => Promise<void>;
 
   subscribeRealtime: (role?: "ADMIN" | "OPD") => () => void;
 }
@@ -223,6 +225,15 @@ export const useInboxStore = create<InboxState>((set, get) => ({
     }
   },
 
+  markAsRead: async (conversationId) => {
+    try {
+      await fetch(`/api/inbox/${conversationId}/read`, { method: "POST" });
+      get().fetchConversations();
+    } catch (err) {
+      console.error("Failed to mark as read:", err);
+    }
+  },
+
   subscribeRealtime: (role) => {
     let channel: RealtimeChannel | null = null;
     try {
@@ -269,6 +280,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
                         senderType: row.senderType,
                         isInternal: row.isInternal,
                         isApproved: row.isApproved,
+                        isRead: false,
                         forwardedToTicketId: null,
                         forwardedToOpdName: null,
                         ticket: null,

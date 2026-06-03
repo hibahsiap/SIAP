@@ -15,7 +15,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     data.name = name;
     data.slug = generateSlug(name);
   }
-  if (defaultOpdId !== undefined) data.defaultOpdId = defaultOpdId || null;
+  if (defaultOpdId) {
+    data.defaultOpdId = defaultOpdId;
+  }
 
   const category = await prisma.category.update({
     where: { id },

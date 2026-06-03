@@ -21,14 +21,16 @@ export default function ChatDetailPage({
     isLoadingDetail,
     detailError,
     fetchConversation,
-    fetchConversations,
     sendMessage,
     isSending,
     sendError,
+    markAsRead,
   } = useInboxStore();
 
   const [draft, setDraft] = useState("");
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [firstUnreadId, setFirstUnreadId] = useState<string | null>(null);
+  const initializedChatId = useRef<string | null>(null);
 
   // Outbound attachment composer state. We upload immediately on file pick so the
   // user gets a preview thumbnail; the URL is held until Send fires.
@@ -77,7 +79,22 @@ export default function ChatDetailPage({
     setReadTicketIds(new Set());
     setSelectedTicketId("");
     setPinIndex(0);
+    initializedChatId.current = null;
+    setFirstUnreadId(null);
   }, [chatId, fetchConversation]);
+
+  useEffect(() => {
+    if (current && current.id === chatId && initializedChatId.current !== chatId) {
+      initializedChatId.current = chatId;
+      const unreadMsg = current.messages.find(m => m.direction === "INBOUND" && !m.isRead);
+      if (unreadMsg) {
+        setFirstUnreadId(unreadMsg.id);
+      }
+      // Always call markAsRead so that we clear any lingering unread states 
+      // (even if no messages matched the query, the API will just run a no-op update)
+      markAsRead(chatId);
+    }
+  }, [current, chatId, markAsRead]);
 
   useEffect(() => {
     if (scrollerRef.current) {
@@ -91,11 +108,11 @@ export default function ChatDetailPage({
     if (!text && !pendingAttachment) return;
     const snapshotAttachment = pendingAttachment
       ? {
-          url: pendingAttachment.url,
-          mimeType: pendingAttachment.mimeType,
-          fileName: pendingAttachment.fileName,
-          sizeBytes: pendingAttachment.sizeBytes,
-        }
+        url: pendingAttachment.url,
+        mimeType: pendingAttachment.mimeType,
+        fileName: pendingAttachment.fileName,
+        sizeBytes: pendingAttachment.sizeBytes,
+      }
       : undefined;
     setDraft("");
     setPendingAttachment(null);
@@ -371,8 +388,18 @@ export default function ChatDetailPage({
             ) : null;
 
             if (m.direction === "INBOUND") {
+              const showUnreadDivider = firstUnreadId === m.id;
               return (
                 <div key={m.id} id={`msg-${m.id}`}>
+                  {showUnreadDivider && (
+                    <div className="flex items-center gap-3 my-6">
+                      <div className="flex-1 h-px bg-[#5B6F9C]/30" />
+                      <span className="text-[11px] text-[#2962C0] font-bold px-3 py-1 bg-[#2962C0]/10 rounded-md uppercase tracking-wider">
+                        Unread messages
+                      </span>
+                      <div className="flex-1 h-px bg-[#5B6F9C]/30" />
+                    </div>
+                  )}
                   {dateSep}
                   <ChatBubble
                     message={m.content}
@@ -400,31 +427,31 @@ export default function ChatDetailPage({
               return (
                 <div key={m.id} id={`msg-${m.id}`}>
                   {dateSep}
-                    <ChatBubble
-                      message={m.content}
-                      time={time}
-                      isOPD
-                      senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
-                      isApproved={m.isApproved}
-                      approval={m.approval}
-                      onEditApprove={!m.isApproved ? async (content) => {
-                        await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ content, approve: true }),
-                        });
-                        fetchConversation(chatId);
-                      } : undefined}
-                      onReject={!m.isApproved ? async (reason: string) => {
-                        await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ reject: true, reason }),
-                        });
-                        fetchConversation(chatId);
-                      } : undefined}
-                      attachments={m.attachments}
-                    />
+                  <ChatBubble
+                    message={m.content}
+                    time={time}
+                    isOPD
+                    senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
+                    isApproved={m.isApproved}
+                    approval={m.approval}
+                    onEditApprove={!m.isApproved ? async (content) => {
+                      await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ content, approve: true }),
+                      });
+                      fetchConversation(chatId);
+                    } : undefined}
+                    onReject={!m.isApproved ? async (reason: string) => {
+                      await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ reject: true, reason }),
+                      });
+                      fetchConversation(chatId);
+                    } : undefined}
+                    attachments={m.attachments}
+                  />
                 </div>
               );
             }

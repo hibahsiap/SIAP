@@ -145,7 +145,7 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
                   platform={platform}
                   flagColor="text-green-500"
                   isActive={pathname === href}
-                  unread={c.unread}
+                  unreadCount={c.unreadCount}
                 />
               </Link>
             );
