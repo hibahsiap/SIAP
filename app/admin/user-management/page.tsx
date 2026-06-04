@@ -71,42 +71,44 @@ export default function UserManagementPage() {
   const columns: ColumnDefinition[] = useMemo(() => [
     {
       header: "NAME",
-      key: "name",
-      className: "text-center pl-8 w-[350px]",
+      key: "koko",
+      className: "text-center w-[240px]",
       cell: (_, row) => (
-        <div className="flex items-center gap-4 py-2">
+        <div className="flex items-center gap-2 py-2 w-[240px]">
           <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-600 font-bold border border-gray-200">
             {getInitials(row.name)}
           </div>
-          <span className="font-bold text-gray-800 text-left">{row.name}</span>
+          <span className="font-bold text-gray-800 text-left">
+            {/* {row.name} */} Nama Petugas
+          </span>
         </div>
       ),
     },
     {
       header: "OPD",
-      key: "nameOPD",
+      key: "name",
       className: "text-center",
-      cell: (val) => <div className="text-gray-500 font-medium">{val}</div>,
+      cell: (val) => <div className="text-gray-500 font-medium w-[320px]">{val}</div>,
     },
     {
       header: "EMAIL",
       key: "email",
       className: "text-center",
-      cell: (val) => <div className="text-gray-500 font-medium lowercase">{val}</div>,
+      cell: (val) => <div className="w-[200px] text-gray-500 font-medium lowercase">{val}</div>,
     },
     {
       header: "PHONE NUMBER",
       key: "phone",
       className: "text-center",
-      cell: (val) => <div className="text-gray-500 font-medium">{val ?? "—"}</div>,
+      cell: (val) => <div className="text-gray-500 font-medium w-[160px]">{val ?? "—"}</div>,
     },
     {
       header: "ROLE",
       key: "role",
       className: "text-center",
       cell: (val) => (
-        <div className="flex justify-center">
-          <span className="px-5 py-1.5 bg-[#f8f9fa] border border-gray-200 text-[#21335A] rounded-md text-[11px] font-bold tracking-widest uppercase">
+        <div className="flex justify-center w-[100px]">
+          <span className={`px-5 py-1.5 border border-gray-200 text-[#21335A] rounded-md text-[11px] font-bold tracking-widest uppercase ${val === "ADMIN" ? "bg-[#21335A] text-white" : "bg-[#f8f9fa] text-[#21335A]"}`}>
             {val}
           </span>
         </div>
@@ -115,9 +117,9 @@ export default function UserManagementPage() {
     {
       header: "ACTIONS",
       key: "actions",
-      className: "text-right pr-8 w-[150px]",
+      className: "text-center",
       cell: (_, row) => (
-        <div className="flex justify-end gap-2 text-gray-400">
+        <div className="flex justify-center gap-2 text-gray-400 w-[80px]">
           <button onClick={() => openEditModal(row as User)} className="p-2 hover:bg-gray-100 rounded-md hover:text-[#14234b] transition-all">
             <Pencil className="w-4 h-4" />
           </button>
@@ -130,20 +132,20 @@ export default function UserManagementPage() {
   ], [openEditModal, openDeleteModal])
 
   return (
-    <div className="p-4 bg-gray-50/50 min-h-screen">
+    <div className="p-4 bg-gray-50/50 min-h-screen max-w-255">
 
       {/* BAGIAN HEADER */}
-      <div className="bg-white px-4 py-6 rounded-t-lg border border-gray-200 border-b-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white px-4 py-6 rounded-t-lg border border-gray-200 border-b-0 grid grid-cols-[1fr_400px] items-center gap-4">
         <h2 className="text-2xl font-bold text-[#14234b]">User Management</h2>
 
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <Input
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full md:w-[280px] bg-gray-100 border-transparent focus:bg-white focus:border-[#1D2F58] rounded-md h-10 text-sm transition-all"
+              className="pl-9 w-full bg-gray-100 border-transparent focus:bg-white focus:border-[#1D2F58] rounded-md h-10 text-sm transition-all"
             />
           </div>
           <Button onClick={openAddModal} className="bg-[#1a233a] hover:bg-[#1a233a]/90 text-white font-medium h-10 px-4 rounded-md flex items-center gap-2">
@@ -152,7 +154,7 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 border-t-0 rounded-b-lg flex flex-col shadow-sm min-h-[calc(100vh-160px)]">
+      <div className="bg-white border border-gray-200 border-t-0 rounded-b-lg flex flex-col shadow-sm min-h-[calc(100vh-160px)] w-full">
         <div className="flex-1 overflow-auto flex flex-col">
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading...</div>

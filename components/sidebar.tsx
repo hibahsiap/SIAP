@@ -77,7 +77,7 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="w-64 h-screen sticky top-0 bg-[#1D2F58] text-white flex flex-col px-2 pb-4 pt-6 border-r border-slate-700">
+    <aside className="max-w-64 w-64 h-screen sticky top-0 bg-[#1D2F58] text-white flex flex-col px-2 pb-4 pt-6 border-r border-slate-700">
       {/* Logo & Branding */}
       <div className="flex items-center gap-3 mb-10 px-2">
         <div className="flex items-center justify-center w-12 h-12 bg-white rounded-lg p-1.5 shadow-md">
@@ -93,7 +93,7 @@ export default function Sidebar({
 
         <div className="space-y-1">
           <h1 className="font-bold text-[16px] leading-tight">SIAP</h1>
-          <p className="text-[9px] uppercase text-slate-400 tracking-wider">
+          <p className="text-[10px] uppercase text-slate-400 tracking-wider">
             Sistem Informasi Aduan Publik
           </p>
         </div>
@@ -186,7 +186,7 @@ export default function Sidebar({
                 type="button"
                 onClick={handleLogout}
                 aria-label="Logout"
-                className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer"
+                className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer hover:text-red-500"
               >
                 <LogOut size={20} />
               </button>
@@ -208,9 +208,9 @@ export default function Sidebar({
               type="button"
               onClick={handleLogout}
               aria-label="Logout"
-              className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer"
+              className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer hover:text-red-500"
             >
-              <LogOut size={20} className="transition-colors duration-200 group-hover:text-red-500" />
+              <LogOut size={20} />
             </button>
           </div>
         )}
