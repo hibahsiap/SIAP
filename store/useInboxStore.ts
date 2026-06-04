@@ -81,6 +81,7 @@ export type InboxMessage = {
   } | null;
   attachments: InboxAttachment[];
   approval: { verdict: string; reason: string | null } | null;
+  replyTo: { id: string; content: string; senderName: string } | null;
 };
 
 export type InboxTicketSummaryDetail = {
@@ -288,6 +289,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
                         sender: null,
                         attachments: [],
                         approval: null,
+                        replyTo: null,
                       },
                     ],
                   },

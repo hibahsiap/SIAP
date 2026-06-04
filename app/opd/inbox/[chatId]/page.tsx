@@ -225,6 +225,7 @@ export default function ChatDetailPage({
                     avatar={current.citizen.profilePicUrl}
                     ticket={m.ticket}
                     attachments={m.attachments}
+                    replyTo={m.replyTo}
                   />
                 </div>
               );
@@ -240,6 +241,7 @@ export default function ChatDetailPage({
                     isApproved={m.isApproved}
                     approval={m.approval}
                     attachments={m.attachments}
+                    replyTo={m.replyTo}
                   />
                 </div>
               );
@@ -252,6 +254,7 @@ export default function ChatDetailPage({
                   isSender
                   senderName={m.sender?.name ?? "Admin"}
                   attachments={m.attachments}
+                  replyTo={m.replyTo}
                 />
               </div>
             );

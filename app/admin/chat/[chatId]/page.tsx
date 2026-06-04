@@ -420,6 +420,7 @@ export default function ChatDetailPage({
                     isSelected={selectedMessageIds.has(m.id)}
                     onToggleSelect={(opts) => handleToggleMessageSelect(m.id, opts)}
                     attachments={m.attachments}
+                    replyTo={m.replyTo}
                   />
                 </div>
               );
@@ -452,6 +453,7 @@ export default function ChatDetailPage({
                       fetchConversation(chatId);
                     } : undefined}
                     attachments={m.attachments}
+                    replyTo={m.replyTo}
                   />
                 </div>
               );
@@ -468,6 +470,7 @@ export default function ChatDetailPage({
                   isSelected={selectedMessageIds.has(m.id)}
                   onToggleSelect={(opts) => handleToggleMessageSelect(m.id, opts)}
                   attachments={m.attachments}
+                  replyTo={m.replyTo}
                 />
               </div>
             );

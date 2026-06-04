@@ -199,6 +199,8 @@ model Message {
   forwardedToTicketId String?
   senderUserId        String?
   approvalId          String?
+  externalId          String?          @unique
+  replyToMessageId    String?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   attachments         Attachment[]
@@ -207,10 +209,13 @@ model Message {
   ticket              Ticket?          @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   conversation        Conversation?    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   forwardedToTicket   Ticket?          @relation("ForwardedMessages", fields: [forwardedToTicketId], references: [id])
+  replyTo             Message?         @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+  replies             Message[]        @relation("MessageReplies")
 
   @@index([ticketId])
   @@index([conversationId])
   @@index([forwardedToTicketId])
+  @@index([replyToMessageId])
   @@index([createdAt])
 }
 

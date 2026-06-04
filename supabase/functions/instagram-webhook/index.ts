@@ -121,6 +121,16 @@ async function sendAutoReply(opts: {
     return
   }
 
+  let externalId: string | null = null
+  try {
+    const sendData = await sendRes.json()
+    if (sendData.message_id) {
+      externalId = sendData.message_id
+    }
+  } catch (err) {
+    console.warn('[AutoReply] Failed to parse send response:', err)
+  }
+
   // Simpan auto-reply ke DB sebagai OUTBOUND agar terhitung di 24h check berikutnya
   const { error: replyErr } = await supabase.from('Message').insert({
     id: crypto.randomUUID(),
@@ -132,6 +142,7 @@ async function sendAutoReply(opts: {
     isInternal: false,
     isApproved: true,
     updatedAt: now,
+    externalId,
   })
 
   if (replyErr) {
@@ -404,6 +415,20 @@ Deno.serve(async (req: Request) => {
             }
           }
 
+          // Extract Meta message ID and reply_to context
+          const externalId: string | null = event.message.mid ?? null
+          const replyToMid: string | null = event.message.reply_to?.mid ?? null
+          let replyToMessageId: string | null = null
+
+          if (replyToMid) {
+            const { data: replyMsg } = await supabase
+              .from('Message')
+              .select('id')
+              .eq('externalId', replyToMid)
+              .maybeSingle()
+            if (replyMsg) replyToMessageId = replyMsg.id
+          }
+
           // Setelah semua attachment ter-upload ke Storage, insert Message
           // (yang memicu realtime), lalu langsung insert semua Attachment row.
           const { error: msgErr } = await supabase.from('Message').insert({
@@ -416,6 +441,8 @@ Deno.serve(async (req: Request) => {
             isInternal: false,
             isApproved: true,
             updatedAt: now,
+            externalId,
+            replyToMessageId,
           })
           if (msgErr) {
             console.error('[Webhook] Failed to insert Message:', JSON.stringify(msgErr))

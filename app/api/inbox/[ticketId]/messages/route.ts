@@ -12,7 +12,8 @@ export async function POST(
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { ticketId: conversationId } = await params;
-  const body = await req.json().catch(() => ({}));
+  try {
+    const body = await req.json().catch(() => ({}));
   const content: string = (body?.content ?? "").toString().trim();
   const isInternal: boolean = Boolean(body?.isInternal);
   const attachment: {
@@ -97,6 +98,7 @@ export async function POST(
   }
 
   let deliveryError: string | null = null;
+  let externalId: string | null = null;
 
   if (conv.channel.platform === "INSTAGRAM") {
     const recipient = conv.citizen.contacts.find((c) => c.platform === "INSTAGRAM");
@@ -132,11 +134,14 @@ export async function POST(
         });
       }
       if (content) {
-        await sendInstagramDM({
+        const res = await sendInstagramDM({
           accessToken: conv.channel.accessToken,
           recipientPsid: recipient.handle,
           text: content,
         });
+        if (res.message_id) {
+          externalId = res.message_id;
+        }
       }
     } catch (err) {
       console.error("[Instagram DM send]", err);
@@ -156,6 +161,7 @@ export async function POST(
       conversationId: conv.id,
       senderUserId: auth.userId,
       sentAt: now,
+      externalId,
     },
   });
 
@@ -170,4 +176,8 @@ export async function POST(
     { ...msg, deliveryError },
     { status: deliveryError ? 207 : 201 }
   );
+  } catch (err: any) {
+    console.error("[POST /api/inbox/[ticketId]/messages] Error:", err);
+    return NextResponse.json({ error: err.message, stack: err.stack }, { status: 500 });
+  }
 }

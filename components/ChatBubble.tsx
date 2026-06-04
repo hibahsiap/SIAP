@@ -54,13 +54,14 @@ interface ChatBubbleProps {
   onReject?: (reason: string) => Promise<void>;
   approval?: { verdict: string; reason: string | null } | null;
   attachments?: BubbleAttachment[];
+  replyTo?: { id: string; content: string; senderName: string } | null;
 }
 
 export const ChatBubble = ({
   message, time, isSender, isOPD, senderName, avatar,
   onCreateTicket, isSelectMode, isSelected, onToggleSelect,
   ticket, forwardedToTicketId, forwardedToOpdName, isClassifying,
-  isApproved = true, onEditApprove, onReject, approval, attachments,
+  isApproved = true, onEditApprove, onReject, approval, attachments, replyTo,
 }: ChatBubbleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message);
@@ -208,12 +209,17 @@ export const ChatBubble = ({
                 </div>
               ) : (
                 <div className={`p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${isSender ? "bg-[#1e293b] text-white rounded-br-none" :
-                    isOPD && isRejected ? "bg-red-50 text-slate-600 border border-red-200 rounded-br-none opacity-60" :
-                      isOPD && isPending ? "bg-[#e0f2fe] text-slate-800 border border-blue-200 border-dashed rounded-br-none opacity-70" :
-                        isOPD ? "bg-[#e0f2fe] text-slate-800 border border-blue-100 rounded-br-none" :
-                          ticket ? "bg-[#f1f5f9] text-slate-800 rounded-bl-none ring-1 ring-slate-300" :
-                            "bg-[#f1f5f9] text-slate-800 rounded-bl-none"
+                  isOPD && isRejected ? "bg-red-50 text-slate-600 border border-red-200 rounded-br-none opacity-60" :
+                    isOPD && isPending ? "bg-[#e0f2fe] text-slate-800 border border-blue-200 border-dashed rounded-br-none opacity-70" :
+                      isOPD ? "bg-[#e0f2fe] text-slate-800 border border-blue-100 rounded-br-none" :
+                        ticket ? "bg-[#f1f5f9] text-slate-800 rounded-bl-none ring-1 ring-slate-300" :
+                          "bg-[#f1f5f9] text-slate-800 rounded-bl-none"
                   }`}>
+                  {replyTo && (
+                    <div className={`mb-1 px-2 py-1.5 rounded border-l-2 text-[11px] max-w-xs overflow-hidden ${isSender ? "bg-slate-700/50 border-slate-400 text-slate-300" : "bg-gray-200 border-green-600 text-slate-700"}`}>
+                      <div className="line-clamp-2 opacity-90 leading-tight break-words">{replyTo.content || "Attachment"}</div>
+                    </div>
+                  )}
                   {attachments && attachments.length > 0 && (
                     <div className={`flex flex-col gap-2 ${message ? "mb-2" : ""}`}>
                       {attachments.map((a) => {

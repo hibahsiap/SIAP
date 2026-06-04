@@ -1,5 +1,19 @@
 # AGENTS.md
 
+# Instructions for All Response
+
+Read AGENTS.md first.
+
+Read relevant OpenSpec documents before coding.
+
+Do not create duplicate services.
+
+Preserve API contracts.
+
+Follow existing architecture.
+
+Update OpenSpec when behavior changes.
+
 # SIAP
 
 SIAP adalah sistem layanan dan monitoring aduan masyarakat terintegrasi berbasis web.
