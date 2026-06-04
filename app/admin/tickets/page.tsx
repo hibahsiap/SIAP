@@ -3,7 +3,7 @@
 import DeleteAlertModal from '@/components/DeleteModal';
 import EditTicketModal from '@/components/EditTicketModal';
 import EmptyState from '@/components/EmptyState';
-import FilterSidebar from '@/components/Filter';
+import FilterSidebar, { FilterState } from '@/components/Filter';
 import ForwardTicketModal from '@/components/ForwardTicketModal';
 import Header from '@/components/Header';
 import SearchEmptyState from '@/components/SearchEmpty';
@@ -58,19 +58,66 @@ export default function TicketsPage() {
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
+    opds: [],
+    classifications: [],
+    issues: [],
+    priorities: [],
+    rangeTime: "",
+  });
+
   const currentData = useMemo(() => {
     if (activeTab === 'pending') return pendingTickets;
     if (activeTab === 'all') return allTickets;
     return aspirationTickets;
   }, [activeTab]);
 
+  // const filteredData = useMemo(() => {
+  //   return currentData.filter((item: any) => {
+  //     const searchStr = searchQuery.toLowerCase();
+  //     const searchField = item.taskName || item.pengirim || "";
+  //     return searchField.toLowerCase().includes(searchStr);
+  //   });
+  // }, [currentData, searchQuery]);
+
   const filteredData = useMemo(() => {
     return currentData.filter((item: any) => {
+      // Filter search query (tidak berubah)
       const searchStr = searchQuery.toLowerCase();
       const searchField = item.taskName || item.pengirim || "";
-      return searchField.toLowerCase().includes(searchStr);
+      if (!searchField.toLowerCase().includes(searchStr)) return false;
+
+      // ✅ TAMBAH: Filter OPD (hanya berlaku jika ada item.opd)
+      if (appliedFilters.opds.length > 0 && item.opd) {
+        if (!appliedFilters.opds.includes(item.opd)) return false;
+      }
+
+      // ✅ TAMBAH: Filter Classification/Status
+      if (appliedFilters.classifications.length > 0) {
+        if (!appliedFilters.classifications.includes(item.status)) return false;
+      }
+
+      // ✅ TAMBAH: Filter Issue Type (hanya berlaku jika ada item.issueType)
+      if (appliedFilters.issues.length > 0 && item.issueType) {
+        if (!appliedFilters.issues.includes(item.issueType)) return false;
+      }
+
+      // ✅ TAMBAH: Filter Priority
+      if (appliedFilters.priorities.length > 0) {
+        if (!appliedFilters.priorities.includes(item.priority)) return false;
+      }
+
+      return true;
     });
-  }, [currentData, searchQuery]);
+  }, [currentData, searchQuery, appliedFilters]); 
+
+  // const activeFilterCount = useMemo(() => {
+  //   return appliedFilters.opds.length +
+  //     appliedFilters.classifications.length +
+  //     appliedFilters.issues.length +
+  //     appliedFilters.priorities.length +
+  //     (appliedFilters.rangeTime ? 1 : 0);
+  // }, [appliedFilters]);
 
   const handleForwardConfirm = () => {
     setIsForwardModalOpen(false);
@@ -171,7 +218,11 @@ export default function TicketsPage() {
           {['pending', 'all', 'aspirations'].map((id) => (
             <button
               key={id}
-              onClick={() => { setActiveTab(id as TabCategory); setSearchQuery(""); }}
+              onClick={() => { 
+                setActiveTab(id as TabCategory); 
+                setSearchQuery(""); 
+                setAppliedFilters({ opds: [], classifications: [], issues: [], priorities: [], rangeTime: "" });
+              }}
               className={`px-5 h-10 flex items-center justify-center rounded-[12px] text-sm font-semibold transition-all duration-200 ${
                 activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
               }`}
@@ -182,9 +233,10 @@ export default function TicketsPage() {
         </div>
         <div className="w-auto">
             <Header 
-            searchQuery={searchQuery} 
-            setSearchQuery={setSearchQuery} 
-            onFilterClick={() => setIsFilterOpen(true)} /> 
+              searchQuery={searchQuery} 
+              setSearchQuery={setSearchQuery} 
+              onFilterClick={() => setIsFilterOpen(true)} 
+            /> 
         </div>
       </div>
 
@@ -230,6 +282,8 @@ export default function TicketsPage() {
       <FilterSidebar 
         isOpen={isFilterOpen} 
         onClose={() => setIsFilterOpen(false)} 
+        filterState={appliedFilters}
+        onApply={(filters) => setAppliedFilters(filters)}
       />
       
     </div>

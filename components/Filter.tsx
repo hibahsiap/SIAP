@@ -3,9 +3,19 @@
 import React, { useState, useMemo } from "react";
 import { X, Plus, Minus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
+export type FilterState = {
+  opds: string[];
+  classifications: string[];
+  issues: string[];
+  priorities: string[];
+  rangeTime: string;
+};
+
 type FilterSidebarProps = {
   isOpen: boolean;
   onClose: () => void;
+  filterState: FilterState; 
+  onApply: (filters: FilterState) => void;
 };
 
 // Data Dummy untuk Search
@@ -31,7 +41,7 @@ const ISSUE_LIST = [
 const CLASSIFICATIONS = ["To Do", "In Progress", "Done", "On Hold", "Canceled"];
 const PRIORITIES = ["Low", "Medium", "High"];
 
-export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
+export default function FilterSidebar({ isOpen, onClose, filterState, onApply }: FilterSidebarProps) {
   // 1. State untuk Accordion (Default False / Tertutup semua)
   const [isOpdOpen, setIsOpdOpen] = useState(false);
   const [isClassificationOpen, setIsClassificationOpen] = useState(false);
@@ -44,39 +54,67 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
   const [issueQuery, setIssueQuery] = useState("");
 
   // 3. State untuk Pilihan yang Aktif (Selected)
-  const [selectedOpds, setSelectedOpds] = useState<string[]>([]);
+  // const [selectedOpds, setSelectedOpds] = useState<string[]>([]);
+
+  const [localFilters, setLocalFilters] = useState<FilterState>(filterState);
+
+  React.useEffect(() => {
+    if (isOpen) setLocalFilters(filterState);
+  }, [isOpen, filterState]);
+
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [selectedClassifications, setSelectedClassifications] = useState<string[]>(["Canceled"]); // Default contoh
   const [selectedPriorities, setSelectedPriorities] = useState<string[]>(["Medium"]); // Default contoh
   const [selectedRange, setSelectedRange] = useState<string>("");
 
   // Helper function untuk toggle pilihan (Multi-select)
-  const toggleSelection = (item: string, state: string[], setState: React.Dispatch<React.SetStateAction<string[]>>) => {
-    if (state.includes(item)) {
-      setState(state.filter((i) => i !== item));
-    } else {
-      setState([...state, item]);
-    }
+  // const toggleSelection = (item: string, state: string[], setState: React.Dispatch<React.SetStateAction<string[]>>) => {
+  //   if (state.includes(item)) {
+  //     setState(state.filter((i) => i !== item));
+  //   } else {
+  //     setState([...state, item]);
+  //   }
+  // };
+
+  const toggleSelection = (item: string, key: keyof Pick<FilterState, 'opds' | 'classifications' | 'issues' | 'priorities'>) => {
+    setLocalFilters(prev => {
+      const current = prev[key] as string[];
+      return {
+        ...prev,
+        [key]: current.includes(item) ? current.filter(i => i !== item) : [...current, item],
+      };
+    });
   };
 
   // Helper untuk membersihkan semua filter
+  // const handleClear = () => {
+  //   setSelectedOpds([]);
+  //   setSelectedIssues([]);
+  //   setSelectedClassifications([]);
+  //   setSelectedPriorities([]);
+  //   setSelectedRange("");
+  //   setOpdQuery("");
+  //   setIssueQuery("");
+  // };
+
   const handleClear = () => {
-    setSelectedOpds([]);
-    setSelectedIssues([]);
-    setSelectedClassifications([]);
-    setSelectedPriorities([]);
-    setSelectedRange("");
+    setLocalFilters({ opds: [], classifications: [], issues: [], priorities: [], rangeTime: "" });
     setOpdQuery("");
     setIssueQuery("");
   };
 
+  const handleApply = () => {
+    onApply(localFilters);
+    onClose();
+  };
+
   // Filter List berdasarkan Search Query
   const filteredOpds = useMemo(() => 
-    OPD_LIST.filter((opd) => opd.toLowerCase().includes(opdQuery.toLowerCase())),
+    OPD_LIST.filter(opd => opd.toLowerCase().includes(opdQuery.toLowerCase())),
   [opdQuery]);
 
   const filteredIssues = useMemo(() => 
-    ISSUE_LIST.filter((issue) => issue.toLowerCase().includes(issueQuery.toLowerCase())),
+    ISSUE_LIST.filter(issue => issue.toLowerCase().includes(issueQuery.toLowerCase())),
   [issueQuery]);
 
   return (
@@ -132,9 +170,9 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
                     filteredOpds.map((opd) => (
                       <button
                         key={opd}
-                        onClick={() => toggleSelection(opd, selectedOpds, setSelectedOpds)}
+                        onClick={() => toggleSelection(opd, 'opds')}
                         className={`text-left px-3 py-2 rounded transition ${
-                          selectedOpds.includes(opd) ? "bg-[#0b1736] text-white font-medium" : "hover:bg-slate-50"
+                          localFilters.opds.includes(opd) ? "bg-[#0b1736] text-white font-medium" : "hover:bg-slate-50"
                         }`}
                       >
                         {opd}
@@ -162,9 +200,9 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
                 {CLASSIFICATIONS.map((item) => (
                   <button
                     key={item}
-                    onClick={() => toggleSelection(item, selectedClassifications, setSelectedClassifications)}
+                    onClick={() => toggleSelection(item, 'classifications')}
                     className={`px-4 py-1.5 rounded text-sm transition ${
-                      selectedClassifications.includes(item)
+                      localFilters.classifications.includes(item)
                         ? "bg-[#0b1736] text-white border border-[#0b1736]"
                         : "border border-slate-300 text-slate-700 hover:bg-slate-50"
                     }`}
@@ -202,9 +240,9 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
                     filteredIssues.map((issue) => (
                       <button
                         key={issue}
-                        onClick={() => toggleSelection(issue, selectedIssues, setSelectedIssues)}
+                        onClick={() => toggleSelection(issue, 'issues')}
                         className={`text-left px-3 py-2 rounded transition ${
-                          selectedIssues.includes(issue) ? "bg-[#0b1736] text-white font-medium" : "hover:bg-slate-50"
+                          localFilters.issues.includes(issue) ? "bg-[#0b1736] text-white font-medium" : "hover:bg-slate-50"
                         }`}
                       >
                         {issue}
@@ -232,9 +270,9 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
                 {PRIORITIES.map((item) => (
                   <button
                     key={item}
-                    onClick={() => toggleSelection(item, selectedPriorities, setSelectedPriorities)}
+                    onClick={() => toggleSelection(item, 'priorities')}
                     className={`px-5 py-1.5 rounded text-sm transition ${
-                      selectedPriorities.includes(item)
+                      localFilters.priorities.includes(item)
                         ? "bg-[#0b1736] text-white border border-[#0b1736]"
                         : "border border-slate-300 text-slate-700 hover:bg-slate-50"
                     }`}
@@ -260,7 +298,7 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
                 {["Today", "This Week", "This Month"].map((range) => (
                   <button
                     key={range}
-                    onClick={() => setSelectedRange(range)}
+                    onClick={() => setLocalFilters(prev => ({ ...prev, rangeTime: range }))}
                     className={`text-left px-6 py-3 border-b border-slate-100 transition ${
                       selectedRange === range ? "bg-[#0b1736] text-white" : "hover:bg-slate-50"
                     }`}
@@ -313,7 +351,7 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
             CLEAR
           </button>
           <button 
-            onClick={onClose}
+            onClick={handleApply}
             className="px-8 py-2.5 bg-[#0b1736] text-white font-bold rounded-lg text-sm hover:bg-[#152754] transition"
           >
             APPLY

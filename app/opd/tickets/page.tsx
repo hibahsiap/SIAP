@@ -8,7 +8,7 @@ import SearchEmptyState from '@/components/SearchEmpty';
 import DeleteAlertModal from '@/components/DeleteModal';
 import { ArrowUpRight, Loader, CircleChevronDown, Calendar, Trash2, Edit2, Forward } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
-import FilterSidebar from '@/components/Filter'; 
+import FilterSidebar, { FilterState } from '@/components/Filter'; 
 import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
 import KanbanBoard from '@/components/spectrumui/kanbanboard';
 import Link from 'next/link';
@@ -50,20 +50,61 @@ export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState<TabCategory>('kanban');
   const [searchQuery, setSearchQuery] = useState("");
   const { openEditModal, openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
+    opds: [],
+    classifications: [],
+    issues: [],
+    priorities: [],
+    rangeTime: "",
+  });
+
   const currentData = useMemo(() => {
     if (activeTab === 'all') return allTickets;
     return aspirationTickets;
   }, [activeTab]);
 
   // Logika Pencarian
+  // const filteredData = useMemo(() => {
+  //   return currentData.filter((item: any) => {
+  //     const searchStr = searchQuery.toLowerCase();
+  //     const searchField = item.taskName || item.pengirim || "";
+  //     return searchField.toLowerCase().includes(searchStr);
+  //   });
+  // }, [currentData, searchQuery]);
+
   const filteredData = useMemo(() => {
     return currentData.filter((item: any) => {
+      // Filter search query (tidak berubah)
       const searchStr = searchQuery.toLowerCase();
       const searchField = item.taskName || item.pengirim || "";
-      return searchField.toLowerCase().includes(searchStr);
+      if (!searchField.toLowerCase().includes(searchStr)) return false;
+
+      // ✅ TAMBAH: Filter OPD (hanya berlaku jika ada item.opd)
+      if (appliedFilters.opds.length > 0 && item.opd) {
+        if (!appliedFilters.opds.includes(item.opd)) return false;
+      }
+
+      // ✅ TAMBAH: Filter Classification/Status
+      if (appliedFilters.classifications.length > 0) {
+        if (!appliedFilters.classifications.includes(item.status)) return false;
+      }
+
+      // ✅ TAMBAH: Filter Issue Type (hanya berlaku jika ada item.issueType)
+      if (appliedFilters.issues.length > 0 && item.issueType) {
+        if (!appliedFilters.issues.includes(item.issueType)) return false;
+      }
+
+      // ✅ TAMBAH: Filter Priority
+      if (appliedFilters.priorities.length > 0) {
+        if (!appliedFilters.priorities.includes(item.priority)) return false;
+      }
+
+      return true;
     });
-  }, [currentData, searchQuery]);
+  }, [currentData, searchQuery, appliedFilters]); 
 
   // Kolom dibuat dinamis berdasarkan Tab yang aktif
   const columns = useMemo<ColumnDefinition[]>(() => {
@@ -147,14 +188,18 @@ export default function TicketsPage() {
           ))}
         </div>
         <div className="w-auto">
-            <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} onFilterClick={() => setIsFilterOpen(true)}/> 
+            <Header 
+              searchQuery={searchQuery} 
+              setSearchQuery={setSearchQuery} 
+              onFilterClick={() => setIsFilterOpen(true)}
+            /> 
         </div>
       </div>
 
       {/* --- AREA KONTEN (LOGIKA SWITCH) --- */}
       <div className="">
         {activeTab === 'kanban' ? (
-          <KanbanBoard searchQuery={searchQuery} />
+          <KanbanBoard searchQuery={searchQuery} filters={appliedFilters} />
         ) : filteredData.length > 0 ? (
           <div className="overflow-x-auto w-full">
             <TableTemplate2 columns={columns} data={filteredData as any} />
@@ -182,6 +227,8 @@ export default function TicketsPage() {
       <FilterSidebar 
         isOpen={isFilterOpen} 
         onClose={() => setIsFilterOpen(false)} 
+        filterState={appliedFilters}
+        onApply={(filters) => setAppliedFilters(filters)}
       />
       
     </div>

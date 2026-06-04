@@ -12,6 +12,6 @@ export const allTickets = [
 
 export const aspirationTickets = [
   { id: 7, pengirim: "Wahyu", status: "On Hold", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur." },
-  { id: 8, pengirim: "Budi", status: "On Hold", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur." },
-  { id: 9, pengirim: "Parjo", status: "On Hold", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur." },
+  { id: 8, pengirim: "Budi", status: "On Hold", priority: "High", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur." },
+  { id: 9, pengirim: "Parjo", status: "On Hold", priority: "Medium", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur." },
 ];

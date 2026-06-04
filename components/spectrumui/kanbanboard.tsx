@@ -11,6 +11,7 @@ import UpdateProgressModal from '../UpdateProgressModal';
 import ToastFrame from '../ToastFrame';
 import { toast } from 'sonner';
 import SearchEmptyState from '../SearchEmpty';
+import { FilterState } from '../Filter';
 // import ToastFrame from './ToastFrame';
 
 
@@ -147,20 +148,71 @@ const priorityColors = {
   high: "border-red-400 bg-red-50 text-red-700",
 };
 
-export default function KanbanBoard({ searchQuery = "" }) {
+export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuery?: string, filters?: FilterState;}) {
+
   const [columns, setColumns] = useState<Column[]>(sampleData);
+
+  // const filteredColumns = useMemo(() => {
+  //   const q = searchQuery.toLowerCase();
+
+  //   return columns.map((col) => ({
+  //     ...col,
+  //     tasks: col.tasks.filter((task) =>
+  //       task.taskName.toLowerCase().includes(q) ||
+  //       task.message?.toLowerCase().includes(q)
+  //     ),
+  //   }))
+  //   .filter(col => col.tasks.length > 0);
+  // }, [searchQuery, columns]);
+
   const filteredColumns = useMemo(() => {
     const q = searchQuery.toLowerCase();
 
     return columns.map((col) => ({
       ...col,
-      tasks: col.tasks.filter((task) =>
-        task.taskName.toLowerCase().includes(q) ||
-        task.message?.toLowerCase().includes(q)
-      ),
+      tasks: col.tasks.filter((task) => {
+        // Filter search query (tidak berubah)
+        const matchSearch =
+          task.taskName.toLowerCase().includes(q) ||
+          task.message?.toLowerCase().includes(q);
+        if (!matchSearch) return false;
+
+        // ✅ TAMBAH: Filter Priority
+        if (filters?.priorities && filters.priorities.length > 0) {
+          const taskPriority = task.priority
+            ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) // "high" → "High"
+            : "";
+          if (!filters.priorities.includes(taskPriority)) return false;
+        }
+
+        // ✅ TAMBAH: Filter Issue Type
+        // task.issueType adalah array, cocok jika ada irisan dengan filter
+        if (filters?.issues && filters.issues.length > 0) {
+          const hasMatchingIssue = task.issueType?.some((issue) =>
+            filters.issues.includes(issue)
+          );
+          if (!hasMatchingIssue) return false;
+        }
+
+        // ✅ TAMBAH: Filter Classification/Status
+        // Mapping dari column.id ke label Classification
+        const statusMap: Record<string, string> = {
+          todo: "To Do",
+          progress: "In Progress",
+          done: "Done",
+          hold: "On Hold",
+          cancel: "Canceled",
+        };
+        if (filters?.classifications && filters.classifications.length > 0) {
+          const colLabel = statusMap[col.id] ?? "";
+          if (!filters.classifications.includes(colLabel)) return false;
+        }
+
+        return true;
+      }),
     }))
-    .filter(col => col.tasks.length > 0);
-  }, [searchQuery, columns]);
+    .filter((col) => col.tasks.length > 0);
+  }, [searchQuery, columns, filters]);
 
   const router = useRouter();
 
