@@ -69,7 +69,7 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
   const basePath = role === "ADMIN" ? "/admin/chat" : "/opd/inbox";
 
   return (
-    <aside className="w-97.5 border-r flex flex-col h-full z-10">
+    <aside className="w-full border-r flex flex-col h-full z-10">
       <div className="px-2 py-1 space-y-4 border-b">
         <h2 className="text-3xl font-bold text-[#041942]">All Inbox</h2>
 

@@ -84,18 +84,37 @@ export default function SocialInteractionsPage() {
     {
       header: "Time",
       key: "capturedAt",
-      cell: (value: any) => formatTime(value),
+      className: "text-center bg-red-500",
+      cell: (value: any) => 
+        // formatTime(value),
+        <div className="bg-red-700 font-medium w-[140px]">{formatTime(value)}</div>,
     },
-    { header: "Username", key: "username" },
-    { header: "Message Content", key: "content" },
+    { 
+      header: "Username", 
+      key: "username",
+      className: "text-center",
+      cell: (value: any) => 
+        // formatTime(value),
+        <div className="bg-red-700 font-medium w-[120px]">{value}</div>,
+    },
+    { 
+      header: "Message Content", 
+      key: "content",
+      className: "text-center",
+      cell: (value: any) => 
+        // formatTime(value),
+        <div className="bg-red-700 text-left font-medium w-[340px] line-clamp-2 break-words whitespace-normal">{value}</div>,
+    },
     {
       header: "Destination Account",
       key: "channel",
+      className: "text-center",
       cell: (value: any) => value?.accountHandle ?? value?.platform ?? "-",
     },
     {
       header: "Permalink",
       key: "permalink",
+      className: "text-center",
       cell: (value: any) =>
         value ? (
           <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
@@ -108,8 +127,9 @@ export default function SocialInteractionsPage() {
     {
       header: "Actions",
       key: "id",
+      className: "text-center",
       cell: (_value: any, row: any) => (
-        <div className="flex gap-2">
+        <div className="flex justify-center gap-2">
           {!row.isTicketCreated && (
             <button onClick={() => openCreateTicketModal(row, activeTab as "comments" | "mentions")}>
               <Plus size={16} />
@@ -124,7 +144,7 @@ export default function SocialInteractionsPage() {
   ];
 
   return (
-    <div className="px-4 py-2">
+    <div className="px-4 py-2 w-[1000px]">
       <div className="mb-8 py-1">
         <h1 className="text-3xl font-bold text-[#041942]">Sosial Interactions</h1>
         <p className="text-gray-500 text-sm">Manage comments from social media here</p>
