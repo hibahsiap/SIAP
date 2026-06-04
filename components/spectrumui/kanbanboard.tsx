@@ -223,11 +223,11 @@ export default function KanbanBoard() {
   };
  
   return (
-    <div className=" mb-4 flex flex-col gap-4 -mt-2 relative">
-      <div className="flex gap-1 justify-end items-center">
+    <div className="mb-4 flex flex-col -mt-2 relative">
+      {/* <div className="flex gap-1 justify-end items-center">
         <p className='font-semibold text-xs'>Scroll</p>
         <ArrowRight size={16}/>
-      </div>
+      </div> */}
       <div className="w-full overflow-x-auto custom-scrollbar">
           
           <div className="flex gap-4 w-250 mb-2">

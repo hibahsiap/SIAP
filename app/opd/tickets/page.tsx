@@ -11,6 +11,7 @@ import { useTaskStore } from '@/store/useTaskStore';
 import FilterSidebar from '@/components/Filter'; 
 import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
 import KanbanBoard from '@/components/spectrumui/kanbanboard';
+import Link from 'next/link';
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
@@ -79,20 +80,39 @@ export default function TicketsPage() {
       return [];
     } else if (activeTab === 'all') {
       return [
-        { header: <><span className="font-serif text-[15px] font-semibold mr-0.5">Aa</span> Task Name</>, key: "taskName", cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> },
-        { header: <><ArrowUpRight className="w-4 h-4"/> OPD</>, key: "opd" },
-        { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
-        { header: <><CircleChevronDown className="w-4 h-4"/> Issue Type</>, key: "issueType", cell: (val) => getBadge(val, 'issue') },
-        { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
-        { header: <><Calendar className="w-4 h-4"/> Star date</>, key: "startDate" },
-        { header: <><Calendar className="w-4 h-4"/> Due date</>, key: "dueDate" },
+        { 
+          header: "Task Name", 
+          key: "taskName", 
+          // cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> 
+          cell: (val, row: any) => (
+            <Link href={`/opd/task/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+              {val}
+            </Link>
+          ) 
+        },
+        { header: "OPD", key: "opd" },
+        { header: "Status", key: "status", cell: (val) => getStatusBadge(val) },
+        { header: "Issue Type", key: "issueType", cell: (val) => getBadge(val, 'issue') },
+        { header: "Priority", key: "priority", cell: (val) => getBadge(val, 'priority') },
+        { header: "Start Date", key: "startDate" },
+        { header: "Due Date", key: "dueDate" },
         messageColumn
       ];
     } else {
       return [
-        { header: "Pengirim", key: "pengirim", cell: (val) => <span className="whitespace-normal min-w-[100px] inline-block font-bold">{val}</span> },
-        { header: <><Loader className="w-4 h-4"/> Status</>, key: "status", cell: (val) => getStatusBadge(val) },
-        { header: <><CircleChevronDown className="w-4 h-4"/> Priority</>, key: "priority", cell: (val) => getBadge(val, 'priority') },
+        { 
+          header: "Pengirim", 
+          key: "pengirim", 
+          className: "text-center", 
+          // cell: (val) => <span className="whitespace-normal min-w-[100px] inline-block font-bold">{val}</span> 
+          cell: (val, row: any) => (
+            <Link href={`/opd/task/${row.id}`} className="whitespace-normal min-w-[100px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+              {val}
+            </Link>
+          )
+        },
+        { header: "Status", key: "status", cell: (val) => getStatusBadge(val) },
+        { header: "Priority", key: "priority", cell: (val) => getBadge(val, 'priority') },
         messageColumn,
         { header: "Action", key: "action", cell: (_, row) => (
             <button onClick={() => openDeleteModal(row)} className="text-gray-400 hover:text-red-500 transition-colors">
@@ -105,7 +125,7 @@ export default function TicketsPage() {
   }, [activeTab, openEditModal, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-full max-w-full h-full px-4 py-2 bg-white overflow-hidden">
+    <div className="flex-1 w-[1020px] h-full px-4 py-2 overflow-hidden">
 
       {/* --- TABS & SEARCH HEADER --- */}
       <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
@@ -117,8 +137,8 @@ export default function TicketsPage() {
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id as TabCategory); setSearchQuery(""); }}
-              className={`px-6 py-1.5 rounded-[12px] text-sm font-semibold transition-all duration-200 ${
-                activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border-2 border-[#F3F3F3]"
+              className={`px-5 h-10 rounded-[12px] text-sm font-semibold transition-all duration-200 ${
+                activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
               }`}
             >
               {tab.id.charAt(0).toUpperCase() + tab.id.slice(1)}

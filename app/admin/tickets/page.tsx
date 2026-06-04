@@ -163,16 +163,16 @@ export default function TicketsPage() {
   }, [activeTab, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-full max-w-full h-full px-4 py-2">
+    <div className="flex-1 h-full px-4 py-2 w-[1020px]">
 
       {/* --- TABS & SEARCH HEADER --- */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 py-4 mb-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
+        <div className="flex gap-2">
           {['pending', 'all', 'aspirations'].map((id) => (
             <button
               key={id}
               onClick={() => { setActiveTab(id as TabCategory); setSearchQuery(""); }}
-              className={`px-5 h-[40px] flex items-center justify-center rounded-[12px] text-sm font-semibold transition-all duration-200 ${
+              className={`px-5 h-10 flex items-center justify-center rounded-[12px] text-sm font-semibold transition-all duration-200 ${
                 activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
               }`}
             >
@@ -180,7 +180,7 @@ export default function TicketsPage() {
             </button>
           ))}
         </div>
-        <div className="w-full md:w-auto">
+        <div className="w-auto">
             <Header 
             searchQuery={searchQuery} 
             setSearchQuery={setSearchQuery} 
@@ -189,7 +189,7 @@ export default function TicketsPage() {
       </div>
 
       {/* --- AREA KONTEN --- */}
-      <div className="w-full">
+      <div className="overflow-y-auto custom-scrollbar">
         {filteredData.length > 0 ? (
           <div className="w-full">
             <TableTemplate2 columns={columns} data={filteredData as any} />
