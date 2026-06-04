@@ -29,10 +29,10 @@ export default function TaskGallery({
         {canAddImage && (
           <Button
             onClick={onAddImage}
-            className="bg-slate-900 text-white hover:bg-slate-800"
+            className="bg-slate-900 text-white hover:bg-slate-800 w-32 h-8"
           >
             <Plus className="mr-1 size-4" />
-            ADD IMAGE
+            Add Image
           </Button>
         )}
       </div>

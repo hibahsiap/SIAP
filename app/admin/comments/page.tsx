@@ -84,10 +84,10 @@ export default function SocialInteractionsPage() {
     {
       header: "Time",
       key: "capturedAt",
-      className: "text-center bg-red-500",
+      className: "text-center",
       cell: (value: any) => 
         // formatTime(value),
-        <div className="bg-red-700 font-medium w-[140px]">{formatTime(value)}</div>,
+        <div className="font-medium w-[140px]">{formatTime(value)}</div>,
     },
     { 
       header: "Username", 
@@ -95,7 +95,7 @@ export default function SocialInteractionsPage() {
       className: "text-center",
       cell: (value: any) => 
         // formatTime(value),
-        <div className="bg-red-700 font-medium w-[120px]">{value}</div>,
+        <div className="font-medium w-[120px]">{value}</div>,
     },
     { 
       header: "Message Content", 
@@ -103,7 +103,7 @@ export default function SocialInteractionsPage() {
       className: "text-center",
       cell: (value: any) => 
         // formatTime(value),
-        <div className="bg-red-700 text-left font-medium w-[340px] line-clamp-2 break-words whitespace-normal">{value}</div>,
+        <div className="text-left font-medium w-[340px] line-clamp-2 break-words whitespace-normal">{value}</div>,
     },
     {
       header: "Destination Account",
@@ -131,11 +131,17 @@ export default function SocialInteractionsPage() {
       cell: (_value: any, row: any) => (
         <div className="flex justify-center gap-2">
           {!row.isTicketCreated && (
-            <button onClick={() => openCreateTicketModal(row, activeTab as "comments" | "mentions")}>
+            <button 
+              onClick={() => openCreateTicketModal(row, activeTab as "comments" | "mentions")}
+              className="p-0.5 text-[#1D2F58] hover:text-blue-500 hover:bg-slate-200 rounded-sm transition-colors duration-300 cursor-pointer"
+            >
               <Plus size={16} />
             </button>
           )}
-          <button onClick={() => openDeleteModal(row, activeTab as "comments" | "mentions")}>
+          <button 
+            onClick={() => openDeleteModal(row, activeTab as "comments" | "mentions")}
+            className="p-0.5 text-[#1D2F58] hover:text-red-500 hover:bg-slate-200 rounded-sm transition-colors duration-300 cursor-pointer"
+          >
             <Trash2 size={16} />
           </button>
         </div>

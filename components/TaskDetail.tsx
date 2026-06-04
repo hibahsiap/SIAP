@@ -28,6 +28,7 @@ import type { Task } from "@/types/task"
 import type { TaskStatus } from "@/components/StatusBadge"
 import type { IssueType } from "@/components/IssueBadge"
 import type { Priority } from "@/components/PriorityBadge"
+import UpdateProgressModal from "./UpdateProgressModal"
 
 type Props = {
   task: Task
@@ -53,6 +54,17 @@ export default function TaskDetailContent({ task }: Props) {
   const [isAddImageOpen, setIsAddImageOpen] = useState(false)
   const [newImageUrl, setNewImageUrl] = useState("")
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+
+  // Di dalam komponen TaskDetailContent
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+
+  // Tambahkan state untuk melacak perubahan (Dirty Checking)
+  const hasChanges = 
+    status !== task.status || 
+    issueType !== task.issueType || 
+    priority !== task.priority ||
+    galleryImages.length !== (task.gallery?.length || 0);
 
   // -- LOGIC --
 
@@ -120,68 +132,80 @@ export default function TaskDetailContent({ task }: Props) {
 
           <div className="h-px bg-gray-100" />
 
-          {/* Edit Status */}
-          <TaskInfoRow icon={Loader} label="Status">
-            <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
-                <SelectValue placeholder="Pilih Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="in-progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed / Done</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </TaskInfoRow>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Edit Status */}
+            <TaskInfoRow icon={Loader} label="Status">
+              <Select value={status} onValueChange={handleStatusChange}>
+                <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
+                  <SelectValue placeholder="Pilih Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="open">Open</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed / Done</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </TaskInfoRow>
 
-          {/* Edit Issue Type */}
-          <TaskInfoRow icon={CircleChevronDown} label="Issue Type">
-            <Select value={issueType} onValueChange={(val) => setIssueType(val as IssueType)}>
-              <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
-                <SelectValue placeholder="Pilih Issue Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="health">Health</SelectItem>
-                <SelectItem value="infrastructure">Infrastructure</SelectItem>
-                <SelectItem value="education">Education</SelectItem>
-                <SelectItem value="social">Social</SelectItem>
-                <SelectItem value="environment">Environment</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </TaskInfoRow>
+            {/* Edit Issue Type */}
+            <TaskInfoRow icon={CircleChevronDown} label="Issue Type">
+              <Select value={issueType} onValueChange={(val) => setIssueType(val as IssueType)}>
+                <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
+                  <SelectValue placeholder="Pilih Issue Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="health">Health</SelectItem>
+                  <SelectItem value="infrastructure">Infrastructure</SelectItem>
+                  <SelectItem value="education">Education</SelectItem>
+                  <SelectItem value="social">Social</SelectItem>
+                  <SelectItem value="environment">Environment</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </TaskInfoRow>
 
-          {/* OPD (Tetap statis sesuai desain) */}
-          <TaskInfoRow icon={Building2} label="OPD">
-            <span className="text-gray-700 font-medium">{task.opd}</span>
-          </TaskInfoRow>
+            {/* OPD (Tetap statis sesuai desain) */}
+            <TaskInfoRow icon={Building2} label="OPD">
+              <span className="text-gray-700 font-medium">{task.opd}</span>
+            </TaskInfoRow>
 
-          {/* Edit Priority */}
-          <TaskInfoRow icon={CircleChevronDown} label="Priority">
-            <Select value={priority} onValueChange={(val) => setPriority(val as Priority)}>
-              <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
-                <SelectValue placeholder="Pilih Priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-              </SelectContent>
-            </Select>
-          </TaskInfoRow>
+            {/* Edit Priority */}
+            <TaskInfoRow icon={CircleChevronDown} label="Priority">
+              <Select value={priority} onValueChange={(val) => setPriority(val as Priority)}>
+                <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
+                  <SelectValue placeholder="Pilih Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </TaskInfoRow>
 
-          <TaskInfoRow icon={Calendar} label="Start Date">
-            <span className="text-gray-700">{formatDate(task.startDate)}</span>
-          </TaskInfoRow>
+            <TaskInfoRow icon={Calendar} label="Start Date">
+              <span className="text-gray-700">{formatDate(task.startDate)}</span>
+            </TaskInfoRow>
 
-          {/* Sudah diubah labelnya jadi End Date dan isinya dinamis */}
-          <TaskInfoRow icon={Calendar} label="End Date">
-            <span className="text-gray-700 font-medium">
-              {endDate ? formatDate(endDate) : "-"}
-            </span>
-          </TaskInfoRow>
+            {/* Sudah diubah labelnya jadi End Date dan isinya dinamis */}
+            <TaskInfoRow icon={Calendar} label="End Date">
+              <span className="text-gray-700 font-medium">
+                {endDate ? formatDate(endDate) : "-"}
+              </span>
+            </TaskInfoRow>
+          </div>
+
+          <div className="flex justify-end mt-4">
+            <Button 
+              // disabled={!hasChanges} // Tombol disabled jika tidak ada perubahan
+              onClick={() => !hasChanges ? null: setIsUpdateModalOpen(true)}
+              className={`w-32 h-8 text-white ${!hasChanges ? "bg-gray-400 cursor-not-allowed" : "bg-slate-900 hover:bg-slate-800"}`}
+            >
+              Save Changes
+            </Button>
+          </div>
         </div>
 
         <div className="border-t border-gray-100 pt-6">
@@ -226,6 +250,19 @@ export default function TaskDetailContent({ task }: Props) {
           )}
         </div>
       </CustomModal>
+
+      {/* MODAL UNTUK UPDATE PROGRESS */}
+      <UpdateProgressModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        task={{ id: task.id, taskName: task.title }} // Sesuaikan dengan interface modal
+        onSave={(data) => {
+          console.log("Data disimpan:", data);
+          // Masukkan logika API Anda di sini
+          setIsUpdateModalOpen(false);
+        }}
+      />
+
     </>
   )
 }

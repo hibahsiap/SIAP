@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 // import { Badge } from '@/components/ui/badge';
 // import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +9,8 @@ import { Badge } from '../ui/badge';
 import { useRouter } from 'next/navigation';
 import UpdateProgressModal from '../UpdateProgressModal';
 import ToastFrame from '../ToastFrame';
+import { toast } from 'sonner';
+import SearchEmptyState from '../SearchEmpty';
 // import ToastFrame from './ToastFrame';
 
 
@@ -145,8 +147,21 @@ const priorityColors = {
   high: "border-red-400 bg-red-50 text-red-700",
 };
 
-export default function KanbanBoard() {
+export default function KanbanBoard({ searchQuery = "" }) {
   const [columns, setColumns] = useState<Column[]>(sampleData);
+  const filteredColumns = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+
+    return columns.map((col) => ({
+      ...col,
+      tasks: col.tasks.filter((task) =>
+        task.taskName.toLowerCase().includes(q) ||
+        task.message?.toLowerCase().includes(q)
+      ),
+    }))
+    .filter(col => col.tasks.length > 0);
+  }, [searchQuery, columns]);
+
   const router = useRouter();
 
   // Menyimpan data perpindahan yang akan dieksekusi setelah modal di-save
@@ -159,7 +174,7 @@ export default function KanbanBoard() {
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
 
   // STATE BARU: Untuk mentrigger Toast di level KanbanBoard
-  const [toastData, setToastData] = useState<{ id: string; name: string } | null>(null);
+  // const [toastData, setToastData] = useState<{ id: string; name: string } | null>(null);
 
   const handleDragStart = (e: React.DragEvent, task: Task, columnId: string) => {
     e.dataTransfer.setData('text/plain', JSON.stringify({ task, sourceColumnId: columnId }));
@@ -210,114 +225,121 @@ export default function KanbanBoard() {
     console.log("New description updated:", data.description);
 
     // 3. SET DATA TOAST DI LEVEL KANBANBOARD SEBELUM MODAL RE-SET
-    setToastData({ id: task.id, name: task.taskName });
+    // setToastData({ id: task.id, name: task.taskName });
+    
+    // toast.success("Task Updated", {
+    //   description: `"${task.id}-${task.taskName}" updated successfully`,
+    // });
 
     // Reset total seluruh state modal (Modal menutup dengan aman)
     setIsProgressModalOpen(false);
     setPendingMove(null);
 
     // Otomatis hilangkan toast setelah beberapa detik (misal 4 detik)
-    setTimeout(() => {
-      setToastData(null);
-    }, 4000);
+    // setTimeout(() => {
+    //   setToastData(null);
+    // }, 4000);
   };
  
   return (
     <div className="mb-4 flex flex-col -mt-2 relative">
-      {/* <div className="flex gap-1 justify-end items-center">
-        <p className='font-semibold text-xs'>Scroll</p>
-        <ArrowRight size={16}/>
-      </div> */}
-      <div className="w-full overflow-x-auto custom-scrollbar">
-          
-          <div className="flex gap-4 w-250 mb-2">
-            {columns.map((column) => (
-              <div
-                key={column.id}
-                className="rounded-[10px] p-4 shrink-0 w-84"
-                style={{ backgroundColor: column.bg }}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, column.id)}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2 py-1.5 px-2 rounded-sm" style={{ backgroundColor: column.badge }}>
-                    <div className="w-2 h-2 rounded-full " style={{ backgroundColor: column.dot }} />
-                    <h3 className="font-semibold text-sm tracking-wider" style={{ color: column.text }}>
-                      {column.title}
-                    </h3>
-                    <Badge className="bg-neutral-100/80 text-neutral-800">
-                      {column.tasks.length}
-                    </Badge>
+
+      {filteredColumns.length === 0 ? (
+        <SearchEmptyState type={"all"} />
+      ) : (
+
+        <div className="w-full overflow-x-auto custom-scrollbar">
+            
+            <div className="flex gap-4 w-250 mb-2">
+              {filteredColumns.map((column) => (
+                <div
+                  key={column.id}
+                  className="rounded-[10px] p-4 shrink-0 w-84 min-h-100"
+                  style={{ backgroundColor: column.bg }}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, column.id)}
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2 py-1.5 px-2 rounded-sm" style={{ backgroundColor: column.badge }}>
+                      <div className="w-2 h-2 rounded-full " style={{ backgroundColor: column.dot }} />
+                      <h3 className="font-semibold text-sm tracking-wider" style={{ color: column.text }}>
+                        {column.title}
+                      </h3>
+                      <Badge className="bg-neutral-100/80 text-neutral-800">
+                        {column.tasks.length}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="h-0.5 w-full mb-4 rounded-2xl" style={{ backgroundColor: column.badge }}></div>
+
+                  <div className="space-y-4">
+                    {column.tasks.map((task) => (
+                      <Card
+                        key={task.id}
+                        className="cursor-move transition-all transform duration-400 bg-white hover:bg-white/50 border-2 hover:shadow-md hover:shadow-neutral-600/20"
+                        style={{borderColor: column.badge }}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, task, column.id)}
+                        onClick={() => {
+                          router.push(`/opd/task/${task.id}`)
+                        }}
+                      >
+                        <CardContent className="px-3 py-1">
+                          <div className="space-y-3.5">
+                            <div className="flex items-center justify-between gap-1">
+                              <h4 className="font-semibold text-neutral-900 text-sm leading-tight">
+                                {task.taskName}
+                              </h4>
+                              <p className={`border px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  task.priority ? priorityColors[task.priority] : 'border-neutral-300 bg-neutral-50 text-neutral-600'
+                                }`}>
+                                  {task.priority}
+                              </p>
+                            </div>
+
+                            {task.message && (
+                              <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed line-clamp-2">
+                                {task.message}
+                              </p>
+                            )}
+
+                            {task.issueType && (
+                              <div className="flex flex-wrap gap-2">
+                                {task.issueType.map((issue) => (
+                                  <Badge
+                                    key={issue}
+                                    className="text-[10px] bg-[#F0DFAC] text-[#655121] border-[#655121] backdrop-blur-sm"
+                                  >
+                                    {issue}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between pt-1">
+                              <div className="flex items-center gap-4 text-neutral-600 dark:text-neutral-400">
+                                {task.startDate && (
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" />
+                                    <span className="text-[10px] font-medium">{task.startDate}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </div>
+              ))}
+            </div>
+          
+        </div>
+      )}
 
-                <div className="h-0.5 w-full mb-4 rounded-2xl" style={{ backgroundColor: column.badge }}></div>
-
-                <div className="space-y-4">
-                  {column.tasks.map((task) => (
-                    <Card
-                      key={task.id}
-                      className="cursor-move transition-all transform duration-400 bg-white hover:bg-white/50 border-2 hover:shadow-md hover:shadow-neutral-600/20"
-                      style={{borderColor: column.badge }}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, task, column.id)}
-                      onClick={() => {
-                        router.push(`/opd/task/${task.id}`)
-                      }}
-                    >
-                      <CardContent className="px-3 py-1">
-                        <div className="space-y-3.5">
-                          <div className="flex items-center justify-between gap-1">
-                            <h4 className="font-semibold text-neutral-900 text-sm leading-tight">
-                              {task.taskName}
-                            </h4>
-                            <p className={`border px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                task.priority ? priorityColors[task.priority] : 'border-neutral-300 bg-neutral-50 text-neutral-600'
-                              }`}>
-                                {task.priority}
-                            </p>
-                          </div>
-
-                          {task.message && (
-                            <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed line-clamp-2">
-                              {task.message}
-                            </p>
-                          )}
-
-                          {task.issueType && (
-                            <div className="flex flex-wrap gap-2">
-                              {task.issueType.map((issue) => (
-                                <Badge
-                                  key={issue}
-                                  className="text-[10px] bg-[#F0DFAC] text-[#655121] border-[#655121] backdrop-blur-sm"
-                                >
-                                  {issue}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between pt-1">
-                            <div className="flex items-center gap-4 text-neutral-600 dark:text-neutral-400">
-                              {task.startDate && (
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="w-3 h-3" />
-                                  <span className="text-[10px] font-medium">{task.startDate}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        
-      </div>
 
       {/* SINGLE UPDATE PROGRESS MODAL */}
       {pendingMove && (
@@ -333,14 +355,14 @@ export default function KanbanBoard() {
       )}
 
       {/* RENDER TOAST DI LEVEL KANBANBOARD (Aman dari unmount modal) */}
-      {toastData && (
+      {/* {toastData && (
         <ToastFrame 
           isSuccess={true} 
           id={toastData.id} 
           name={toastData.name}
           process="updated" 
         />
-      )}
+      )} */}
       
     </div>
   );

@@ -81,8 +81,8 @@ export default function UserModals() {
   }, [isAddModalOpen])
 
   const handleAdd = async () => {
-    if (!addForm.name || !addForm.email || !addForm.password) {
-      toast.error("Name, email, and password are required")
+    if (!addForm.name || !addForm.email || !addForm.phone || !addForm.password) {
+      toast.error("Name, email, phone, and password are required")
       return
     }
     if (addForm.password !== addForm.confirmPassword) {

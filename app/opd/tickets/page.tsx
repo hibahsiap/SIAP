@@ -12,6 +12,7 @@ import FilterSidebar from '@/components/Filter';
 import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
 import KanbanBoard from '@/components/spectrumui/kanbanboard';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
@@ -153,7 +154,7 @@ export default function TicketsPage() {
       {/* --- AREA KONTEN (LOGIKA SWITCH) --- */}
       <div className="">
         {activeTab === 'kanban' ? (
-          <KanbanBoard />
+          <KanbanBoard searchQuery={searchQuery} />
         ) : filteredData.length > 0 ? (
           <div className="overflow-x-auto w-full">
             <TableTemplate2 columns={columns} data={filteredData as any} />
@@ -171,7 +172,10 @@ export default function TicketsPage() {
       <DeleteAlertModal 
         isOpen={isDeleteModalOpen} 
         onClose={closeDeleteModal} 
-        onConfirm={() => { closeDeleteModal(); }} 
+        onConfirm={() => { 
+          toast.success("Ticket deleted successfully"); 
+          closeDeleteModal(); 
+        }} 
         itemName={activeTab === 'aspirations' ? "aspiration message" : "task"} 
       />
 

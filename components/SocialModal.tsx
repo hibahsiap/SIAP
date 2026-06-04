@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DeleteModal from "@/components/DeleteModal";
+import { toast } from "sonner";
 
 export default function SocialTicketModal() {
   const { isCreateTicketModalOpen, closeCreateTicketModal, isDeleteModalOpen, closeDeleteModal, selectedItem, context } = InteractionStore();
@@ -16,6 +17,7 @@ export default function SocialTicketModal() {
     if (!selectedItem) return;
     console.log(`Menghapus ${context} dengan ID:`, selectedItem.id);
     closeDeleteModal();
+    toast.success(`Successfully deleted ${formattedItemName}`);
   };
   
   return (
@@ -71,7 +73,13 @@ export default function SocialTicketModal() {
             <Button onClick={closeCreateTicketModal} variant="outline" className="flex-1 h-[45px] rounded-lg">
               CANCEL
             </Button>
-            <Button onClick={closeCreateTicketModal} className="flex-1 h-[45px] bg-[#1a233a] rounded-lg text-white">
+            <Button 
+              onClick={() => 
+                {closeCreateTicketModal(); 
+                toast.success("Ticket Created Successfully")
+              }}  
+              className="flex-1 h-[45px] bg-[#1a233a] rounded-lg text-white"
+            >
               CREATE TICKET
             </Button>
           </div>

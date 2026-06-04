@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import Link from 'next/link'; 
-import Header from '@/components/Header'; 
-import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
-import EmptyState from '@/components/EmptyState';
-import SearchEmptyState from '@/components/SearchEmpty';
 import DeleteAlertModal from '@/components/DeleteModal';
 import EditTicketModal from '@/components/EditTicketModal';
-import FilterSidebar from '@/components/Filter'; 
-import ForwardTicketModal from '@/components/ForwardTicketModal'; 
-import { Trash2, Edit2, Forward } from 'lucide-react';
+import EmptyState from '@/components/EmptyState';
+import FilterSidebar from '@/components/Filter';
+import ForwardTicketModal from '@/components/ForwardTicketModal';
+import Header from '@/components/Header';
+import SearchEmptyState from '@/components/SearchEmpty';
+import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
+import { allTickets, aspirationTickets, pendingTickets } from '@/constants/ticketsDummy';
 import { useTaskStore } from '@/store/useTaskStore';
-import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
-import { toast } from "sonner"; 
+import { Edit2, Forward, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import { toast } from "sonner";
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
@@ -109,8 +109,8 @@ export default function TicketsPage() {
         messageColumn,
         { header: "Actions", key: "action", className: "text-center", cell: (_, row) => (
             <div className="flex items-center justify-center gap-4">
-              <button onClick={() => { setSelectedTicket(row); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
-              <button onClick={() => { setSelectedTicket(row); setIsForwardModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Forward className="w-4 h-4" /></button>
+              <button onClick={() => { setSelectedTicket(row); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:text-blue-500 transition-colors duration-300 cursor-pointer"><Edit2 className="w-4 h-4" /></button>
+              <button onClick={() => { setSelectedTicket(row); setIsForwardModalOpen(true); }} className="text-[#1D2F58] hover:text-green-500 transition-colors duration-300 cursor-pointer"><Forward className="w-4 h-4" /></button>
             </div>
           )
         }
@@ -208,7 +208,10 @@ export default function TicketsPage() {
       <DeleteAlertModal 
         isOpen={isDeleteModalOpen} 
         onClose={closeDeleteModal} 
-        onConfirm={() => { closeDeleteModal(); }} 
+        onConfirm={() => { 
+          toast.success("Ticket deleted successfully"); 
+          closeDeleteModal(); 
+        }} 
         itemName={activeTab === 'aspirations' ? "aspiration message" : "task"} 
       />
 

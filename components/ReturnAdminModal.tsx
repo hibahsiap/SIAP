@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useReturnStore } from "@/store/useReturnStore"
+import { toast } from "sonner"
 
 const MAX_CHARS = 300
 
@@ -37,8 +38,11 @@ export default function ReturnAdminModal({ onConfirm }: Props) {
       await onConfirm?.(ticketId, reason.trim())
       setReason("")
       close()
+      toast.success("Ticket returned successfully")
+      setLoading(false)
     } catch (error) {
       console.error("Failed to return ticket:", error)
+      toast.error("Failed to return ticket")
       setLoading(false)
     }
   }
