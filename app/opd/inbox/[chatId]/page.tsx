@@ -61,11 +61,11 @@ export default function ChatDetailPage({
     if (!text && !pendingAttachment) return;
     const snapshotAttachment = pendingAttachment
       ? {
-          url: pendingAttachment.url,
-          mimeType: pendingAttachment.mimeType,
-          fileName: pendingAttachment.fileName,
-          sizeBytes: pendingAttachment.sizeBytes,
-        }
+        url: pendingAttachment.url,
+        mimeType: pendingAttachment.mimeType,
+        fileName: pendingAttachment.fileName,
+        sizeBytes: pendingAttachment.sizeBytes,
+      }
       : undefined;
     setDraft("");
     setPendingAttachment(null);
@@ -232,14 +232,14 @@ export default function ChatDetailPage({
             if (m.senderType === "OPD") {
               return (
                 <div key={m.id} id={`msg-${m.id}`}>
-                    <ChatBubble
-                      message={m.content}
-                      time={time}
-                      isOPD
-                      senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
-                      isApproved={m.isApproved}
-                      approval={m.approval}
-                      attachments={m.attachments}
+                  <ChatBubble
+                    message={m.content}
+                    time={time}
+                    isOPD
+                    senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
+                    isApproved={m.isApproved}
+                    approval={m.approval}
+                    attachments={m.attachments}
                   />
                 </div>
               );

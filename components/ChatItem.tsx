@@ -46,7 +46,7 @@ export const ChatItem = ({
               <h4 className="text-[15px] font-bold text-slate-900 leading-tight truncate">{name}</h4>
               <p className="text-[13px] text-gray-500 mt-1 truncate">{message}</p>
             </div>
-            
+
             {/* Waktu & Icon */}
             <div className="flex flex-col items-end flex-shrink-0">
               <span className="text-[11px] text-gray-400 mb-2">{time}</span>
@@ -82,7 +82,7 @@ export const ChatItem = ({
             {/* Unread Indicator */}
             <div className="w-6 flex justify-center flex-shrink-0">
               {unreadCount !== undefined && unreadCount > 0 && !isActive ? (
-                <div className="min-w-5 h-5 px-1.5 bg-[#2962C0] rounded-md text-white text-[10px] flex items-center justify-center font-semibold shadow-sm ring-2 ring-white">
+                <div className="min-w-5 h-5 px-1.5 bg-[#2962C0] rounded-full text-white text-[11px] flex items-center justify-center font-semibold shadow-sm ring-2 ring-white">
                   {unreadCount}
                 </div>
               ) : null}

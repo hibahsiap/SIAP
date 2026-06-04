@@ -55,7 +55,7 @@ export async function GET(
             },
           },
           forwardedToTicket: {
-            select: { id: true, assignedOpdId: true, assignedOpd: { select: { id: true, name: true } } },
+            select: { id: true, ticketNumber: true, assignedOpdId: true, assignedOpd: { select: { id: true, name: true } } },
           },
           attachments: {
             select: { id: true, url: true, mimeType: true, fileName: true },
@@ -122,25 +122,26 @@ export async function GET(
       isApproved: m.isApproved,
       isRead: m.isRead,
       forwardedToTicketId: m.forwardedToTicketId,
+      forwardedToTicketNumber: m.forwardedToTicket?.ticketNumber ?? null,
       forwardedToOpdName: m.forwardedToTicket?.assignedOpd?.name ?? null,
       ticket: m.ticket
         ? {
-            id: m.ticket.id,
-            ticketNumber: m.ticket.ticketNumber,
-            status: m.ticket.status,
-            urgency: m.ticket.urgency,
-            type: m.ticket.type,
-            assignedOpd: m.ticket.assignedOpd,
-          }
+          id: m.ticket.id,
+          ticketNumber: m.ticket.ticketNumber,
+          status: m.ticket.status,
+          urgency: m.ticket.urgency,
+          type: m.ticket.type,
+          assignedOpd: m.ticket.assignedOpd,
+        }
         : null,
       at: m.sentAt ?? m.createdAt,
       sender: m.senderUser
         ? {
-            id: m.senderUser.id,
-            name: m.senderUser.name,
-            role: m.senderUser.role,
-            opdName: m.senderUser.opd?.name ?? null,
-          }
+          id: m.senderUser.id,
+          name: m.senderUser.name,
+          role: m.senderUser.role,
+          opdName: m.senderUser.opd?.name ?? null,
+        }
         : null,
       attachments: m.attachments,
       approval: m.approval

@@ -21,6 +21,7 @@ export default function ChatDetailPage({
     isLoadingDetail,
     detailError,
     fetchConversation,
+    fetchConversations,
     sendMessage,
     isSending,
     sendError,
