@@ -57,6 +57,7 @@ export async function GET(
             forwardedToTicket: {
               select: { id: true, ticketNumber: true, assignedOpdId: true, assignedOpd: { select: { id: true, name: true } } },
             },
+            forwardedToOpd: { select: { id: true, name: true } },
             attachments: {
               select: { id: true, url: true, mimeType: true, fileName: true },
             },
@@ -88,7 +89,7 @@ export async function GET(
       );
 
       const hasForwardedToOpd = conv.messages.some(
-        (m) => m.forwardedToTicket?.assignedOpdId === user?.opdId
+        (m) => m.forwardedToTicket?.assignedOpdId === user?.opdId || m.forwardedToOpdId === user?.opdId
       );
       const hasSentMessage = conv.messages.some(
         (m) => m.senderUser?.opdId === user?.opdId
@@ -100,6 +101,7 @@ export async function GET(
       messages = conv.messages.filter(
         (m) =>
           (m.direction === "OUTBOUND" && m.senderUser?.opdId === user?.opdId) ||
+          (m.forwardedToOpdId === user?.opdId) ||
           (m.forwardedToTicketId !== null && (opdTicketIds.has(m.forwardedToTicketId) || m.forwardedToTicket?.assignedOpdId === user?.opdId))
       );
     }
@@ -125,8 +127,9 @@ export async function GET(
         isApproved: m.isApproved,
         isRead: m.isRead,
         forwardedToTicketId: m.forwardedToTicketId,
+        forwardedToOpdId: m.forwardedToOpdId,
         forwardedToTicketNumber: m.forwardedToTicket?.ticketNumber ?? null,
-        forwardedToOpdName: m.forwardedToTicket?.assignedOpd?.name ?? null,
+        forwardedToOpdName: m.forwardedToOpd?.name ?? m.forwardedToTicket?.assignedOpd?.name ?? null,
         ticket: m.ticket
           ? {
             id: m.ticket.id,

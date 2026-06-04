@@ -6,9 +6,9 @@ import { DUMMY_TASK } from "@/constants/taskDummy";
 import Image from "next/image";
 
 interface ChatHeaderAdminProps {
-  tickets: { id: string; ticketNumber: string; assignedOpd: { id: string; name: string } | null }[];
-  selectedTicketId: string;
-  onSelectTicket: (id: string) => void;
+  opds: { id: string; name: string }[];
+  selectedOpdId: string;
+  onSelectOpd: (id: string) => void;
   isSelectMode: boolean;
   selectedCount: number;
   isForwarding: boolean;
@@ -18,7 +18,7 @@ interface ChatHeaderAdminProps {
 
 export const ChatHeader = ({
   name, phone, role, chatId, avatarUrl,
-  tickets, selectedTicketId, onSelectTicket,
+  opds, selectedOpdId, onSelectOpd,
   isSelectMode, selectedCount, isForwarding,
   onToggleSelectMode, onForward,
 }: {
@@ -61,21 +61,21 @@ export const ChatHeader = ({
         <div className="flex items-center gap-2 flex-1 justify-end">
           {!isSelectMode ? (
             <>
-              <Select value={selectedTicketId ?? ""} onValueChange={onSelectTicket}>
+              <Select value={selectedOpdId ?? ""} onValueChange={onSelectOpd}>
                 <SelectTrigger className="w-64 bg-white border-gray-200 text-slate-600 text-sm h-9">
-                  <SelectValue placeholder={tickets && tickets.length > 0 ? "Select ticket to forward to..." : "No ticket yet"} />
+                  <SelectValue placeholder={opds && opds.length > 0 ? "Select OPD to forward to..." : "Loading OPDs..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  {(tickets ?? []).map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.ticketNumber} — {t.assignedOpd?.name ?? "Unassigned"}
+                  {(opds ?? []).map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <button
                 onClick={onToggleSelectMode}
-                disabled={!selectedTicketId}
+                disabled={!selectedOpdId}
                 className="bg-[#1e293b] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#0f172a] disabled:opacity-40 transition-all h-9"
               >
                 Select Messages
@@ -113,9 +113,9 @@ export const ChatHeader = ({
 };
 
 interface ForwardControlProps {
-  tickets: { id: string; ticketNumber: string; assignedOpd: { id: string; name: string } | null }[];
-  selectedTicketId: string;
-  onSelectTicket: (id: string) => void;
+  opds: { id: string; name: string }[];
+  selectedOpdId: string;
+  onSelectOpd: (id: string) => void;
   isSelectMode: boolean;
   selectedCount: number;
   isForwarding: boolean;
@@ -124,9 +124,9 @@ interface ForwardControlProps {
 }
 
 export const ForwardControl = ({
-  tickets,
-  selectedTicketId,
-  onSelectTicket,
+  opds,
+  selectedOpdId,
+  onSelectOpd,
   isSelectMode,
   selectedCount,
   isForwarding,
@@ -139,27 +139,27 @@ export const ForwardControl = ({
         Forward to OPD
       </label>
 
-      {tickets.length === 0 ? (
+      {opds.length === 0 ? (
         <p className="text-xs text-gray-400">
-          No ticket linked yet. Use the <strong>+</strong> button on a message to create a ticket first.
+          Loading OPDs...
         </p>
       ) : !isSelectMode ? (
         <div className="flex gap-2">
-          <Select value={selectedTicketId} onValueChange={onSelectTicket}>
+          <Select value={selectedOpdId} onValueChange={onSelectOpd}>
             <SelectTrigger className="flex-1 bg-white border-gray-200 text-slate-600 text-sm">
-              <SelectValue placeholder="Select ticket to forward to..." />
+              <SelectValue placeholder="Select OPD to forward to..." />
             </SelectTrigger>
             <SelectContent>
-              {tickets.map((t) => (
-                <SelectItem key={t.id} value={t.id}>
-                  {t.ticketNumber} — {t.assignedOpd?.name ?? "Unassigned"}
+              {opds.map((o) => (
+                <SelectItem key={o.id} value={o.id}>
+                  {o.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <button
             onClick={onToggleSelectMode}
-            disabled={!selectedTicketId}
+            disabled={!selectedOpdId}
             className="bg-[#1e293b] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#0f172a] disabled:opacity-40 transition-all shadow-sm"
           >
             Select Messages

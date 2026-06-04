@@ -71,18 +71,26 @@ export default function ChatDetailPage({
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(new Set());
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
-  const [selectedTicketId, setSelectedTicketId] = useState("");
+  const [opds, setOpds] = useState<{ id: string; name: string }[]>([]);
+  const [selectedOpdId, setSelectedOpdId] = useState("");
   const [isForwarding, setIsForwarding] = useState(false);
   const [forwardError, setForwardError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchConversation(chatId);
     setReadTicketIds(new Set());
-    setSelectedTicketId("");
+    setSelectedOpdId("");
     setPinIndex(0);
     initializedChatId.current = null;
     setFirstUnreadId(null);
   }, [chatId, fetchConversation]);
+
+  useEffect(() => {
+    fetch("/api/opd")
+      .then((res) => res.json())
+      .then((data) => setOpds(data))
+      .catch((err) => console.error("Failed to load OPDs", err));
+  }, []);
 
   useEffect(() => {
     if (current && current.id === chatId && initializedChatId.current !== chatId) {
@@ -170,6 +178,7 @@ export default function ChatDetailPage({
   const selectableMessages = (current?.messages ?? []).filter(
     (m) =>
       !m.forwardedToTicketId &&
+      !m.forwardedToOpdId &&
       (m.direction === "INBOUND" || m.senderType === "ADMIN")
   );
 
@@ -205,7 +214,7 @@ export default function ChatDetailPage({
   };
 
   const handleForward = async () => {
-    if (selectedMessageIds.size === 0 || !selectedTicketId) return;
+    if (selectedMessageIds.size === 0 || !selectedOpdId) return;
     setIsForwarding(true);
     setForwardError(null);
     try {
@@ -214,7 +223,7 @@ export default function ChatDetailPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messageIds: Array.from(selectedMessageIds),
-          ticketId: selectedTicketId,
+          opdId: selectedOpdId,
         }),
       });
       const data = await res.json();
@@ -294,7 +303,6 @@ export default function ChatDetailPage({
     if (pinnedMessages.length === 0) return;
     const target = pinnedMessages[safePinIndex];
     if (target?.ticket) {
-      setSelectedTicketId(target.ticket.id);
       setReadTicketIds((prev) => {
         if (prev.has(target.ticket!.id)) return prev;
         const next = new Set(prev);
@@ -315,9 +323,9 @@ export default function ChatDetailPage({
         phone={phone}
         role="ADMIN"
         avatarUrl={current.citizen.profilePicUrl}
-        tickets={current.tickets}
-        selectedTicketId={selectedTicketId}
-        onSelectTicket={setSelectedTicketId}
+        opds={opds}
+        selectedOpdId={selectedOpdId}
+        onSelectOpd={setSelectedOpdId}
         isSelectMode={isSelectMode}
         selectedCount={selectedMessageIds.size}
         isForwarding={isForwarding}
@@ -330,10 +338,7 @@ export default function ChatDetailPage({
           <button
             type="button"
             onClick={handleCyclePin}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg border-l-4 text-left transition-colors w-full min-w-0 max-w-full ${currentPin.ticket && selectedTicketId === currentPin.ticket.id
-              ? "bg-amber-100 border-amber-500 ring-1 ring-amber-300"
-              : "bg-amber-50 border-amber-400 hover:bg-amber-100"
-              }`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border-l-4 text-left transition-colors w-full min-w-0 max-w-full bg-amber-50 border-amber-400 hover:bg-amber-100`}
             title={
               pinnedMessages.length > 1
                 ? `Pinned (${safePinIndex + 1}/${pinnedMessages.length}) — click to jump, click again for the next pin`

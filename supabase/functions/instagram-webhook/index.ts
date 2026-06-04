@@ -234,18 +234,16 @@ Deno.serve(async (req: Request) => {
             console.log('[Webhook] Skip: no message in event')
             continue
           }
-          if (event.message.is_echo) {
-            console.log('[Webhook] Skip: echo')
-            continue
-          }
+          
+          const isEcho = event.message.is_echo === true
 
-          const senderId: string = event.sender?.id ?? ''
+          const senderId: string = isEcho ? (event.recipient?.id ?? '') : (event.sender?.id ?? '')
           if (!senderId) {
-            console.log('[Webhook] Skip: no sender.id')
+            console.log(`[Webhook] Skip: no ${isEcho ? 'recipient' : 'sender'}.id`)
             continue
           }
           const messageText: string = event.message.text ?? ''
-          console.log(`[Webhook] DM from ${senderId}: ${messageText.slice(0, 80)}`)
+          console.log(`[Webhook] ${isEcho ? 'Echo' : 'DM'} from ${senderId}: ${messageText.slice(0, 80)}`)
 
           // Cari CitizenContact berdasarkan PSID. maybeSingle = null saat 0 row, tanpa error palsu.
           const { data: contact, error: contactSelErr } = await supabase
@@ -357,6 +355,43 @@ Deno.serve(async (req: Request) => {
             conversationId = newConv.id
           }
 
+          const externalId: string | null = event.message.mid ?? null
+
+          // Handle echo deduplication and ID format mismatch (Project API vs Webhook)
+          if (isEcho && externalId) {
+            const timeLimit = new Date(sentAt.getTime() - 60000) // Within 60 seconds
+            const { data: recentMsg } = await supabase
+              .from('Message')
+              .select('id, externalId')
+              .eq('conversationId', conversationId)
+              .eq('direction', 'OUTBOUND')
+              .eq('content', messageText)
+              .gte('sentAt', timeLimit.toISOString())
+              .order('sentAt', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+
+            if (recentMsg) {
+              if (recentMsg.externalId !== externalId) {
+                // Update to Webhook format so future reply_to.mid matches
+                await supabase.from('Message').update({ externalId }).eq('id', recentMsg.id)
+                console.log(`[Webhook] Updated existing OUTBOUND message externalId to match webhook format`)
+              }
+              console.log('[Webhook] Skip: echo message already handled by project')
+              continue
+            }
+          } else if (externalId) {
+            const { data: existingMsg } = await supabase
+              .from('Message')
+              .select('id')
+              .eq('externalId', externalId)
+              .maybeSingle()
+            if (existingMsg) {
+              console.log('[Webhook] Skip: inbound message already exists', externalId)
+              continue
+            }
+          }
+
           // PROSES ATTACHMENT DULU sebelum insert Message, supaya begitu realtime
           // mengirim event Message INSERT ke client, semua row Attachment sudah ada
           // di DB. Tanpa ini, client sempat menampilkan bubble kosong selama
@@ -415,8 +450,7 @@ Deno.serve(async (req: Request) => {
             }
           }
 
-          // Extract Meta message ID and reply_to context
-          const externalId: string | null = event.message.mid ?? null
+          // Extract reply_to context
           const replyToMid: string | null = event.message.reply_to?.mid ?? null
           let replyToMessageId: string | null = null
 
@@ -434,12 +468,13 @@ Deno.serve(async (req: Request) => {
           const { error: msgErr } = await supabase.from('Message').insert({
             id: messageId,
             content: messageText,
-            senderType: 'WARGA',
-            direction: 'INBOUND',
+            senderType: isEcho ? 'ADMIN' : 'WARGA',
+            direction: isEcho ? 'OUTBOUND' : 'INBOUND',
             conversationId,
             sentAt,
             isInternal: false,
             isApproved: true,
+            isRead: isEcho ? true : false,
             updatedAt: now,
             externalId,
             replyToMessageId,
@@ -460,15 +495,17 @@ Deno.serve(async (req: Request) => {
             }
           }
 
-          await sendAutoReply({
-            supabase,
-            channel,
-            conversationId,
-            senderId,
-            messageText: messageText || '',
-            igGraphVersion,
-            now,
-          })
+          if (!isEcho) {
+            await sendAutoReply({
+              supabase,
+              channel,
+              conversationId,
+              senderId,
+              messageText: messageText || '',
+              igGraphVersion,
+              now,
+            })
+          }
         }
 
         // --- Comment & Mention ---

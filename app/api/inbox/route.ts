@@ -23,7 +23,12 @@ export async function GET(req: NextRequest) {
     });
     if (!user?.opdId) return NextResponse.json([], { status: 200 });
     opdId = user.opdId;
-    opdFilter = { tickets: { some: { assignedOpdId: user.opdId } } };
+    opdFilter = {
+      OR: [
+        { tickets: { some: { assignedOpdId: user.opdId } } },
+        { messages: { some: { forwardedToOpdId: user.opdId } } }
+      ]
+    };
     const opdTickets = await prisma.ticket.findMany({
       where: { assignedOpdId: user.opdId },
       select: { id: true },
@@ -73,6 +78,7 @@ export async function GET(req: NextRequest) {
           createdAt: true,
           sentAt: true,
           forwardedToTicketId: true,
+          forwardedToOpdId: true,
           senderUser: { select: { opdId: true } },
           attachments: { select: { mimeType: true } },
           isRead: true,
@@ -87,16 +93,17 @@ export async function GET(req: NextRequest) {
     .map((c) => {
       const visibleMessages = opdTicketIds
         ? c.messages.filter(
-            (m) =>
-              (m.forwardedToTicketId !== null && opdTicketIds!.has(m.forwardedToTicketId)) ||
-              (m.direction === "OUTBOUND" && m.senderUser?.opdId === opdId)
-          )
+          (m) =>
+            (m.forwardedToTicketId !== null && opdTicketIds!.has(m.forwardedToTicketId)) ||
+            (m.forwardedToOpdId === opdId) ||
+            (m.direction === "OUTBOUND" && m.senderUser?.opdId === opdId)
+        )
         : c.messages;
       const last = visibleMessages[0];
       // For OPD, the conversation's effective recency is the latest message THEY are
       // allowed to see — not the global lastMessageAt, which would surface activity
       // (admin replies, unrelated citizen messages) the OPD never receives.
-        const effectiveLastAt = last
+      const effectiveLastAt = last
         ? (last.sentAt ?? last.createdAt)
         : c.lastMessageAt;
 
@@ -117,12 +124,12 @@ export async function GET(req: NextRequest) {
         ticketCount: c._count.tickets,
         lastMessage: last
           ? {
-              content: last.content,
-              direction: last.direction,
-              senderType: last.senderType,
-              at: last.sentAt ?? last.createdAt,
-              hasAttachment: last.attachments.length > 0,
-            }
+            content: last.content,
+            direction: last.direction,
+            senderType: last.senderType,
+            at: last.sentAt ?? last.createdAt,
+            hasAttachment: last.attachments.length > 0,
+          }
           : null,
         unreadCount,
         lastMessageAt: opdTicketIds ? effectiveLastAt : c.lastMessageAt,

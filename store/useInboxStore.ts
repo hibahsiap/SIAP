@@ -70,6 +70,8 @@ export type InboxMessage = {
   isApproved: boolean;
   isRead: boolean;
   forwardedToTicketId: string | null;
+  forwardedToOpdId: string | null;
+  forwardedToTicketNumber: string | null;
   forwardedToOpdName: string | null;
   ticket: InboxMessageTicket | null;
   at: string;
@@ -260,41 +262,9 @@ export const useInboxStore = create<InboxState>((set, get) => ({
             const cur = get().current;
             if (cur && row.conversationId === cur.id) {
               if (cur.messages.some((m) => m.id === row.id)) return;
-              // INBOUND messages can carry attachments yang baru di-insert ke DB
-              // sesaat setelah Message row-nya. Kalau kita append optimistic dengan
-              // attachments: [], bubble muncul kosong dulu. Refetch saja agar
-              // payload yang sampai ke UI selalu lengkap (Message + Attachments
-              // sudah ter-join oleh server). OPD tetap refetch untuk filter
-              // role-based di server.
-              if (role === "OPD" || row.direction === "INBOUND") {
-                get().fetchConversation(cur.id);
-              } else {
-                set({
-                  current: {
-                    ...cur,
-                    messages: [
-                      ...cur.messages,
-                      {
-                        id: row.id,
-                        content: row.content,
-                        direction: row.direction,
-                        senderType: row.senderType,
-                        isInternal: row.isInternal,
-                        isApproved: row.isApproved,
-                        isRead: false,
-                        forwardedToTicketId: null,
-                        forwardedToOpdName: null,
-                        ticket: null,
-                        at: row.sentAt ?? row.createdAt,
-                        sender: null,
-                        attachments: [],
-                        approval: null,
-                        replyTo: null,
-                      },
-                    ],
-                  },
-                });
-              }
+              // Refetch always to ensure we get joined relations (attachments, replyTo, etc.)
+              // rather than optimistically appending with nulls.
+              get().fetchConversation(cur.id);
             }
 
             get().fetchConversations();

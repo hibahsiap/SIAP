@@ -10,24 +10,24 @@ export async function PATCH(
   if (!auth || auth.role !== "ADMIN")
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { ticketId: conversationId } = await params;
-  const { messageIds, ticketId } = await req.json();
+  const { ticketId: conversationId } = await params; // It's actually chatId/conversationId
+  const { messageIds, opdId } = await req.json();
 
   if (!Array.isArray(messageIds) || messageIds.length === 0)
     return NextResponse.json({ error: "No messages selected" }, { status: 400 });
 
-  if (!ticketId)
-    return NextResponse.json({ error: "ticketId is required" }, { status: 400 });
+  if (!opdId)
+    return NextResponse.json({ error: "opdId is required" }, { status: 400 });
 
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: ticketId },
+  const opd = await prisma.opd.findUnique({
+    where: { id: opdId },
   });
-  if (!ticket)
-    return NextResponse.json({ error: "Ticket not found in this conversation" }, { status: 404 });
+  if (!opd)
+    return NextResponse.json({ error: "OPD not found" }, { status: 404 });
 
   const result = await prisma.message.updateMany({
-    where: { id: { in: messageIds }, forwardedToTicketId: null },
-    data: { forwardedToTicketId: ticketId },
+    where: { id: { in: messageIds }, forwardedToOpdId: null },
+    data: { forwardedToOpdId: opdId },
   });
 
   return NextResponse.json({ forwarded: result.count });

@@ -169,7 +169,7 @@ export const ChatBubble = ({
             )}
 
             {/* Forwarded badge — shown only when forwarded but NOT a ticket trigger */}
-            {forwardedToTicketId && !ticket && isInbound && (
+            {(forwardedToTicketId || forwardedToOpdName) && !ticket && isInbound && (
               <span className="flex items-center gap-1 text-[10px] text-blue-500 font-medium px-1">
                 <Forward size={10} /> Forwarded to {forwardedToOpdName ?? "OPD"}
               </span>
