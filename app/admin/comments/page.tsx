@@ -124,8 +124,8 @@ export default function SocialInteractionsPage() {
   ];
 
   return (
-    <div className="p-4">
-      <div className="mb-8">
+    <div className="px-4 py-2">
+      <div className="mb-8 py-1">
         <h1 className="text-3xl font-bold text-[#041942]">Sosial Interactions</h1>
         <p className="text-gray-500 text-sm">Manage comments from social media here</p>
       </div>
@@ -154,7 +154,7 @@ export default function SocialInteractionsPage() {
             {activeTab} List
           </h2>
 
-          <div className="flex-grow">
+          <div className="grow">
             {isLoading ? (
               <div className="py-10 text-center text-gray-400 text-sm">Loading…</div>
             ) : error ? (

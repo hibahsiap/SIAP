@@ -133,8 +133,8 @@ export default function UserManagementPage() {
     <div className="p-4 bg-gray-50/50 min-h-screen">
 
       {/* BAGIAN HEADER */}
-      <div className="bg-white px-8 py-6 rounded-t-lg border border-gray-200 border-b-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold tracking-tight text-[#14234b]">User Management</h2>
+      <div className="bg-white px-4 py-6 rounded-t-lg border border-gray-200 border-b-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold text-[#14234b]">User Management</h2>
 
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative">

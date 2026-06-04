@@ -163,7 +163,7 @@ export default function TicketsPage() {
   }, [activeTab, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-full max-w-full h-full p-4 lg:p-8">
+    <div className="flex-1 w-full max-w-full h-full px-4 py-2">
 
       {/* --- TABS & SEARCH HEADER --- */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 py-4 mb-4">

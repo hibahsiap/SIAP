@@ -170,13 +170,13 @@ export default function Settings() {
     }));
 
     return (
-        <div className="grid grid-rows-[100px_1fr] gap-2.5 p-2">
+        <div className="grid grid-rows-[90px_1fr] gap-2.5 px-4 py-2">
             <Suspense fallback={null}>
                 <OAuthNotifier />
             </Suspense>
 
             {/* Header */}
-            <div className="flex flex-col justify-center text-[#041942] gap-1.5 px-2 border-b border-black/10">
+            <div className="flex flex-col text-[#041942] gap-1.5 py-1 border-b border-black/10">
                 <h1 className="font-bold text-3xl">Settings</h1>
                 <p className="tracking-wide">Configure your account, channels, and preferences here</p>
             </div>
