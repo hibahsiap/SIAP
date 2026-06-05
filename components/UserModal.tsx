@@ -183,7 +183,29 @@ export default function UserModals() {
             </div>
           </div>
 
-          <FormField label="Phone Number" placeholder="0812-0000-0000" value={addForm.phone} onChange={(v) => setAddForm({ ...addForm, phone: v })} />
+          {/* <FormField label="Phone Number" placeholder="0812-0000-0000" value={addForm.phone} onChange={(v) => setAddForm({ ...addForm, phone: v })} /> */}
+
+          <FormField 
+            label="Phone Number" 
+            placeholder="+62 812-0000-0000" 
+            value={addForm.phone} 
+            onChange={(v) => {
+              // 1. Hapus semua karakter yang bukan angka
+              const numbersOnly = v.replace(/\D/g, '');
+              
+              // 2. Pastikan selalu dimulai dengan 62 (tanpa tanda + di awal agar mudah diproses)
+              // Jika user menghapus angka, pastikan prefix tetap ada
+              let formatted = numbersOnly;
+              if (!formatted.startsWith('62')) {
+                formatted = '62' + formatted;
+              }
+              
+              // 3. Batasi panjang maksimal (misal: 15 digit)
+              const finalValue = '+' + formatted.substring(0, 15);
+              
+              setAddForm({ ...addForm, phone: finalValue });
+            }} 
+          />
 
           {addForm.role === "OPD" && (
             <OpdSelect value={addForm.opdId} onChange={(v) => setAddForm({ ...addForm, opdId: v })} />
@@ -264,7 +286,29 @@ export default function UserModals() {
                 </div>
               </div>
 
-              <FormField label="Phone Number" placeholder="0812-0000-0000" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} />
+              {/* <FormField label="Phone Number" placeholder="0812-0000-0000" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} /> */}
+
+              <FormField 
+                label="Phone Number" 
+                placeholder="+62 812-0000-0000" 
+                value={addForm.phone} 
+                onChange={(v) => {
+                  // 1. Hapus semua karakter yang bukan angka
+                  const numbersOnly = v.replace(/\D/g, '');
+                  
+                  // 2. Pastikan selalu dimulai dengan 62 (tanpa tanda + di awal agar mudah diproses)
+                  // Jika user menghapus angka, pastikan prefix tetap ada
+                  let formatted = numbersOnly;
+                  if (!formatted.startsWith('62')) {
+                    formatted = '62' + formatted;
+                  }
+                  
+                  // 3. Batasi panjang maksimal (misal: 15 digit)
+                  const finalValue = '+' + formatted.substring(0, 15);
+                  
+                  setAddForm({ ...addForm, phone: finalValue });
+                }} 
+              />
 
               {editForm.role === "OPD" && (
                 <OpdSelect value={editForm.opdId} onChange={(v) => setEditForm({ ...editForm, opdId: v })} />

@@ -9,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface HeaderProps {
   searchQuery: string;
   setSearchQuery: (val: string) => void;
-  onFilterClick?: () => void; // <-- 1. Tambahkan prop ini
+  onFilterClick?: () => void;
+  sortOrder: 'newest' | 'oldest';
+  onSortChange: (val: 'newest' | 'oldest') => void;     
 }
 
-export default function Header({ searchQuery, setSearchQuery, onFilterClick }: HeaderProps) { // <-- 2. Panggil di sini
+export default function Header({ searchQuery, setSearchQuery, onFilterClick, sortOrder, onSortChange}: HeaderProps) { // <-- 2. Panggil di sini
   return (
     <div className="flex flex-row justify-end items-center gap-3 font-sans">
       <div className="w-full md:w-64">
@@ -33,7 +35,10 @@ export default function Header({ searchQuery, setSearchQuery, onFilterClick }: H
         Filter
       </Button>
 
-      <Select defaultValue="newest">
+      <Select 
+        value={sortOrder}
+        onValueChange={(val) => onSortChange(val as 'newest' | 'oldest')}
+      >
         <SelectTrigger className="w-[180px] bg-white border-[#D2D2D2] text-[#6B7280] h-[40px] min-h-[40px]  2xl:h-12 2xl:min-h-12 flex justify-between items-center px-4 focus:ring-0 rounded-[12px]">
           <div className="flex items-center gap-1">
             <span className="text-[#6B7280]">Sorted by:</span>

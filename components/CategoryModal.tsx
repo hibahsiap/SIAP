@@ -100,7 +100,7 @@ export default function CategoryModal({ isOpen, onClose, onSaved, editData }: Ca
       <div className="space-y-6 mt-2">
         <FormField label="Category" placeholder="Category Name" value={name} onChange={setName} />
         
-        <FormField label="Sub Category" placeholder="Sub Category" value={subCategory} onChange={setSubCategory} />
+        {/* <FormField label="Sub Category" placeholder="Sub Category" value={subCategory} onChange={setSubCategory} /> */}
 
         <div className="space-y-1.5">
           <label className="text-[10px] 2xl:text-xs font-bold text-gray-500 uppercase tracking-wider">OPD</label>

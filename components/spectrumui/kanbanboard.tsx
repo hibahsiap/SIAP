@@ -12,6 +12,7 @@ import ToastFrame from '../ToastFrame';
 import { toast } from 'sonner';
 import SearchEmptyState from '../SearchEmpty';
 import { FilterState } from '../Filter';
+import { isWithinRange } from '@/utils/dateFilter';
 // import ToastFrame from './ToastFrame';
 
 
@@ -50,7 +51,7 @@ const sampleData: Column[] = [
         message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
         status: "todo",
         issueType: ["Health", "Finance"],
-        startDate: "2024-01-15",
+        startDate: "2026-06-06",
         priority: "high",
       },
       {
@@ -59,7 +60,7 @@ const sampleData: Column[] = [
         message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
         status: "todo",
         issueType: ["Infrastructure"],
-        startDate: "2024-01-15",
+        startDate: "2026-05-27",
         priority: "low",
       },
     ],
@@ -78,7 +79,7 @@ const sampleData: Column[] = [
         message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
         status: "progress",
         issueType: ["Administration"],
-        startDate: "2024-01-15",
+        startDate: "2026-06-01",
         priority: "high",
       },
     ],
@@ -97,7 +98,7 @@ const sampleData: Column[] = [
         message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
         status: "done",
         issueType: ["Social"],
-        startDate: "2024-01-15",
+        startDate: "2026-05-15",
         priority: "medium",
       },
     ],
@@ -116,7 +117,7 @@ const sampleData: Column[] = [
         message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
         status: "hold",
         issueType: ["Social"],
-        startDate: "2024-01-15",
+        startDate: "2026-05-31",
         priority: "medium",
       },
     ],
@@ -135,7 +136,7 @@ const sampleData: Column[] = [
         message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
         status: "hold",
         issueType: ["Social"],
-        startDate: "2024-01-15",
+        startDate: "2026-06-04",
         priority: "medium",
       },
     ],
@@ -148,7 +149,7 @@ const priorityColors = {
   high: "border-red-400 bg-red-50 text-red-700",
 };
 
-export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuery?: string, filters?: FilterState;}) {
+export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'newest', }: { searchQuery?: string, filters?: FilterState; sortOrder?: 'newest' | 'oldest'; }) {
 
   const [columns, setColumns] = useState<Column[]>(sampleData);
 
@@ -157,14 +158,13 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
 
     return columns.map((col) => ({
       ...col,
-      tasks: col.tasks.filter((task) => {
+      tasks: [...col.tasks].filter((task) => {
         // Filter search query (tidak berubah)
         const matchSearch =
           task.taskName.toLowerCase().includes(q) ||
           task.message?.toLowerCase().includes(q);
         if (!matchSearch) return false;
 
-        // ✅ TAMBAH: Filter Priority
         if (filters?.priorities && filters.priorities.length > 0) {
           const taskPriority = task.priority
             ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) // "high" → "High"
@@ -191,11 +191,28 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
           if (!filters.classifications.includes(colLabel)) return false;
         }
 
+        if (filters?.rangeTime) {
+          if (!isWithinRange(task.startDate, filters.rangeTime)) return false;
+        }
+
         return true;
-      }),
+      })
+      .sort((a, b) => {
+          const getTime = (t: Task) => {
+            if (t.startDate) {
+              const d = new Date(t.startDate);
+              return isNaN(d.getTime()) ? 0 : d.getTime();
+            }
+            return 0;
+          };
+          return sortOrder === 'newest'
+            ? getTime(b) - getTime(a)
+            : getTime(a) - getTime(b);
+        }),
+
     }))
     .filter((col) => col.tasks.length > 0);
-  }, [searchQuery, columns, filters]);
+  }, [searchQuery, columns, filters, sortOrder]);
 
   const router = useRouter();
 

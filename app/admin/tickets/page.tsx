@@ -10,6 +10,7 @@ import SearchEmptyState from '@/components/SearchEmpty';
 import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
 import { allTickets, aspirationTickets, pendingTickets } from '@/constants/ticketsDummy';
 import { useTaskStore } from '@/store/useTaskStore';
+import { isWithinRange } from '@/utils/dateFilter';
 import { Edit2, Forward, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
@@ -52,6 +53,7 @@ export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState<TabCategory>('pending');
   const [searchQuery, setSearchQuery] = useState("");
   const { openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false); 
@@ -74,7 +76,7 @@ export default function TicketsPage() {
   }, [activeTab]);
 
   const filteredData = useMemo(() => {
-    return currentData.filter((item: any) => {
+    const filtered = currentData.filter((item: any) => {
       // Filter search query (tidak berubah)
       const searchStr = searchQuery.toLowerCase();
       const searchField = item.taskName || item.pengirim || "";
@@ -96,9 +98,28 @@ export default function TicketsPage() {
         if (!appliedFilters.priorities.includes(item.priority)) return false;
       }
 
+      if (appliedFilters.rangeTime) {
+        if (!isWithinRange(item.startDate, appliedFilters.rangeTime)) return false;
+      }
+
       return true;
     });
-  }, [currentData, searchQuery, appliedFilters]); 
+
+    return [...filtered].sort((a: any, b: any) => {
+      // Pakai startDate jika ada, fallback ke id
+      const getTime = (item: any) => {
+        if (item.startDate) {
+          const d = new Date(item.startDate);
+          return isNaN(d.getTime()) ? 0 : d.getTime();
+        }
+        return item.id ?? 0;
+      };
+      return sortOrder === 'newest'
+        ? getTime(b) - getTime(a)
+        : getTime(a) - getTime(b);
+    });
+
+  }, [currentData, searchQuery, appliedFilters, sortOrder]); 
 
   const handleForwardConfirm = () => {
     setIsForwardModalOpen(false);
@@ -221,7 +242,9 @@ export default function TicketsPage() {
             <Header 
               searchQuery={searchQuery} 
               setSearchQuery={setSearchQuery} 
-              onFilterClick={() => setIsFilterOpen(true)} 
+              onFilterClick={() => setIsFilterOpen(true)}
+              sortOrder={sortOrder}
+              onSortChange={setSortOrder} 
             /> 
         </div>
       </div>
@@ -266,6 +289,7 @@ export default function TicketsPage() {
       />
 
       <FilterSidebar 
+        admin
         isOpen={isFilterOpen} 
         onClose={() => setIsFilterOpen(false)} 
         filterState={appliedFilters}

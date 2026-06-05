@@ -13,6 +13,7 @@ import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticket
 import KanbanBoard from '@/components/spectrumui/kanbanboard';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { isWithinRange } from '@/utils/dateFilter';
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
@@ -51,6 +52,7 @@ export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState<TabCategory>('kanban');
   const [searchQuery, setSearchQuery] = useState("");
   const { openEditModal, openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -68,7 +70,7 @@ export default function TicketsPage() {
   }, [activeTab]);
 
   const filteredData = useMemo(() => {
-    return currentData.filter((item: any) => {
+    const filtered = currentData.filter((item: any) => {
       // Filter search query (tidak berubah)
       const searchStr = searchQuery.toLowerCase();
       const searchField = item.taskName || item.pengirim || "";
@@ -90,9 +92,28 @@ export default function TicketsPage() {
         if (!appliedFilters.priorities.includes(item.priority)) return false;
       }
 
+      if (appliedFilters.rangeTime) {
+        if (!isWithinRange(item.startDate, appliedFilters.rangeTime)) return false;
+      }
+
       return true;
     });
-  }, [currentData, searchQuery, appliedFilters]); 
+
+    return [...filtered].sort((a: any, b: any) => {
+      // Pakai startDate jika ada, fallback ke id
+      const getTime = (item: any) => {
+        if (item.startDate) {
+          const d = new Date(item.startDate);
+          return isNaN(d.getTime()) ? 0 : d.getTime();
+        }
+        return item.id ?? 0;
+      };
+      return sortOrder === 'newest'
+        ? getTime(b) - getTime(a)
+        : getTime(a) - getTime(b);
+    });
+
+  }, [currentData, searchQuery, appliedFilters, sortOrder]); 
 
   // Kolom dibuat dinamis berdasarkan Tab yang aktif
   const columns = useMemo<ColumnDefinition[]>(() => {
@@ -180,6 +201,8 @@ export default function TicketsPage() {
               searchQuery={searchQuery} 
               setSearchQuery={setSearchQuery} 
               onFilterClick={() => setIsFilterOpen(true)}
+              sortOrder={sortOrder}
+              onSortChange={setSortOrder}
             /> 
         </div>
       </div>
@@ -187,7 +210,7 @@ export default function TicketsPage() {
       {/* --- AREA KONTEN (LOGIKA SWITCH) --- */}
       <div className="">
         {activeTab === 'kanban' ? (
-          <KanbanBoard searchQuery={searchQuery} filters={appliedFilters} />
+          <KanbanBoard searchQuery={searchQuery} filters={appliedFilters} sortOrder={sortOrder} />
         ) : filteredData.length > 0 ? (
           <div className="overflow-x-auto w-full">
             <TableTemplate2 columns={columns} data={filteredData as any} />

@@ -12,6 +12,7 @@ export type FilterState = {
 };
 
 type FilterSidebarProps = {
+  admin?: boolean;
   isOpen: boolean;
   onClose: () => void;
   filterState: FilterState; 
@@ -41,7 +42,7 @@ const ISSUE_LIST = [
 const CLASSIFICATIONS = ["To Do", "In Progress", "Done", "On Hold", "Canceled"];
 const PRIORITIES = ["Low", "Medium", "High"];
 
-export default function FilterSidebar({ isOpen, onClose, filterState, onApply }: FilterSidebarProps) {
+export default function FilterSidebar({ admin, isOpen, onClose, filterState, onApply }: FilterSidebarProps) {
   // 1. State untuk Accordion (Default False / Tertutup semua)
   const [isOpdOpen, setIsOpdOpen] = useState(false);
   const [isClassificationOpen, setIsClassificationOpen] = useState(false);
@@ -145,46 +146,48 @@ export default function FilterSidebar({ isOpen, onClose, filterState, onApply }:
         <div className="flex-1 overflow-y-auto bg-white">
           
           {/* --- Section OPD --- */}
-          <div>
-            <button
-              onClick={() => setIsOpdOpen(!isOpdOpen)}
-              className="w-full flex justify-between items-center px-6 py-4 bg-[#f4f5f7] border-b border-white hover:bg-slate-200 transition"
-            >
-              <span className="font-bold text-sm text-slate-800">OPD</span>
-              {isOpdOpen ? <Minus className="w-4 h-4 text-slate-600" /> : <Plus className="w-4 h-4 text-slate-600" />}
-            </button>
-            {isOpdOpen && (
-              <div className="p-4 border-b border-slate-100 space-y-3 bg-white">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search OPD..."
-                    value={opdQuery}
-                    onChange={(e) => setOpdQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-                  />
+          {admin && (
+            <div>
+              <button
+                onClick={() => setIsOpdOpen(!isOpdOpen)}
+                className="w-full flex justify-between items-center px-6 py-4 bg-[#f4f5f7] border-b border-white hover:bg-slate-200 transition"
+              >
+                <span className="font-bold text-sm text-slate-800">OPD</span>
+                {isOpdOpen ? <Minus className="w-4 h-4 text-slate-600" /> : <Plus className="w-4 h-4 text-slate-600" />}
+              </button>
+              {isOpdOpen && (
+                <div className="p-4 border-b border-slate-100 space-y-3 bg-white">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search OPD..."
+                      value={opdQuery}
+                      onChange={(e) => setOpdQuery(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="flex flex-col text-sm text-slate-700 max-h-40 overflow-y-auto">
+                    {filteredOpds.length > 0 ? (
+                      filteredOpds.map((opd) => (
+                        <button
+                          key={opd}
+                          onClick={() => toggleSelection(opd, 'opds')}
+                          className={`text-left px-3 py-2 rounded transition ${
+                            localFilters.opds.includes(opd) ? "bg-[#0b1736] text-white font-medium" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          {opd}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-slate-400 text-xs italic px-2 py-2">OPD tidak ditemukan</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col text-sm text-slate-700 max-h-40 overflow-y-auto">
-                  {filteredOpds.length > 0 ? (
-                    filteredOpds.map((opd) => (
-                      <button
-                        key={opd}
-                        onClick={() => toggleSelection(opd, 'opds')}
-                        className={`text-left px-3 py-2 rounded transition ${
-                          localFilters.opds.includes(opd) ? "bg-[#0b1736] text-white font-medium" : "hover:bg-slate-50"
-                        }`}
-                      >
-                        {opd}
-                      </button>
-                    ))
-                  ) : (
-                    <p className="text-slate-400 text-xs italic px-2 py-2">OPD tidak ditemukan</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* --- Section Classification --- */}
           <div>
@@ -298,9 +301,9 @@ export default function FilterSidebar({ isOpen, onClose, filterState, onApply }:
                 {["Today", "This Week", "This Month"].map((range) => (
                   <button
                     key={range}
-                    onClick={() => setLocalFilters(prev => ({ ...prev, rangeTime: range }))}
+                    onClick={() => setLocalFilters(prev => ({ ...prev, rangeTime: prev.rangeTime === range ? "" : range }))}
                     className={`text-left px-6 py-3 border-b border-slate-100 transition ${
-                      selectedRange === range ? "bg-[#0b1736] text-white" : "hover:bg-slate-50"
+                      localFilters.rangeTime === range ? "bg-[#0b1736] text-white" : "hover:bg-slate-50"
                     }`}
                   >
                     {range}
@@ -308,7 +311,7 @@ export default function FilterSidebar({ isOpen, onClose, filterState, onApply }:
                 ))}
                 
                 {/* Custom Range with Calendar Mockup */}
-                <div className="p-6 border-b border-slate-100">
+                {/* <div className="p-6 border-b border-slate-100">
                   <p className="font-bold text-slate-800 mb-3">Custom Range</p>
                   <div className="border border-slate-200 rounded-xl p-4 w-64 shadow-sm bg-white">
                     <div className="flex justify-between items-center mb-4 text-xs font-semibold">
@@ -336,7 +339,9 @@ export default function FilterSidebar({ isOpen, onClose, filterState, onApply }:
                       <div className="text-slate-300 py-1">1</div><div className="text-slate-300 py-1">2</div><div className="text-slate-300 py-1">3</div><div className="text-slate-300 py-1">4</div>
                     </div>
                   </div>
-                </div>
+                </div> */}
+
+                
               </div>
             )}
           </div>
