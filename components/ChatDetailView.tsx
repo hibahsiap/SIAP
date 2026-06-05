@@ -16,9 +16,9 @@ export default function ChatDetailView({ activeChat, role }: { activeChat: any, 
 
         {role === 'ADMIN' && (
           <ForwardControl
-            tickets={[]}
-            selectedTicketId=""
-            onSelectTicket={() => {}}
+            opds={[]}
+            selectedOpdId=""
+            onSelectOpd={() => {}}
             isSelectMode={false}
             selectedCount={0}
             isForwarding={false}

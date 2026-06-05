@@ -162,7 +162,7 @@ export default function SocialInteractionsPage() {
             ) : (
               <TableTemplate columns={columns} data={currentData} />
             )}
-            <CreateDeleteModals />
+            <CreateDeleteModals onSuccess={() => fetchData(activeTab)} />
           </div>
         </div>
 

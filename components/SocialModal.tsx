@@ -8,14 +8,26 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DeleteModal from "@/components/DeleteModal";
 
-export default function SocialTicketModal() {
+export default function SocialTicketModal({ onSuccess }: { onSuccess?: () => void } = {}) {
   const { isCreateTicketModalOpen, closeCreateTicketModal, isDeleteModalOpen, closeDeleteModal, selectedItem, context } = InteractionStore();
   const formattedItemName = context === 'comments' ? 'comment' : context === 'mentions' ? 'mentions' : 'message';
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!selectedItem) return;
-    console.log(`Menghapus ${context} dengan ID:`, selectedItem.id);
-    closeDeleteModal();
+    try {
+      const res = await fetch(`/api/social-interactions/${selectedItem.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        onSuccess?.();
+      } else {
+        console.error("Failed to delete interaction");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      closeDeleteModal();
+    }
   };
   
   return (
