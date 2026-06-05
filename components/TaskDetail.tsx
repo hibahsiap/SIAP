@@ -201,7 +201,7 @@ export default function TaskDetailContent({ task }: Props) {
             <Button 
               // disabled={!hasChanges} // Tombol disabled jika tidak ada perubahan
               onClick={() => !hasChanges ? null: setIsUpdateModalOpen(true)}
-              className={`w-32 h-8 text-white ${!hasChanges ? "bg-gray-400 cursor-not-allowed" : "bg-slate-900 hover:bg-slate-800"}`}
+              className={`w-32 h-8 2xl:h-10 2xl:w-40 text-white ${!hasChanges ? "bg-gray-400 cursor-not-allowed" : "bg-slate-900 hover:bg-slate-800"}`}
             >
               Save Changes
             </Button>
@@ -220,7 +220,7 @@ export default function TaskDetailContent({ task }: Props) {
       <ReturnAdminModal onConfirm={handleConfirmReturn} />
 
       {/* --- MODAL ADD IMAGE --- */}
-      <CustomModal isOpen={isAddImageOpen} onClose={() => setIsAddImageOpen(false)} title="Add Image">
+      {/* <CustomModal isOpen={isAddImageOpen} onClose={() => setIsAddImageOpen(false)} title="Add Image">
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Image URL</label>
@@ -235,7 +235,7 @@ export default function TaskDetailContent({ task }: Props) {
             <Button onClick={submitNewImage} className="bg-[#1a233a] text-white">Upload</Button>
           </div>
         </div>
-      </CustomModal>
+      </CustomModal> */}
 
       {/* --- MODAL PREVIEW IMAGE (FOTO MENJADI BESAR) --- */}
       <CustomModal isOpen={!!previewImage} onClose={() => setPreviewImage(null)} title="Image Preview" size="lg">

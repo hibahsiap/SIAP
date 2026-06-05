@@ -27,7 +27,7 @@ const getStatusBadge = (status: string) => {
     "Done": "bg-[#4C9A61]",
   };
   return (
-    <div className={`mx-auto inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide ${styles[status]}`}>
+    <div className={`mx-auto inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[status]} w-30`}>
       <span className={`h-1.5 w-1.5 rounded-full ${dotColors[status]}`}></span>
       {status}
     </div>
@@ -40,9 +40,10 @@ const getBadge = (text: string, type: 'issue' | 'priority') => {
     "Health": "bg-purple-100/80 text-purple-700",
     "Traffic": "bg-[#F5E6E0] text-[#B06B52]", 
     "Low": "bg-[#E3F2E7] text-[#4C9A61]",
+    "Medium": "bg-yellow-100/80 text-yellow-700",
     "High": "bg-red-100/80 text-red-700",
   };
-  return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[text]}`}>{text}</span>;
+  return <div className={`w-18 px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[text]}`}>{text}</div>;
 };
 
 type TabCategory = 'pending' | 'all' | 'aspirations'; 
@@ -72,14 +73,6 @@ export default function TicketsPage() {
     return aspirationTickets;
   }, [activeTab]);
 
-  // const filteredData = useMemo(() => {
-  //   return currentData.filter((item: any) => {
-  //     const searchStr = searchQuery.toLowerCase();
-  //     const searchField = item.taskName || item.pengirim || "";
-  //     return searchField.toLowerCase().includes(searchStr);
-  //   });
-  // }, [currentData, searchQuery]);
-
   const filteredData = useMemo(() => {
     return currentData.filter((item: any) => {
       // Filter search query (tidak berubah)
@@ -87,22 +80,18 @@ export default function TicketsPage() {
       const searchField = item.taskName || item.pengirim || "";
       if (!searchField.toLowerCase().includes(searchStr)) return false;
 
-      // ✅ TAMBAH: Filter OPD (hanya berlaku jika ada item.opd)
       if (appliedFilters.opds.length > 0 && item.opd) {
         if (!appliedFilters.opds.includes(item.opd)) return false;
       }
 
-      // ✅ TAMBAH: Filter Classification/Status
       if (appliedFilters.classifications.length > 0) {
         if (!appliedFilters.classifications.includes(item.status)) return false;
       }
 
-      // ✅ TAMBAH: Filter Issue Type (hanya berlaku jika ada item.issueType)
       if (appliedFilters.issues.length > 0 && item.issueType) {
         if (!appliedFilters.issues.includes(item.issueType)) return false;
       }
 
-      // ✅ TAMBAH: Filter Priority
       if (appliedFilters.priorities.length > 0) {
         if (!appliedFilters.priorities.includes(item.priority)) return false;
       }
@@ -110,14 +99,6 @@ export default function TicketsPage() {
       return true;
     });
   }, [currentData, searchQuery, appliedFilters]); 
-
-  // const activeFilterCount = useMemo(() => {
-  //   return appliedFilters.opds.length +
-  //     appliedFilters.classifications.length +
-  //     appliedFilters.issues.length +
-  //     appliedFilters.priorities.length +
-  //     (appliedFilters.rangeTime ? 1 : 0);
-  // }, [appliedFilters]);
 
   const handleForwardConfirm = () => {
     setIsForwardModalOpen(false);
@@ -130,7 +111,7 @@ export default function TicketsPage() {
       key: "message", 
       className: "text-center", 
       cell: (val: string) => (
-        <span className="block w-full min-w-[250px] whitespace-normal break-words text-[12px] font-normal leading-relaxed text-justify text-[#1D2F58]">
+        <span className="block w-full min-w-[250px] 2xl:min-w-[300px] whitespace-normal break-words text-[12px] 2xl:text-[14px] font-normal leading-relaxed text-justify text-[#1D2F58]">
           {val}
         </span> 
       )
@@ -144,12 +125,17 @@ export default function TicketsPage() {
           className: "text-center", 
           // Diubah menjadi Link agar bisa diklik ke detail
           cell: (val, row: any) => (
-            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[200px] line-clamp-2 inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           ) 
         },
-        { header: "OPD", key: "opd", className: "text-center" }, 
+        { 
+          header: "OPD", 
+          key: "opd", 
+          className: "text-center" ,
+          cell: (val) => <div className="w-[280px]">{val}</div>,
+        }, 
         { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
         { header: "Issue Type", key: "issueType", className: "text-center", cell: (val) => getBadge(val, 'issue') },
         { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
@@ -170,12 +156,12 @@ export default function TicketsPage() {
           className: "text-center", 
           // Diubah menjadi Link
           cell: (val, row: any) => (
-            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           ) 
         },
-        { header: "OPD", key: "opd", className: "text-center" }, 
+        { header: "OPD", key: "opd", className: "text-center", cell: (val) => <div className="w-[180px]">{val}</div>, }, 
         { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
         { header: "Issue Type", key: "issueType", className: "text-center", cell: (val) => getBadge(val, 'issue') },
         { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
@@ -191,7 +177,7 @@ export default function TicketsPage() {
           className: "text-center", 
           // Pengirim juga kita buat bisa diklik ke detail tiket
           cell: (val, row: any) => (
-            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[100px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           ) 
@@ -210,7 +196,7 @@ export default function TicketsPage() {
   }, [activeTab, openDeleteModal]);
 
   return (
-    <div className="flex-1 h-full px-4 py-2 w-[1020px]">
+    <div className="flex-1 h-full px-4 py-2 w-[1020px] 2xl:w-[1300px]">
 
       {/* --- TABS & SEARCH HEADER --- */}
       <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
@@ -223,7 +209,7 @@ export default function TicketsPage() {
                 setSearchQuery(""); 
                 setAppliedFilters({ opds: [], classifications: [], issues: [], priorities: [], rangeTime: "" });
               }}
-              className={`px-5 h-10 flex items-center justify-center rounded-[12px] text-sm font-semibold transition-all duration-200 ${
+              className={`px-5 h-10 flex items-center justify-center rounded-[12px] text-sm 2xl:text-base 2xl:h-12 font-semibold transition-all duration-200 ${
                 activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
               }`}
             >

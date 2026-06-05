@@ -152,19 +152,6 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
 
   const [columns, setColumns] = useState<Column[]>(sampleData);
 
-  // const filteredColumns = useMemo(() => {
-  //   const q = searchQuery.toLowerCase();
-
-  //   return columns.map((col) => ({
-  //     ...col,
-  //     tasks: col.tasks.filter((task) =>
-  //       task.taskName.toLowerCase().includes(q) ||
-  //       task.message?.toLowerCase().includes(q)
-  //     ),
-  //   }))
-  //   .filter(col => col.tasks.length > 0);
-  // }, [searchQuery, columns]);
-
   const filteredColumns = useMemo(() => {
     const q = searchQuery.toLowerCase();
 
@@ -185,8 +172,6 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
           if (!filters.priorities.includes(taskPriority)) return false;
         }
 
-        // ✅ TAMBAH: Filter Issue Type
-        // task.issueType adalah array, cocok jika ada irisan dengan filter
         if (filters?.issues && filters.issues.length > 0) {
           const hasMatchingIssue = task.issueType?.some((issue) =>
             filters.issues.includes(issue)
@@ -194,8 +179,6 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
           if (!hasMatchingIssue) return false;
         }
 
-        // ✅ TAMBAH: Filter Classification/Status
-        // Mapping dari column.id ke label Classification
         const statusMap: Record<string, string> = {
           todo: "To Do",
           progress: "In Progress",
@@ -225,8 +208,6 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
 
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
 
-  // STATE BARU: Untuk mentrigger Toast di level KanbanBoard
-  // const [toastData, setToastData] = useState<{ id: string; name: string } | null>(null);
 
   const handleDragStart = (e: React.DragEvent, task: Task, columnId: string) => {
     e.dataTransfer.setData('text/plain', JSON.stringify({ task, sourceColumnId: columnId }));
@@ -276,21 +257,10 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
     console.log("Files ready to API upload:", data.files);
     console.log("New description updated:", data.description);
 
-    // 3. SET DATA TOAST DI LEVEL KANBANBOARD SEBELUM MODAL RE-SET
-    // setToastData({ id: task.id, name: task.taskName });
-    
-    // toast.success("Task Updated", {
-    //   description: `"${task.id}-${task.taskName}" updated successfully`,
-    // });
-
     // Reset total seluruh state modal (Modal menutup dengan aman)
     setIsProgressModalOpen(false);
     setPendingMove(null);
 
-    // Otomatis hilangkan toast setelah beberapa detik (misal 4 detik)
-    // setTimeout(() => {
-    //   setToastData(null);
-    // }, 4000);
   };
  
   return (
@@ -306,7 +276,7 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
               {filteredColumns.map((column) => (
                 <div
                   key={column.id}
-                  className="rounded-[10px] p-4 shrink-0 w-84 min-h-100"
+                  className="rounded-[10px] p-4 shrink-0 w-84 2xl:w-90 min-h-100"
                   style={{ backgroundColor: column.bg }}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, column.id)}
@@ -314,7 +284,7 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2 py-1.5 px-2 rounded-sm" style={{ backgroundColor: column.badge }}>
                       <div className="w-2 h-2 rounded-full " style={{ backgroundColor: column.dot }} />
-                      <h3 className="font-semibold text-sm tracking-wider" style={{ color: column.text }}>
+                      <h3 className="font-semibold text-sm 2xl:text-base tracking-wider" style={{ color: column.text }}>
                         {column.title}
                       </h3>
                       <Badge className="bg-neutral-100/80 text-neutral-800">
@@ -340,10 +310,10 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
                         <CardContent className="px-3 py-1">
                           <div className="space-y-3.5">
                             <div className="flex items-center justify-between gap-1">
-                              <h4 className="font-semibold text-neutral-900 text-sm leading-tight">
+                              <h4 className="font-semibold text-neutral-900 text-sm 2xl:text-base leading-tight">
                                 {task.taskName}
                               </h4>
-                              <p className={`border px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              <p className={`border px-2 py-0.5 2xl:px-3 2xl:py-1 rounded-full text-[10px] 2xl:text-xs font-bold uppercase tracking-wider ${
                                   task.priority ? priorityColors[task.priority] : 'border-neutral-300 bg-neutral-50 text-neutral-600'
                                 }`}>
                                   {task.priority}
@@ -351,7 +321,7 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
                             </div>
 
                             {task.message && (
-                              <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed line-clamp-2">
+                              <p className="text-xs 2xl:text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed line-clamp-2">
                                 {task.message}
                               </p>
                             )}
@@ -361,7 +331,7 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
                                 {task.issueType.map((issue) => (
                                   <Badge
                                     key={issue}
-                                    className="text-[10px] bg-[#F0DFAC] text-[#655121] border-[#655121] backdrop-blur-sm"
+                                    className="text-[10px] 2xl:text-xs bg-[#F0DFAC] text-[#655121] border-[#655121] backdrop-blur-sm"
                                   >
                                     {issue}
                                   </Badge>
@@ -374,7 +344,7 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
                                 {task.startDate && (
                                   <div className="flex items-center gap-1">
                                     <Calendar className="w-3 h-3" />
-                                    <span className="text-[10px] font-medium">{task.startDate}</span>
+                                    <span className="text-[10px] 2xl:text-xs font-medium">{task.startDate}</span>
                                   </div>
                                 )}
                               </div>
@@ -405,16 +375,6 @@ export default function KanbanBoard({ searchQuery = "", filters, }: { searchQuer
           onSave={handleFinalProgressSave}
         />
       )}
-
-      {/* RENDER TOAST DI LEVEL KANBANBOARD (Aman dari unmount modal) */}
-      {/* {toastData && (
-        <ToastFrame 
-          isSuccess={true} 
-          id={toastData.id} 
-          name={toastData.name}
-          process="updated" 
-        />
-      )} */}
       
     </div>
   );

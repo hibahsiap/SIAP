@@ -27,14 +27,14 @@ export default function Header({ searchQuery, setSearchQuery, onFilterClick }: H
       <Button 
         variant="outline" 
         onClick={onFilterClick} 
-        className="flex items-center gap-2 border-[#D2D2D2] text-[#6B7280] h-[40px] min-h-[40px] rounded-[12px] hover:bg-gray-50"
+        className="flex items-center gap-2 border-[#D2D2D2] text-[#6B7280] h-[40px] 2xl:h-12 min-h-[40px] rounded-[12px] hover:bg-gray-50"
       >
         <Filter className="h-4 w-4" />
         Filter
       </Button>
 
       <Select defaultValue="newest">
-        <SelectTrigger className="w-[180px] border-[#D2D2D2] text-[#6B7280] h-[40px] min-h-[40px] flex justify-between items-center px-4 focus:ring-0 rounded-[12px]">
+        <SelectTrigger className="w-[180px] bg-white border-[#D2D2D2] text-[#6B7280] h-[40px] min-h-[40px]  2xl:h-12 2xl:min-h-12 flex justify-between items-center px-4 focus:ring-0 rounded-[12px]">
           <div className="flex items-center gap-1">
             <span className="text-[#6B7280]">Sorted by:</span>
             <span className="font-semibold text-gray-900"><SelectValue placeholder="Sort" /></span>
@@ -43,7 +43,7 @@ export default function Header({ searchQuery, setSearchQuery, onFilterClick }: H
         <SelectContent>
           <SelectItem value="newest">Newest</SelectItem>
           <SelectItem value="oldest">Oldest</SelectItem>
-          <SelectItem value="priority">Priority</SelectItem>
+          {/* <SelectItem value="priority">Priority</SelectItem> */}
         </SelectContent>
       </Select>
       

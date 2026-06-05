@@ -235,8 +235,8 @@ export default function UserModals() {
 
         </div>
         <div className="flex gap-3 mt-8">
-          <Button onClick={closeAddModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold" disabled={isSubmitting}>CANCEL</Button>
-          <Button onClick={handleAdd} className="flex-1 bg-[#1a233a] text-white font-bold" disabled={isSubmitting}>
+          <Button onClick={closeAddModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold 2xl:h-10" disabled={isSubmitting}>CANCEL</Button>
+          <Button onClick={handleAdd} className="flex-1 bg-[#1a233a] text-white font-bold 2xl:h-10" disabled={isSubmitting}>
             {isSubmitting ? "CREATING..." : "CREATE USER"}
           </Button>
         </div>
@@ -287,8 +287,8 @@ export default function UserModals() {
               </div>
             </div>
             <div className="flex gap-3 mt-8">
-              <Button onClick={closeEditModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold" disabled={isSubmitting}>CANCEL</Button>
-              <Button onClick={handleEdit} className="flex-1 bg-[#1a233a] text-white font-bold" disabled={isSubmitting}>
+              <Button onClick={closeEditModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold 2xl:h-10" disabled={isSubmitting}>CANCEL</Button>
+              <Button onClick={handleEdit} className="flex-1 bg-[#1a233a] text-white font-bold 2xl:h-10" disabled={isSubmitting}>
                 {isSubmitting ? "SAVING..." : "SAVE CHANGES"}
               </Button>
             </div>

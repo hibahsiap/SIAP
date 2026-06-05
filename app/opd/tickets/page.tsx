@@ -26,7 +26,7 @@ const getStatusBadge = (status: string) => {
     "Done": "bg-[#4C9A61]",
   };
   return (
-    <div className={`mx-auto inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide ${styles[status]}`}>
+    <div className={`mx-auto inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[status]} w-30`}>
       <span className={`h-1.5 w-1.5 rounded-full ${dotColors[status]}`}></span>
       {status}
     </div>
@@ -39,9 +39,10 @@ const getBadge = (text: string, type: 'issue' | 'priority') => {
     "Health": "bg-purple-100/80 text-purple-700",
     "Traffic": "bg-[#F5E6E0] text-[#B06B52]", 
     "Low": "bg-[#E3F2E7] text-[#4C9A61]",
+    "Medium": "bg-yellow-100/80 text-yellow-700",
     "High": "bg-red-100/80 text-red-700",
   };
-  return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[text]}`}>{text}</span>;
+  return <div className={`w-18 px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[text]}`}>{text}</div>;
 };
 
 type TabCategory = 'kanban' | 'all' | 'aspirations';
@@ -66,15 +67,6 @@ export default function TicketsPage() {
     return aspirationTickets;
   }, [activeTab]);
 
-  // Logika Pencarian
-  // const filteredData = useMemo(() => {
-  //   return currentData.filter((item: any) => {
-  //     const searchStr = searchQuery.toLowerCase();
-  //     const searchField = item.taskName || item.pengirim || "";
-  //     return searchField.toLowerCase().includes(searchStr);
-  //   });
-  // }, [currentData, searchQuery]);
-
   const filteredData = useMemo(() => {
     return currentData.filter((item: any) => {
       // Filter search query (tidak berubah)
@@ -82,22 +74,18 @@ export default function TicketsPage() {
       const searchField = item.taskName || item.pengirim || "";
       if (!searchField.toLowerCase().includes(searchStr)) return false;
 
-      // ✅ TAMBAH: Filter OPD (hanya berlaku jika ada item.opd)
       if (appliedFilters.opds.length > 0 && item.opd) {
         if (!appliedFilters.opds.includes(item.opd)) return false;
       }
 
-      // ✅ TAMBAH: Filter Classification/Status
       if (appliedFilters.classifications.length > 0) {
         if (!appliedFilters.classifications.includes(item.status)) return false;
       }
 
-      // ✅ TAMBAH: Filter Issue Type (hanya berlaku jika ada item.issueType)
       if (appliedFilters.issues.length > 0 && item.issueType) {
         if (!appliedFilters.issues.includes(item.issueType)) return false;
       }
 
-      // ✅ TAMBAH: Filter Priority
       if (appliedFilters.priorities.length > 0) {
         if (!appliedFilters.priorities.includes(item.priority)) return false;
       }
@@ -112,7 +100,7 @@ export default function TicketsPage() {
       header: "Pesan Aspirasi", 
       key: "message", 
       cell: (val: string) => (
-        <span className="block w-full min-w-[250px] whitespace-normal break-words text-[12px] font-normal leading-relaxed text-justify text-[#1D2F58]">
+        <span className="block w-full min-w-[250px] 2xl:min-w-[300px] whitespace-normal break-words text-[12px] 2xl:text-[14px] font-normal leading-relaxed text-justify text-[#1D2F58]">
           {val}
         </span> 
       )
@@ -127,12 +115,12 @@ export default function TicketsPage() {
           key: "taskName", 
           // cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> 
           cell: (val, row: any) => (
-            <Link href={`/opd/task/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/opd/task/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           ) 
         },
-        { header: "OPD", key: "opd" },
+        { header: "OPD", key: "opd", className: "text-center", cell: (val) => <div className="w-[180px]">{val}</div>,  },
         { header: "Status", key: "status", cell: (val) => getStatusBadge(val) },
         { header: "Issue Type", key: "issueType", cell: (val) => getBadge(val, 'issue') },
         { header: "Priority", key: "priority", cell: (val) => getBadge(val, 'priority') },
@@ -148,7 +136,7 @@ export default function TicketsPage() {
           className: "text-center", 
           // cell: (val) => <span className="whitespace-normal min-w-[100px] inline-block font-bold">{val}</span> 
           cell: (val, row: any) => (
-            <Link href={`/opd/task/${row.id}`} className="whitespace-normal min-w-[100px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/opd/task/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           )
@@ -167,7 +155,7 @@ export default function TicketsPage() {
   }, [activeTab, openEditModal, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-[1020px] h-full px-4 py-2 overflow-hidden">
+    <div className="flex-1 w-[1020px] 2xl:w-[1300px] h-full px-4 py-2 overflow-hidden">
 
       {/* --- TABS & SEARCH HEADER --- */}
       <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
@@ -179,7 +167,7 @@ export default function TicketsPage() {
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id as TabCategory); setSearchQuery(""); }}
-              className={`px-5 h-10 rounded-[12px] text-sm font-semibold transition-all duration-200 ${
+              className={`px-5 h-10 rounded-[12px] text-sm 2xl:text-base 2xl:h-12 font-semibold transition-all duration-200 ${
                 activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
               }`}
             >

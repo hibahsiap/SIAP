@@ -52,10 +52,10 @@ export default function Reports() {
 
     const userColumns: ColumnDefinition[] = [
         { 
-        header: "NAME OPD", 
-        key: "name", 
-        cell: (_, rowData) => formatNameCell(rowData as TableRowData) ,
-        className: "text-left"
+            header: "NAME OPD", 
+            key: "name", 
+            cell: (_, rowData) => formatNameCell(rowData as TableRowData) ,
+            className: "text-left pl-4 w-[400px] 2xl:w-[500px]"
         },
         { header: "TOTAL TICKETS", key: "totalTickets" },
         { header: "SOLVED TICKETS", key: "solvedTickets" },
@@ -94,12 +94,12 @@ export default function Reports() {
     return (
         <div className="flex flex-col gap-5 pr-6 pl-4 py-2">
             <div className="flex flex-row items-center justify-between py-1">
-                <h1 className="font-bold text-3xl text-[#041942]">Report</h1>
-                <TimeRange
+                <h1 className="font-bold text-3xl 2xl:text-4xl text-[#041942]">Report</h1>
+                {/* <TimeRange
                     options={timeOptions}
                     value={selectedRange}
                     onChange={setSelectedRange}
-                />
+                /> */}
             </div>
             <div className="grid grid-cols-4 gap-4">
                 {stats.map((stat, index) => {
@@ -122,24 +122,20 @@ export default function Reports() {
             <div className="border border-[#D2D2D2] p-4 rounded-[15px] flex flex-col items-end gap-4 bg-white">
                 {/* <SearchField placeholder="search" className="w-60" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}/> */}
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 2xl:h-6 text-gray-500" />
                     <Input
                         placeholder="Search"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 w-full md:w-70 bg-gray-100 border-transparent focus:bg-white focus:border-[#1D2F58] rounded-md h-10 text-sm transition-all"
+                        className="pl-9 w-full md:w-70 2xl:w-80 bg-gray-100 border-transparent focus:bg-white focus:border-[#1D2F58] rounded-md h-10 2xl:h-12 text-sm 2xl:text-base transition-all"
                     />
                 </div>
-                {/* <div className="w-full">
-                    <TableTemplate columns={userColumns} data={userData} position="text-center"/>
-                </div> */}
 
 
                 <div className="w-full">
                     {isLoading ? (
                         <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading...</div>
                     ) : filteredUsers.length > 0 ? (
-                        // <TableTemplate columns={userColumns} data={filteredUsers as any} />
                         <TableTemplate columns={userColumns} data={filteredUsers as any} position="text-center"/>
                     ) : searchQuery !== "" ? (
                         <SearchEmptyState type="opd" searchQuery={searchQuery} />
@@ -147,11 +143,6 @@ export default function Reports() {
                         <EmptyState
                         title="No OPD found"
                         description={<>There is currently no data available. <br /> Please add new data to see it displayed here.</>}
-                        // actionButton={
-                        //     <Button onClick={openAddModal} className="bg-[#172033] hover:bg-[#172033]/90 text-white font-medium px-5 py-5 flex items-center gap-2 rounded-md">
-                        //         <Plus className="w-4 h-4" /> NEW USER
-                        //     </Button>
-                        // }
                         />
                     )}
                 </div>

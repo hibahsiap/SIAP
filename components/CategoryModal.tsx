@@ -21,13 +21,13 @@ const FormField = ({
   type?: string;
 }) => (
   <div className="space-y-1.5">
-    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+    <label className="text-[10px] 2xl:text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
     <Input
       placeholder={placeholder}
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-gray-50 border-gray-200 text-gray-900 w-full"
+      className="bg-gray-50 border-gray-200 text-gray-900 w-full 2xl:text-base 2xl:mt-2"
     />
   </div>
 );
@@ -103,9 +103,9 @@ export default function CategoryModal({ isOpen, onClose, onSaved, editData }: Ca
         <FormField label="Sub Category" placeholder="Sub Category" value={subCategory} onChange={setSubCategory} />
 
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OPD</label>
+          <label className="text-[10px] 2xl:text-xs font-bold text-gray-500 uppercase tracking-wider">OPD</label>
           <Select value={defaultOpdId} onValueChange={setDefaultOpdId}>
-            <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
+            <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900 2xl:text-base 2xl:mt-2">
               <SelectValue placeholder="Pilih Instansi / OPD" />
             </SelectTrigger>
             <SelectContent>
@@ -120,7 +120,7 @@ export default function CategoryModal({ isOpen, onClose, onSaved, editData }: Ca
           <Button
             onClick={onClose}
             variant="outline"
-            className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold"
+            className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold 2xl:h-10"
             disabled={submitting}
           >
             CANCEL
@@ -128,7 +128,7 @@ export default function CategoryModal({ isOpen, onClose, onSaved, editData }: Ca
           <Button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex-1 bg-[#1a233a] text-white font-bold"
+            className="flex-1 bg-[#1a233a] text-white font-bold 2xl:h-10"
           >
             {submitting ? (isEdit ? "SAVING..." : "CREATING...") : (isEdit ? "SAVE CHANGES" : "CREATE")}
           </Button>

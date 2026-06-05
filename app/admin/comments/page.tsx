@@ -32,7 +32,27 @@ export default function SocialInteractionsPage() {
   const [error, setError] = useState<string | null>(null);
   const { openCreateTicketModal, openDeleteModal } = InteractionStore();
 
-  const itemsPerPage = 5;
+  // const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      const newItemsPerPage = window.matchMedia('(min-width: 1536px)').matches ? 8 : 5;
+      
+      // Hanya update jika nilainya benar-benar berbeda untuk menghindari render loop
+      if (newItemsPerPage !== itemsPerPage) {
+        setItemsPerPage(newItemsPerPage);
+        
+        // OPTIONAL: Reset ke halaman 1 jika terjadi perubahan ukuran layar
+        // agar tidak membingungkan user
+        setCurrentPage(1); 
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [itemsPerPage]); // Masukkan itemsPerPage ke dependency agar re-run dengan benar
 
   const fetchData = useCallback(async (tab: string) => {
     setIsLoading(true);
@@ -59,6 +79,13 @@ export default function SocialInteractionsPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // const paginatedUsers = useMemo(() => {
+  //   const startIndex = (currentPage - 1) * itemsPerPage;
+  //   const endIndex = startIndex + itemsPerPage;
+
+  //   return filteredUsers.slice(startIndex, endIndex);
+  // }, [filteredUsers, currentPage, itemsPerPage]);
 
   const timeOptions = [
     { value: 'all', label: 'All Time' },
@@ -117,11 +144,11 @@ export default function SocialInteractionsPage() {
       className: "text-center",
       cell: (value: any) =>
         value ? (
-          <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
+          <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs 2xl:text-sm">
             View Post
           </a>
         ) : (
-          <span className="text-gray-400 text-xs">-</span>
+          <span className="text-gray-400 text-xs 2xl:text-sm">-</span>
         ),
     },
     {
@@ -150,10 +177,10 @@ export default function SocialInteractionsPage() {
   ];
 
   return (
-    <div className="px-4 py-2 w-[1000px]">
+    <div className="px-4 py-2 w-[1000px] 2xl:w-[1300px]">
       <div className="mb-8 py-1">
-        <h1 className="text-3xl font-bold text-[#041942]">Sosial Interactions</h1>
-        <p className="text-gray-500 text-sm">Manage comments from social media here</p>
+        <h1 className="text-3xl 2xl:text-4xl font-bold text-[#041942]">Sosial Interactions</h1>
+        <p className="text-gray-500 text-sm 2xl:text-base ">Manage comments from social media here</p>
       </div>
 
       {/* Interaction Tabs dan Time Range */}
@@ -176,15 +203,15 @@ export default function SocialInteractionsPage() {
       {/* Main Container */}
       <div className="bg-white rounded-t-lg border border-gray-100 shadow-sm min-h-[550px] flex flex-col">
         <div className="p-6 pb-0">
-          <h2 className="text-2xl font-bold text-[#041942] mb-6 capitalize tracking-tight">
+          <h2 className="text-2xl 2xl:text-3xl font-bold text-[#041942] mb-6 capitalize tracking-tight">
             {activeTab} List
           </h2>
 
           <div className="grow">
             {isLoading ? (
-              <div className="py-10 text-center text-gray-400 text-sm">Loading…</div>
+              <div className="py-10 text-center text-gray-400 text-sm 2xl:text-base">Loading…</div>
             ) : error ? (
-              <div className="py-10 text-center text-red-500 text-sm">{error}</div>
+              <div className="py-10 text-center text-red-500 text-sm 2xl:text-base">{error}</div>
             ) : (
               <TableTemplate columns={columns} data={currentData} />
             )}

@@ -21,7 +21,7 @@ const chartConfig = {
 export function BarChartData() {
     return (
         <div className="bg-white flex flex-col gap-1 items-center border border-[#D2D2D2] rounded-[15px] p-3">
-            <h3 className="text-[#546064] tracking-wide font-medium">Tickets by Channel</h3>
+            <h3 className="text-[#546064] tracking-wide font-medium 2xl:text-lg">Tickets by Channel</h3>
             
             <ChartContainer config={chartConfig} className="h-52 w-full">
                 <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 10 }}> 

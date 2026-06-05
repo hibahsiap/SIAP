@@ -1,6 +1,6 @@
 export const pendingTickets = [
   { id: 1, taskName: "Laporan Kemajuan", opd: "Dinas Kearsipan dan Perpustakaan", status: "In Progress", issueType: "Social", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit." },
-  { id: 2, taskName: "Laporan Keuangan", opd: "Dinas Kesehatan", status: "Done", issueType: "Health", priority: "Low", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit." },
+  { id: 2, taskName: "Laporan Keuangan", opd: "Dinas Kesehatan", status: "Done", issueType: "Health", priority: "Medium", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit." },
   { id: 3, taskName: "Laporan Pendidikan", opd: "Dinas Pendidikan", status: "On Hold", issueType: "Social", priority: "High", message: "Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit. Lorem ipsum dolor sit amet consectetur. Pellentesque ornare nisl ullamcorper faucibus ut sed libero egestas sit." },
 ];
 

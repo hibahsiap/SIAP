@@ -36,7 +36,7 @@ const COLORS = ["#5998FE", "#7BADFF", "#C9DDFF"];
 export function PieChartData() {
   return (
     <div className="bg-white flex flex-col items-center border border-[#D2D2D2] rounded-[15px] p-3">
-      <h3 className="text-[#546064] tracking-wide font-medium">
+      <h3 className="text-[#546064] tracking-wide font-medium 2xl:text-lg">
         Messages Distribution
       </h3>
       <ChartContainer config={chartConfig} className="w-full h-52">

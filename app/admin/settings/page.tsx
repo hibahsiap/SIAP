@@ -138,8 +138,16 @@ export default function Settings() {
     );
 
     const categoryColumns: ColumnDefinition[] = [
-        { header: "NO", key: "no" },
-        { header: "CATEGORIES", key: "category" },
+        { 
+            header: "NO", 
+            key: "no",
+            className: "text-center w-[40px]", 
+        },
+        { 
+            header: "CATEGORIES", 
+            key: "category",
+            className: "w-[300px] 2xl:w-[400px]",
+        },
         {
             header: "NAME OPD",
             key: "name",
@@ -148,7 +156,7 @@ export default function Settings() {
         {
             header: "ACTIONS",
             key: "actions",
-            className: "text-center pr-8 w-[150px]",
+            className: "text-center w-[150px]",
             cell: (_, rowData) => (
                 <div className="flex justify-center gap-2 text-gray-400">
                     <button onClick={() => handleEditCategory((rowData as TableRowData).id)} className="p-2 hover:bg-gray-100 rounded-md hover:text-[#14234b] transition-all">
@@ -177,8 +185,8 @@ export default function Settings() {
 
             {/* Header */}
             <div className="flex flex-col text-[#041942] gap-1.5 py-1 border-b border-black/10">
-                <h1 className="font-bold text-3xl">Settings</h1>
-                <p className="tracking-wide">Configure your account, channels, and preferences here</p>
+                <h1 className="font-bold text-3xl 2xl:text-4xl ">Settings</h1>
+                <p className="tracking-wide 2xl:text-lg">Configure your account, channels, and preferences here</p>
             </div>
 
             {/* Content */}
@@ -188,13 +196,13 @@ export default function Settings() {
                     <div className="flex flex-row items-center gap-3.5 text-[#041942]">
                         <MessageSquare size={36} />
                         <div className="flex flex-col gap-0.5">
-                            <h2 className="text-2xl font-bold">Channel Management</h2>
-                            <p className="text-sm">Connect your communication channels</p>
+                            <h2 className="text-2xl 2xl:text-3xl font-bold">Channel Management</h2>
+                            <p className="text-sm 2xl:text-base">Connect your communication channels</p>
                         </div>
                     </div>
 
                     {loadingChannels ? (
-                        <div className="py-6 text-center text-gray-400 text-sm">Loading channels...</div>
+                        <div className="py-6 text-center text-gray-400 text-sm 2xl:text-base">Loading channels...</div>
                     ) : (
                         <div className="grid grid-cols-2 gap-4 pt-2">
                             {channels.map((channel) => {
@@ -215,7 +223,7 @@ export default function Settings() {
                 {/* Issue Categories */}
                 <div className=" flex flex-col gap-4">
                     <div className="flex flex-row justify-between items-center">
-                        <h2 className="font-bold text-2xl text-[#041942]">Issue Categories</h2>
+                        <h2 className="font-bold text-2xl 2xl:text-3xl text-[#041942]">Issue Categories</h2>
                         <div className="grid grid-cols-2 gap-2 w-[40%]">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -223,7 +231,7 @@ export default function Settings() {
                                     placeholder="Search"
                                     value={categorySearch}
                                     onChange={(e) => setCategorySearch(e.target.value)}
-                                    className="pl-9 w-full border-[#D2D2D2] bg-white focus:bg-white focus:border-[#1D2F58] rounded-md h-10 text-sm transition-all"
+                                    className="pl-9 w-full border-[#D2D2D2] bg-white focus:bg-white focus:border-[#1D2F58] rounded-md h-10 2xl:h-12 text-sm 2xl:text-base transition-all"
                                 />
                             </div>
                             <ButtonClick

@@ -31,7 +31,30 @@ export default function UserManagementPage() {
 
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5
+  // const itemsPerPage = 5
+
+  // Di dalam komponen Anda:
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const newItemsPerPage = window.matchMedia('(min-width: 1536px)').matches ? 8 : 5;
+      
+      // Hanya update jika nilainya benar-benar berbeda untuk menghindari render loop
+      if (newItemsPerPage !== itemsPerPage) {
+        setItemsPerPage(newItemsPerPage);
+        
+        // OPTIONAL: Reset ke halaman 1 jika terjadi perubahan ukuran layar
+        // agar tidak membingungkan user
+        setCurrentPage(1); 
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [itemsPerPage]); // Masukkan itemsPerPage ke dependency agar re-run dengan benar
+
 
   useEffect(() => {
     fetchUsers()
@@ -50,7 +73,7 @@ export default function UserManagementPage() {
     const endIndex = startIndex + itemsPerPage;
 
     return filteredUsers.slice(startIndex, endIndex);
-  }, [filteredUsers, currentPage]);
+  }, [filteredUsers, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -132,29 +155,29 @@ export default function UserManagementPage() {
   ], [openEditModal, openDeleteModal])
 
   return (
-    <div className="p-4 bg-gray-50/50 min-h-screen max-w-255">
+    <div className="p-4 bg-gray-50/50 min-h-screen max-w-255 2xl:max-w-350">
 
       {/* BAGIAN HEADER */}
-      <div className="bg-white px-4 py-6 rounded-t-lg border border-gray-200 border-b-0 grid grid-cols-[1fr_400px] items-center gap-4">
-        <h2 className="text-2xl font-bold text-[#14234b]">User Management</h2>
+      <div className="bg-white px-4 py-6 rounded-t-lg border border-gray-200 border-b-0 grid grid-cols-[1fr_400px] 2xl:grid-cols-[1fr_500px] items-center gap-4">
+        <h2 className="text-2xl 2xl:text-3xl font-bold text-[#14234b]">User Management</h2>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 2xl:h-6 text-gray-500" />
             <Input
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full bg-gray-100 border-transparent focus:bg-white focus:border-[#1D2F58] rounded-md h-10 text-sm transition-all"
+              className="pl-9 w-full bg-gray-100 border-transparent focus:bg-white focus:border-[#1D2F58] rounded-md h-10 2xl:h-12 text-sm 2xl:text-base transition-all"
             />
           </div>
-          <Button onClick={openAddModal} className="bg-[#1a233a] hover:bg-[#1a233a]/90 text-white font-medium h-10 px-4 rounded-md flex items-center gap-2">
+          <Button onClick={openAddModal} className="bg-[#1a233a] hover:bg-[#1a233a]/90 text-white font-medium h-10 2xl:h-12 px-4 rounded-md flex items-center gap-2">
             <Plus className="w-4 h-4" /> ADD NEW USER
           </Button>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 border-t-0 rounded-b-lg flex flex-col shadow-sm min-h-[calc(100vh-160px)] w-full">
+      <div className="bg-white border border-gray-200 border-t-0 rounded-b-lg flex flex-col shadow-sm min-h-[calc(100vh-160px)] 2xl:min-h-[calc(100vh-116px)] w-full">
         <div className="flex-1 overflow-auto flex flex-col">
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading...</div>
