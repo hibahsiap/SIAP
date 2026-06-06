@@ -91,17 +91,14 @@ export default function Sidebar({
       className={`${collapsed ? 'w-18 2xl:w-20' : 'max-w-64 w-64 2xl:max-w-74 2xl:w-74'} h-screen sticky top-0 bg-[#1D2F58] text-white flex flex-col px-2 pb-4 pt-6 border-r border-slate-700 transition-all duration-300 ease-in-out`}
     >
       {/* Logo & Branding */}
-      {collapsed ? (
+      {/* {collapsed ? (
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-[4px] text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white transition-all duration-200 mb-1"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-        {/* <PanelLeftClose size={20} className="shrink-0" /> */}
         <PanelLeftOpen size={20} className="shrink-0" />
-          {/* {collapsed
-          } */}
         </button>
       ) : (
         <div className="flex items-center gap-3 mb-10 px-2">
@@ -134,7 +131,28 @@ export default function Sidebar({
           </button>
           
         </div>
-      )}
+      )} */}
+
+      <div className="flex items-center gap-3 mb-10 px-2">
+        <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg p-1.5 shadow-md">
+          <Image
+            src="/logo_siap.png"
+            alt="Logo SIAP"
+            width={38}
+            height={38}
+            className="object-contain"
+            priority
+          />
+        </div>
+
+        <div className="space-y-1">
+          <h1 className="font-bold text-[16px] 2xl:text-lg leading-tight">SIAP</h1>
+          <p className="text-[10px] 2xl:text-xs uppercase text-slate-400 tracking-wider">
+            Sistem Informasi Aduan Publik
+          </p>
+        </div>
+        
+      </div>
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1">

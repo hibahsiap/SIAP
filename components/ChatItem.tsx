@@ -32,7 +32,7 @@ export const ChatItem = ({
               className="w-full h-full object-cover"
             />
           </div>
-          <Flag size={15} className={`${flagColor} fill-current`} />
+          {/* <Flag size={15} className={`${flagColor} fill-current`} /> */}
         </div>
 
         {/* Text Content Area */}
