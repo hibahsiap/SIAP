@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import TableTemplate, { ColumnDefinition } from "@/components/TableTemplate";
 import { InteractionTabs } from "@/components/InteractionTabs";
 import { TimeRange } from "@/components/TimeRange";
@@ -10,6 +10,7 @@ import { InteractionStore } from "@/components/InteractionStore";
 import CreateDeleteModals from "@/components/SocialModal";
 import { formatDateTime as formatTime } from "@/lib/formatdate";
 import { DateRange } from "@/components/DateRangePicker";
+import { isWithinRange } from "@/utils/dateFilter";
 
 type SocialInteraction = {
   id: string;
@@ -75,7 +76,32 @@ export default function SocialInteractionsPage() {
     setCurrentPage(1);
   }, [activeTab, fetchData]);
 
-  const currentData = data.slice(
+  const filteredData = useMemo(() => {
+  if (selectedRange === 'all') return data;
+
+  return data.filter((item) => {
+    if (selectedRange === 'custom') {
+      // Filter custom date range
+      if (!customDateRange.from || !customDateRange.to) return true;
+      const itemDate = new Date(item.capturedAt);
+      const from = new Date(customDateRange.from);
+      const to = new Date(customDateRange.to);
+      // Set to end of day agar tanggal "to" ikut termasuk
+      to.setHours(23, 59, 59, 999);
+      return itemDate >= from && itemDate <= to;
+    }
+
+    // Mapping value TimeRange → label yang dikenali isWithinRange
+    const rangeMap: Record<string, string> = {
+      today: 'Today',
+      week: 'This Week',
+      month: 'This Month',
+    };
+    return isWithinRange(item.capturedAt, rangeMap[selectedRange] ?? '');
+  });
+}, [data, selectedRange, customDateRange]);
+
+  const currentData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -222,7 +248,7 @@ export default function SocialInteractionsPage() {
         {/* Pagination */}
         <div className="mt-auto">
           <Pagination
-            totalItems={data.length}
+            totalItems={filteredData.length}
             itemsPerPage={itemsPerPage}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
