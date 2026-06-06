@@ -136,7 +136,7 @@ export default function TicketsPage() {
           key: "taskName", 
           // cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> 
           cell: (val, row: any) => (
-            <Link href={`/opd/task/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/opd/tickets/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           ) 
@@ -157,7 +157,7 @@ export default function TicketsPage() {
           className: "text-center", 
           // cell: (val) => <span className="whitespace-normal min-w-[100px] inline-block font-bold">{val}</span> 
           cell: (val, row: any) => (
-            <Link href={`/opd/task/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/opd/tickets/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           )

@@ -321,7 +321,7 @@ export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'ne
                         draggable
                         onDragStart={(e) => handleDragStart(e, task, column.id)}
                         onClick={() => {
-                          router.push(`/opd/task/${task.id}`)
+                          router.push(`/opd/tickets/${task.id}`)
                         }}
                       >
                         <CardContent className="px-3 py-1">
