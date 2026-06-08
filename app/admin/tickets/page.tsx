@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link'; 
 import Header from '@/components/Header'; 
 import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
@@ -10,39 +10,89 @@ import DeleteAlertModal from '@/components/DeleteModal';
 import EditTicketModal from '@/components/EditTicketModal';
 import FilterSidebar from '@/components/Filter'; 
 import ForwardTicketModal from '@/components/ForwardTicketModal'; 
-import { Trash2, Edit2, Forward } from 'lucide-react';
+import { Trash2, Edit2, Forward, CheckCircle2, Loader2 } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
-import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
 import { toast } from "sonner"; 
+
+type TicketItem = {
+  id: string;
+  ticketNumber: string;
+  title: string | null;
+  description: string;
+  status: string;
+  urgency: string | null;
+  type: string | null;
+  location: string | null;
+  startDate: string | null;
+  dueDate: string | null;
+  createdAt: string;
+  citizenName: string;
+  opdName: string | null;
+  opdId: string | null;
+  categoryName: string | null;
+  categoryId: string | null;
+  channelPlatform: string;
+};
+
+const statusLabel: Record<string, string> = {
+  ON_HOLD: "On Hold",
+  TO_DO: "To Do",
+  IN_PROGRESS: "In Progress",
+  DONE: "Done",
+  CANCELLED: "Cancelled",
+};
+
+const typeLabel: Record<string, string> = {
+  COMPLAINT: "Pengaduan",
+  QUESTION: "Pertanyaan",
+  FEEDBACK: "Saran",
+};
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
     "On Hold": "bg-[#F5E6E0] text-[#B06B52]",
+    "To Do": "bg-[#E0EBFA] text-[#4A80D4]",
     "In Progress": "bg-[#E0EBFA] text-[#4A80D4]",
     "Done": "bg-[#E3F2E7] text-[#4C9A61]",
+    "Cancelled": "bg-gray-100 text-gray-500",
   };
   const dotColors: Record<string, string> = {
     "On Hold": "bg-[#B06B52]",
+    "To Do": "bg-[#4A80D4]",
     "In Progress": "bg-[#4A80D4]",
     "Done": "bg-[#4C9A61]",
+    "Cancelled": "bg-gray-500",
   };
+  const display = statusLabel[status] ?? status;
   return (
-    <div className={`mx-auto inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide ${styles[status]}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${dotColors[status]}`}></span>
-      {status}
+    <div className={`mx-auto inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-500"}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${dotColors[display] ?? "bg-gray-500"}`}></span>
+      {display}
     </div>
   );
 };
 
-const getBadge = (text: string, type: 'issue' | 'priority') => {
+const getTypeBadge = (type: string | null) => {
+  if (!type) return null;
+  const display = typeLabel[type] ?? type;
   const styles: Record<string, string> = {
-    "Social": "bg-red-100/80 text-red-700",
-    "Health": "bg-purple-100/80 text-purple-700",
-    "Traffic": "bg-[#F5E6E0] text-[#B06B52]", 
-    "Low": "bg-[#E3F2E7] text-[#4C9A61]",
-    "High": "bg-red-100/80 text-red-700",
+    Pengaduan: "bg-red-100/80 text-red-700",
+    Pertanyaan: "bg-blue-100/80 text-blue-700",
+    Saran: "bg-green-100/80 text-green-700",
   };
-  return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[text]}`}>{text}</span>;
+  return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-600"}`}>{display}</span>;
+};
+
+const getUrgencyBadge = (urgency: string | null) => {
+  if (!urgency) return null;
+  const display = urgency.charAt(0) + urgency.slice(1).toLowerCase();
+  const styles: Record<string, string> = {
+    Low: "bg-[#E3F2E7] text-[#4C9A61]",
+    Medium: "bg-yellow-100/80 text-yellow-700",
+    High: "bg-red-100/80 text-red-700",
+    Critical: "bg-red-200/80 text-red-800",
+  };
+  return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-600"}`}>{display}</span>;
 };
 
 type TabCategory = 'pending' | 'all' | 'aspirations'; 
@@ -54,35 +104,90 @@ export default function TicketsPage() {
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false); 
-  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [selectedTicket, setSelectedTicket] = useState<TicketItem | null>(null);
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [tickets, setTickets] = useState<TicketItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
-  const currentData = useMemo(() => {
-    if (activeTab === 'pending') return pendingTickets;
-    if (activeTab === 'all') return allTickets;
-    return aspirationTickets;
+  const fetchTickets = useCallback(async (tab?: TabCategory) => {
+    const t = tab ?? activeTab;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/tickets?tab=${t}`);
+      if (!res.ok) throw new Error("Failed to fetch tickets");
+      const data = await res.json();
+      setTickets(data);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   }, [activeTab]);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchTickets(activeTab);
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const filteredData = useMemo(() => {
-    return currentData.filter((item: any) => {
-      const searchStr = searchQuery.toLowerCase();
-      const searchField = item.taskName || item.pengirim || "";
-      return searchField.toLowerCase().includes(searchStr);
+    if (!searchQuery) return tickets;
+    const q = searchQuery.toLowerCase();
+    return tickets.filter((t) => {
+      return (
+        (t.title ?? "").toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q) ||
+        t.ticketNumber.toLowerCase().includes(q) ||
+        (t.citizenName ?? "").toLowerCase().includes(q)
+      );
     });
-  }, [currentData, searchQuery]);
+  }, [tickets, searchQuery]);
+
+  const handleApprove = useCallback(async (ticket: TicketItem) => {
+    setApprovingId(ticket.id);
+    try {
+      const res = await fetch(`/api/tickets/${ticket.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "TO_DO" }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to approve");
+      }
+      toast.success(`Ticket ${ticket.ticketNumber} approved`);
+      fetchTickets();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setApprovingId(null);
+    }
+  }, [fetchTickets]);
 
   const handleForwardConfirm = () => {
     setIsForwardModalOpen(false);
     toast.success("Ticket successfully forwarded to All Tickets");
   };
 
+  const formatDate = (d: string | null) => {
+    if (!d) return "-";
+    return new Date(d).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   const columns = useMemo<ColumnDefinition[]>(() => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     const messageColumn: ColumnDefinition = { 
       header: "Pesan Aspirasi", 
-      key: "message", 
+      key: "description", 
       className: "text-center", 
-      cell: (val: string) => (
+      cell: (val: any) => (
         <span className="block w-full min-w-[250px] whitespace-normal break-words text-[12px] font-normal leading-relaxed text-justify text-[#1D2F58]">
           {val}
         </span> 
@@ -93,24 +198,32 @@ export default function TicketsPage() {
       return [
         { 
           header: "Title", 
-          key: "taskName", 
+          key: "title", 
           className: "text-center", 
-          // Diubah menjadi Link agar bisa diklik ke detail
-          cell: (val, row: any) => (
+          cell: (val: any, row: any) => (
             <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
-              {val}
+              {val ?? row.ticketNumber}
             </Link>
           ) 
         },
-        { header: "OPD", key: "opd", className: "text-center" }, 
-        { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
-        { header: "Issue Type", key: "issueType", className: "text-center", cell: (val) => getBadge(val, 'issue') },
-        { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
+        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => val ?? "-" }, 
+        { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
+        { header: "Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
+        { header: "Category", key: "categoryName", className: "text-center", cell: (val: any) => val ?? "-" },
+        { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
         messageColumn,
-        { header: "Actions", key: "action", className: "text-center", cell: (_, row) => (
-            <div className="flex items-center justify-center gap-4">
-              <button onClick={() => { setSelectedTicket(row); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
-              <button onClick={() => { setSelectedTicket(row); setIsForwardModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Forward className="w-4 h-4" /></button>
+        { header: "Actions", key: "id", className: "text-center", cell: (_: any, row: any) => (
+            <div className="flex items-center justify-center gap-3">
+              <button onClick={() => { setSelectedTicket(row as TicketItem); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity" title="Edit"><Edit2 className="w-4 h-4" /></button>
+              <button onClick={() => { setSelectedTicket(row as TicketItem); setIsForwardModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity" title="Forward"><Forward className="w-4 h-4" /></button>
+              <button
+                onClick={() => handleApprove(row as TicketItem)}
+                disabled={approvingId === (row.id as string)}
+                className="text-green-600 hover:opacity-70 transition-opacity disabled:opacity-40"
+                title="Approve"
+              >
+                {approvingId === (row.id as string) ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              </button>
             </div>
           )
         }
@@ -119,40 +232,42 @@ export default function TicketsPage() {
       return [
         { 
           header: "Title", 
-          key: "taskName", 
+          key: "title", 
           className: "text-center", 
-          // Diubah menjadi Link
-          cell: (val, row: any) => (
+          cell: (val: any, row: any) => (
             <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
-              {val}
+              {val ?? row.ticketNumber}
             </Link>
           ) 
         },
-        { header: "OPD", key: "opd", className: "text-center" }, 
-        { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
-        { header: "Issue Type", key: "issueType", className: "text-center", cell: (val) => getBadge(val, 'issue') },
-        { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
-        { header: "Start date", key: "startDate", className: "text-center" },
-        { header: "Due date", key: "dueDate", className: "text-center" },
-        messageColumn
+        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => val ?? "-" }, 
+        { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
+        { header: "Issue Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
+        { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
+        { header: "Start date", key: "createdAt", className: "text-center", cell: (val: any) => formatDate(val) },
+        { header: "Due date", key: "dueDate", className: "text-center", cell: (val: any) => formatDate(val) },
+        messageColumn,
+        { header: "Actions", key: "id", className: "text-center", cell: (_: any, row: any) => (
+            <button onClick={() => { setSelectedTicket(row as TicketItem); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
+          )
+        }
       ];
     } else {
       return [
         { 
           header: "Pengirim", 
-          key: "pengirim", 
+          key: "citizenName", 
           className: "text-center", 
-          // Pengirim juga kita buat bisa diklik ke detail tiket
-          cell: (val, row: any) => (
+          cell: (val: any, row: any) => (
             <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[100px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           ) 
         },
-        { header: "Clasification", key: "status", className: "text-center", cell: (val) => getStatusBadge(val) },
-        { header: "Priority", key: "priority", className: "text-center", cell: (val) => getBadge(val, 'priority') },
+        { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
+        { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
         messageColumn,
-        { header: "Action", key: "action", className: "text-center", cell: (_, row) => (
+        { header: "Action", key: "id", className: "text-center", cell: (_: any, row: any) => (
             <button onClick={() => openDeleteModal(row)} className="text-gray-400 hover:text-red-500 transition-colors">
               <Trash2 className="w-4 h-4" />
             </button>
@@ -160,7 +275,7 @@ export default function TicketsPage() {
         }
       ];
     }
-  }, [activeTab, openDeleteModal]);
+  }, [activeTab, approvingId, handleApprove, openDeleteModal]);
 
   return (
     <div className="flex-1 w-full max-w-full h-full p-4 lg:p-8">
@@ -190,7 +305,13 @@ export default function TicketsPage() {
 
       {/* --- AREA KONTEN --- */}
       <div className="w-full">
-        {filteredData.length > 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-[#1D2F58]" />
+          </div>
+        ) : error ? (
+          <EmptyState title="Error loading tickets" description={error} />
+        ) : filteredData.length > 0 ? (
           <div className="w-full">
             <TableTemplate2 columns={columns} data={filteredData as any} />
           </div>
@@ -198,7 +319,7 @@ export default function TicketsPage() {
           <SearchEmptyState type={activeTab} />
         ) : (
           <EmptyState 
-            title="No files found" 
+            title="No tickets found" 
             description="There is currently no data available. Please add new data to see it displayed here." 
           />
         )}
@@ -216,6 +337,7 @@ export default function TicketsPage() {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         ticketData={selectedTicket}
+        onSaved={fetchTickets}
       />
 
       <ForwardTicketModal 

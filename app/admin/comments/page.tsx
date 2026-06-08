@@ -30,7 +30,7 @@ export default function SocialInteractionsPage() {
   const [data, setData] = useState<SocialInteraction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { openCreateTicketModal, openDeleteModal } = InteractionStore();
+  const { classifyAndOpenModal, openDeleteModal, classifyingItemId } = InteractionStore();
 
   const itemsPerPage = 5;
 
@@ -111,8 +111,19 @@ export default function SocialInteractionsPage() {
       cell: (_value: any, row: any) => (
         <div className="flex gap-2">
           {!row.isTicketCreated && (
-            <button onClick={() => openCreateTicketModal(row, activeTab as "comments" | "mentions")}>
-              <Plus size={16} />
+            <button
+              onClick={() => classifyAndOpenModal(row, activeTab as "comments" | "mentions")}
+              disabled={classifyingItemId === row.id}
+              className="disabled:opacity-50"
+            >
+              {classifyingItemId === row.id ? (
+                <svg className="animate-spin h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <Plus size={16} />
+              )}
             </button>
           )}
           <button onClick={() => openDeleteModal(row, activeTab as "comments" | "mentions")}>

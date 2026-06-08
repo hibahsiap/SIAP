@@ -152,6 +152,182 @@ async function sendAutoReply(opts: {
   }
 }
 
+function detectTemplateType(text: string): "COMPLAINT" | "QUESTION" | "FEEDBACK" | null {
+  const t = text.trim();
+  if (t.includes("[FORM PENGADUAN]")) return "COMPLAINT";
+  if (t.includes("[FORM PERTANYAAN]")) return "QUESTION";
+  if (t.includes("[FORM SARAN]")) return "FEEDBACK";
+  return null;
+}
+
+async function classifyViaGroq(content: string, apiKey: string, categoryList: string) {
+  const systemPrompt = `Kamu adalah asisten klasifikasi pengaduan publik untuk pemerintah daerah Indonesia.
+Tugasmu: analisis pesan warga dan kembalikan klasifikasi dalam format JSON.
+
+=== ATURAN TYPE ===
+- COMPLAINT: keluhan, laporan masalah, pengaduan
+- QUESTION: pertanyaan, permintaan informasi atau prosedur
+- FEEDBACK: saran, masukan, apresiasi
+
+=== ATURAN URGENCY ===
+- CRITICAL: mengancam keselamatan jiwa, bencana aktif, darurat
+- HIGH: masalah serius yang mengganggu banyak orang atau perlu ditangani segera
+- MEDIUM: masalah umum yang perlu ditangani dalam waktu normal
+- LOW: pertanyaan, saran ringan, informasi
+
+=== KATEGORI YANG TERSEDIA ===
+Pilih SATU nama kategori yang PALING SESUAI dari daftar berikut. Jangan mengarang nama kategori baru.
+WAJIB diisi — selalu pilih yang paling mendekati, jangan pernah null.
+
+${categoryList}
+
+Panduan pemilihan kategori:
+- Jalan berlubang, drainase, jembatan, trotoar → "Jalan dan Infrastruktur"
+- Sampah, kebersihan lingkungan, TPS → "Sampah dan Kebersihan"
+- Banjir, longsor, gempa, bencana alam → "Banjir dan Bencana"
+- Sekolah, guru, kurikulum, beasiswa → "Pendidikan"
+- Puskesmas, rumah sakit, obat, vaksin → "Kesehatan"
+- KTP, KK, akta, dukcapil, dokumen kependudukan → "Kependudukan"
+- Bansos, PKH, sembako, BPNT, subsidi → "Bantuan Sosial"
+- Angkutan umum, parkir, kemacetan, terminal → "Transportasi"
+- Internet, wifi, aplikasi pemerintah, TIK → "Teknologi dan Internet"
+- Pasar, UMKM, izin usaha, PKL → "Perdagangan dan UMKM"
+
+=== FORMAT OUTPUT ===
+Kembalikan HANYA objek JSON valid, tanpa markdown, tanpa komentar, tanpa teks lain:
+{"title":"judul singkat maksimal 80 karakter","description":"ringkasan 1-2 kalimat isi pesan","type":"COMPLAINT|FEEDBACK|QUESTION","urgency":"LOW|MEDIUM|HIGH|CRITICAL","location":"nama lokasi jika disebutkan, atau null","category":"nama kategori persis seperti di daftar (WAJIB diisi)"}`;
+
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Pesan warga: ${content}` },
+      ],
+      temperature: 0.2,
+      max_tokens: 512,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`Groq API error ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const raw = data.choices?.[0]?.message?.content ?? "{}";
+  const cleaned = raw.replace(/```json\n?|\n?```/g, "").trim();
+  const result = JSON.parse(cleaned);
+
+  return {
+    title: (result.title as string) ?? null,
+    description: (result.description as string) ?? null,
+    type: (result.type as string) ?? null,
+    urgency: (result.urgency as string) ?? null,
+    location: (result.location as string) ?? null,
+    category: (result.category as string) ?? null,
+  };
+}
+
+async function handleAutoTicket(opts: {
+  supabase: ReturnType<typeof createClient>;
+  messageId: string;
+  conversationId: string;
+  messageText: string;
+  citizenId: string;
+  channelId: string;
+  groqApiKey: string;
+  now: Date;
+}) {
+  const { supabase, messageId, conversationId, messageText, citizenId, channelId, groqApiKey, now } = opts;
+
+  const templateType = detectTemplateType(messageText);
+  if (!templateType) return;
+
+  console.log(`[AutoTicket] Template detected: ${templateType}`);
+
+  const { data: dbCategories } = await supabase
+    .from("Category")
+    .select("id, name, defaultOpdId");
+
+  const catMap = new Map<string, { id: string; defaultOpdId: string | null }>();
+  for (const c of dbCategories ?? []) {
+    catMap.set(c.name.toLowerCase(), { id: c.id, defaultOpdId: c.defaultOpdId });
+  }
+  const categoryList = dbCategories?.length
+    ? dbCategories.map((c) => c.name).join(", ")
+    : "Jalan dan Infrastruktur, Sampah dan Kebersihan, Banjir dan Bencana, Pendidikan, Kesehatan, Kependudukan, Bantuan Sosial, Transportasi, Teknologi dan Internet, Perdagangan dan UMKM";
+
+  let aiResult: { title?: string | null; description?: string | null; type?: string | null; urgency?: string | null; location?: string | null; category?: string | null } = {};
+  try {
+    aiResult = await classifyViaGroq(messageText, groqApiKey, categoryList);
+    console.log(`[AutoTicket] AI classified: type=${aiResult.type} category=${aiResult.category}`);
+  } catch (err) {
+    console.warn(`[AutoTicket] AI classification failed, using defaults:`, err);
+  }
+
+  let categoryId: string | null = null;
+  let opdId: string | null = null;
+  if (aiResult.category) {
+    const lower = aiResult.category.toLowerCase();
+    const match = catMap.get(lower);
+    if (match) {
+      categoryId = match.id;
+      opdId = match.defaultOpdId ?? null;
+    } else {
+      for (const [key, val] of catMap) {
+        if (key.includes(lower) || lower.includes(key)) {
+          categoryId = val.id;
+          opdId = val.defaultOpdId ?? null;
+          break;
+        }
+      }
+    }
+  }
+
+  const { count } = await supabase
+    .from("Ticket")
+    .select("id", { count: "exact", head: true });
+  const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const ticketNumber = `TKT-${datePart}-${String((count ?? 0) + 1).padStart(5, "0")}`;
+
+  const ticketId = crypto.randomUUID();
+  const { error: ticketErr } = await supabase.from("Ticket").insert({
+    id: ticketId,
+    ticketNumber,
+    title: aiResult.title ?? messageText.slice(0, 80),
+    description: aiResult.description ?? messageText,
+    status: "ON_HOLD",
+    urgency: aiResult.urgency ?? null,
+    type: templateType,
+    citizenId,
+    channelId,
+    conversationId,
+    categoryId,
+    assignedOpdId: opdId,
+    location: aiResult.location ?? null,
+    updatedAt: now,
+  });
+
+  if (ticketErr) {
+    console.error(`[AutoTicket] Failed to create ticket:`, JSON.stringify(ticketErr));
+    return;
+  }
+
+  const { error: msgErr } = await supabase
+    .from("Message")
+    .update({ ticketId, forwardedToTicketId: ticketId })
+    .eq("id", messageId);
+
+  if (msgErr) {
+    console.error(`[AutoTicket] Failed to link message to ticket:`, JSON.stringify(msgErr));
+  }
+
+  console.log(`[AutoTicket] Created ON_HOLD ticket ${ticketNumber} linked to message ${messageId}`);
+}
+
 Deno.serve(async (req: Request) => {
   const url = new URL(req.url)
 
@@ -496,6 +672,22 @@ Deno.serve(async (req: Request) => {
           }
 
           if (!isEcho) {
+            const groqApiKey = Deno.env.get("GROQ_API_KEY") ?? "";
+            if (groqApiKey) {
+              handleAutoTicket({
+                supabase,
+                messageId,
+                conversationId,
+                messageText: messageText || "",
+                citizenId,
+                channelId: channel.id,
+                groqApiKey,
+                now,
+              }).catch((err) =>
+                console.error("[Webhook] Auto ticket creation error:", err)
+              );
+            }
+
             await sendAutoReply({
               supabase,
               channel,
