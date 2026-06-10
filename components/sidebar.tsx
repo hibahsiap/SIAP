@@ -8,10 +8,8 @@ import {
   MessageSquare,
   MessageSquareMore,
   MessagesSquare,
-  PanelLeftClose,
-  PanelLeftOpen,
   Settings,
-  User,
+  User
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -52,12 +50,6 @@ export default function Sidebar({
       pathname.includes('/admin/chat') ||
       pathname.includes('/admin/comments');
 
-    // if (isInboxRoute) {
-    //   setIsSubMenuOpen(true);
-    // } else {
-    //   setIsSubMenuOpen(false);
-    // }
-
     setIsSubMenuOpen(isInboxRoute)
   }, [pathname]);
 
@@ -88,53 +80,12 @@ export default function Sidebar({
 
   return (
     <aside 
-      className={`${collapsed ? 'w-18 2xl:w-20' : 'max-w-64 w-64 2xl:max-w-74 2xl:w-74'} h-screen sticky top-0 bg-[#1D2F58] text-white flex flex-col px-2 pb-4 pt-6 border-r border-slate-700 transition-all duration-300 ease-in-out`}
+      className={`max-w-64 w-64 2xl:max-w-74 2xl:w-74 h-screen sticky top-0 bg-[#1D2F58] text-white flex flex-col px-2 pb-4 pt-6 border-r border-slate-700`}
     >
-      {/* Logo & Branding */}
-      {/* {collapsed ? (
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-[4px] text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white transition-all duration-200 mb-1"
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-        <PanelLeftOpen size={20} className="shrink-0" />
-        </button>
-      ) : (
-        <div className="flex items-center gap-3 mb-10 px-2">
-          <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg p-1.5 shadow-md">
-            <Image
-              src="/logo_siap.png"
-              alt="Logo SIAP"
-              width={38}
-              height={38}
-              className="object-contain"
-              priority
-            />
-          </div>
-
-          <div className="space-y-1">
-            <h1 className="font-bold text-[16px] 2xl:text-lg leading-tight">SIAP</h1>
-            <p className="text-[10px] 2xl:text-xs uppercase text-slate-400 tracking-wider">
-              Sistem Informasi Aduan Publik
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setCollapsed(!collapsed)}
-            className="flex items-center justify-center rounded-[4px] text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white transition-all duration-200 mb-1"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <PanelLeftClose size={20} className="shrink-0" />
-          
-          </button>
-          
-        </div>
-      )} */}
 
       <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg p-1.5 shadow-md">
+
+        <div className="flex items-center justify-center w-12 h-12 bg-white rounded-lg p-1.5 shadow-md">
           <Image
             src="/logo_siap.png"
             alt="Logo SIAP"
@@ -167,32 +118,22 @@ export default function Sidebar({
                 : 'text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-white'
                 }`}
             >
-              <div className="flex items-center gap-3 w-full">
+              <div className="flex items-center gap-3">
                 <MessageSquare size={20} />
-
-                {!collapsed && (
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-medium text-sm 2xl:text-base">Inbox</span>
-                    {isSubMenuOpen ? (
-                      <ChevronDown size={14} />
-                    ) : (
-                      <ChevronRight size={14} />
-                    )}
-                  </div>
-                )}
-
-                {/* {isSubMenuOpen ? (
-                  <ChevronDown size={14} />
-                ) : (
-                  <ChevronRight size={14} />
-                )} */}
+                <span className="font-medium text-sm 2xl:text-base">Inbox</span>
 
               </div>
+
+              {isSubMenuOpen ? (
+                <ChevronDown size={14} />
+              ) : (
+                <ChevronRight size={14} />
+              )}
 
             </div>
 
             {/* Submenu Chat & Comments */}
-            {isSubMenuOpen && !collapsed && (
+            {isSubMenuOpen && (
               <div className="pl-1 space-y-1 border-l ml-6 border-slate-600 transition-all">
                 <Link
                   href="/admin/chat"
@@ -221,9 +162,7 @@ export default function Sidebar({
             className={getLinkStyle(item.href)}
           >
             {item.icon}
-            {!collapsed && (
-              <span className="font-medium text-sm 2xl:text-base">{item.name}</span>
-            )}
+            <span className="font-medium text-sm 2xl:text-base">{item.name}</span>
           </Link>
         ))}
       </nav>
@@ -237,66 +176,44 @@ export default function Sidebar({
               className={getLinkStyle('/admin/settings')}
             >
               <Settings size={20} />
-              {!collapsed && (
-                <span className="text-sm 2xl:text-base">Settings</span>
-              )}
+              <span className="text-sm 2xl:text-base">Settings</span>
             </Link>
 
             <div className={getLinkProfileStyle('/admin/profile')}>
               <Link
                 href="/admin/profile"
                 className="w-full flex items-center gap-3 min-w-0"
-                title={collapsed ? (name ?? 'Admin') : undefined}
               >
                 <User size={20} />
-                {!collapsed && (
-                  <span className="text-sm 2xl:text-base truncate">
-                    {name ?? 'Admin'}
-                  </span>
-                )}
+                <span className="text-sm 2xl:text-base truncate">
+                  {name ?? 'Admin'}
+                </span>
               </Link>
 
-              {!collapsed && (
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  aria-label="Logout"
-                  className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer hover:text-red-500"
-                >
-                  <LogOut size={20} />
-                </button>
-              )}
-            </div>
-
-            {collapsed && (
               <button
                 type="button"
                 onClick={handleLogout}
                 aria-label="Logout"
-                className="w-full flex items-center justify-center px-4 py-3 rounded-[4px] text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-red-500 transition-all"
+                className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer hover:text-red-500"
                 title="Logout"
               >
                 <LogOut size={20} />
               </button>
-            )}
+            </div>
 
           </>
         ) : (
-          <>
             <div className={getLinkProfileStyle('/opd/profile')}>
               <Link
                 href="/opd/profile"
                 className="w-full flex items-center gap-3 min-w-0"
               >
                 <User size={20} />
-                {!collapsed && (
-                  <span className="text-sm 2xl:text-base truncate">
-                    {name ?? 'OPD'}
-                  </span>
-                )}
+                <span className="text-sm 2xl:text-base truncate">
+                  {name ?? 'OPD'}
+                </span>
               </Link>
-              {!collapsed && (
-                <button
+              <button
                   type="button"
                   onClick={handleLogout}
                   aria-label="Logout"
@@ -304,22 +221,7 @@ export default function Sidebar({
                 >
                   <LogOut size={20} />
                 </button>
-              )}
             </div>
-
-            {collapsed && (
-              <button
-                type="button"
-                onClick={handleLogout}
-                aria-label="Logout"
-                className="w-full flex items-center justify-center px-4 py-3 rounded-[4px] text-slate-400 hover:bg-[#E2EFF3]/10 hover:text-red-500 transition-all"
-                title="Logout"
-              >
-                <LogOut size={20} />
-              </button>
-            )}
-
-          </>
 
         )}
       </div>
