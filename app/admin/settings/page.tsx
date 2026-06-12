@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import CardChannel from "@/components/CardChannel";
+import WhatsAppConnectModal from "@/components/WhatsAppConnectModal";
 import CategoryModal from "@/components/CategoryModal";
 import DeleteModal from "@/components/DeleteModal";
 import EmptyState from "@/components/EmptyState";
@@ -59,9 +60,9 @@ export default function Settings() {
     const [editCategory, setEditCategory] = useState<Category | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+    const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
 
     const fetchChannels = useCallback(async () => {
-        setLoadingChannels(true);
         try {
             const res = await fetch("/api/channel");
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -87,15 +88,16 @@ export default function Settings() {
     }, []);
 
     useEffect(() => {
-        fetchChannels();
-        fetchCategories();
+        void (async () => {
+            await Promise.all([fetchChannels(), fetchCategories()]);
+        })();
     }, [fetchChannels, fetchCategories]);
 
     const handleDisconnect = async (platform: string) => {
         const res = await fetch(`/api/channel/${platform.toLowerCase()}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ isActive: false, accountHandle: null, accountId: null }),
+            body: JSON.stringify({ isActive: false, accountHandle: null, accountId: null, accessToken: null }),
         });
         if (!res.ok) throw new Error("Failed to disconnect");
         setChannels((prev) =>
@@ -105,6 +107,10 @@ export default function Settings() {
                     : c
             )
         );
+    };
+
+    const handleConnect = (platform: string) => {
+        if (platform === "WHATSAPP") setWhatsappModalOpen(true);
     };
 
     const handleEditCategory = (id: string) => {
@@ -205,6 +211,7 @@ export default function Settings() {
                                         icon={Icon}
                                         data={channel}
                                         onDisconnect={handleDisconnect}
+                                        onConnect={handleConnect}
                                     />
                                 );
                             })}
@@ -264,6 +271,12 @@ export default function Settings() {
                 onClose={() => { setDeleteModalOpen(false); setDeletingCategory(null); }}
                 onConfirm={confirmDelete}
                 itemName={deletingCategory?.name ?? "category"}
+            />
+
+            <WhatsAppConnectModal
+                isOpen={whatsappModalOpen}
+                onClose={() => setWhatsappModalOpen(false)}
+                onConnected={fetchChannels}
             />
         </div>
     );

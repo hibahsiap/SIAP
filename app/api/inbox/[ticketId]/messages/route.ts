@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { sendInstagramDM, sendInstagramAttachment } from "@/lib/instagram";
+import { sendWhatsappText, sendWhatsappMedia, waMediaTypeFromMime } from "@/lib/whatsapp";
 
 // Route param is `ticketId` historically; it identifies a Conversation.
 export async function POST(
@@ -147,6 +148,59 @@ export async function POST(
       console.error("[Instagram DM send]", err);
       deliveryError = err instanceof Error ? err.message : "Unknown error";
     }
+  } else if (conv.channel.platform === "WHATSAPP") {
+    const recipient = conv.citizen.contacts.find((c) => c.platform === "WHATSAPP");
+    if (!conv.channel.accessToken || !conv.channel.accountId) {
+      return NextResponse.json(
+        { error: "WhatsApp channel is not connected (missing access token or phone number ID)" },
+        { status: 400 }
+      );
+    }
+    if (!recipient) {
+      return NextResponse.json(
+        { error: "Citizen has no WhatsApp number on record" },
+        { status: 400 }
+      );
+    }
+
+    try {
+      if (attachment?.url) {
+        // WhatsApp media (image/video/document) can carry the text as a caption,
+        // so we avoid a second message. Audio has no caption → send text after.
+        const waType = waMediaTypeFromMime(attachment.mimeType);
+        const captionSupported = waType !== "audio";
+        const mediaRes = await sendWhatsappMedia({
+          phoneNumberId: conv.channel.accountId,
+          accessToken: conv.channel.accessToken,
+          recipientWaId: recipient.handle,
+          type: waType,
+          url: attachment.url,
+          caption: captionSupported && content ? content : undefined,
+          fileName: attachment.fileName,
+        });
+        externalId = mediaRes.message_id ?? null;
+        if (content && !captionSupported) {
+          const textRes = await sendWhatsappText({
+            phoneNumberId: conv.channel.accountId,
+            accessToken: conv.channel.accessToken,
+            recipientWaId: recipient.handle,
+            text: content,
+          });
+          externalId = textRes.message_id ?? externalId;
+        }
+      } else if (content) {
+        const textRes = await sendWhatsappText({
+          phoneNumberId: conv.channel.accountId,
+          accessToken: conv.channel.accessToken,
+          recipientWaId: recipient.handle,
+          text: content,
+        });
+        externalId = textRes.message_id ?? null;
+      }
+    } catch (err) {
+      console.error("[WhatsApp send]", err);
+      deliveryError = err instanceof Error ? err.message : "Unknown error";
+    }
   } else {
     deliveryError = `Outbound delivery for ${conv.channel.platform} is not implemented yet`;
   }
@@ -176,8 +230,10 @@ export async function POST(
     { ...msg, deliveryError },
     { status: deliveryError ? 207 : 201 }
   );
-  } catch (err: any) {
+  } catch (err) {
     console.error("[POST /api/inbox/[ticketId]/messages] Error:", err);
-    return NextResponse.json({ error: err.message, stack: err.stack }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    const stack = err instanceof Error ? err.stack : undefined;
+    return NextResponse.json({ error: message, stack }, { status: 500 });
   }
 }

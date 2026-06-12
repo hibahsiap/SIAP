@@ -17,6 +17,7 @@ interface CardChannelProps {
   icon: ElementType;
   data: ChannelData;
   onDisconnect: (platform: string) => Promise<void>;
+  onConnect?: (platform: string) => void;
 }
 
 const colorCard: Record<string, string> = {
@@ -43,7 +44,7 @@ const platformLabel: Record<string, string> = {
   FACEBOOK: "Facebook",
 };
 
-const CardChannel = ({ icon, data, onDisconnect }: CardChannelProps) => {
+const CardChannel = ({ icon, data, onDisconnect, onConnect }: CardChannelProps) => {
   const Icon = icon;
   const [loading, setLoading] = useState(false);
   const platform = data.platform;
@@ -52,6 +53,8 @@ const CardChannel = ({ icon, data, onDisconnect }: CardChannelProps) => {
     if (platform === "INSTAGRAM") {
       const oauthUrl = process.env.NEXT_PUBLIC_INSTAGRAM_OAUTH_URL;
       if (oauthUrl) window.location.href = oauthUrl;
+    } else if (platform === "WHATSAPP" && onConnect) {
+      onConnect(platform);
     } else {
       toast.info(`${platformLabel[platform]} integration coming soon`);
     }
