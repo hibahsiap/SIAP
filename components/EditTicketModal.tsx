@@ -227,11 +227,11 @@ export default function EditTicketModal({ isOpen, onClose, ticketData, onSaved }
         <Button 
           onClick={onClose} 
           variant="outline" 
-          className="flex-1 bg-[#EAECEF] hover:bg-[#DCDFE3] border-0 text-[#1a233a] font-bold h-12 rounded-xl transition-colors"
+          className="flex-1 bg-[#EAECEF] hover:bg-[#DCDFE3] border-0 text-[#1a233a] font-bold h-10 rounded-lg transition-colors"
         >
           CANCEL
         </Button>
-        <Button 
+        <Button
           onClick={() => handleSave()}
           disabled={isSubmitting || isApproving}
           className="flex-1 bg-[#1a233a] hover:bg-[#0f172a] text-white font-bold h-12 rounded-xl transition-colors disabled:opacity-50"

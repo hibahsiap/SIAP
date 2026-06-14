@@ -84,12 +84,12 @@ export const TimeRange = ({
           ref={triggerRef}
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-white hover:bg-gray-50 transition-colors cursor-pointer select-none min-w-[120px]"
+          className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 2xl:py-3 bg-white hover:bg-gray-50 transition-colors cursor-pointer select-none min-w-[120px]"
         >
           {prefixLabel && (
-            <span className="text-xs text-gray-500 font-medium whitespace-nowrap">{prefixLabel}</span>
+            <span className="text-xs 2xl:text-sm text-gray-500 font-medium whitespace-nowrap">{prefixLabel}</span>
           )}
-          <span className="text-xs font-semibold text-slate-800 whitespace-nowrap">{displayLabel}</span>
+          <span className="text-xs 2xl:text-sm font-semibold text-slate-800 whitespace-nowrap">{displayLabel}</span>
           <ChevronDown
             size={12}
             className={`text-gray-400 transition-transform duration-200 ml-auto ${isOpen ? 'rotate-180' : ''}`}
@@ -107,7 +107,7 @@ export const TimeRange = ({
                 key={opt.value}
                 type="button"
                 onClick={() => handleOptionSelect(opt.value)}
-                className={`w-full px-3 py-2 text-xs font-medium cursor-pointer transition-colors text-left flex items-center gap-2 ${
+                className={`w-full px-3 py-2 text-xs 2xl:text-sm font-medium cursor-pointer transition-colors text-left flex items-center gap-2 ${
                   value === opt.value
                     ? 'bg-slate-50 text-slate-900'
                     : 'text-slate-600 hover:bg-gray-50'

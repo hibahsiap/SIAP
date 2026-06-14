@@ -12,7 +12,7 @@ interface SearchFieldProps {
 const SearchField = ({ placeholder, value, onChange, className }: SearchFieldProps) => {
     return (
         // Ganti tingginya jadi h-[40px] min-h-[40px]
-        <div className={`flex items-center gap-2 border border-[#D2D2D2] bg-white rounded-[12px] px-3 h-[40px] min-h-[40px] text-sm text-[#6B7280] transition-all focus-within:border-[#1D2F58] ${className}`}>
+        <div className={`flex items-center gap-2 border border-[#D2D2D2] bg-white rounded-[12px] px-3 h-[40px] min-h-[40px] text-sm 2xl:text-base 2xl:h-12 text-[#6B7280] transition-all focus-within:border-[#1D2F58] ${className}`}>
             <Search size={16} className={value ? "text-[#1D2F58]" : "text-[#6B7280]"} />
 
             <input 

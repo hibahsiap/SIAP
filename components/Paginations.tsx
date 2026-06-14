@@ -14,7 +14,7 @@ export const Pagination = ({ totalItems, itemsPerPage, currentPage, onPageChange
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-between items-center text-xs text-gray-500 rounded-b-lg">
+    <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-between items-center text-xs 2xl:text-sm text-gray-500 rounded-b-lg">
       <p>Showing {startItem}-{endItem} of {totalItems} items</p>
       
       <div className="flex gap-1">

@@ -16,14 +16,14 @@ interface TableTemplateProps<T = Record<string, any>> {
 
 const TableTemplate = <T extends Record<string, any>>({columns, data, position}: TableTemplateProps<T>) => {
     return (
-        <div className={`w-full max-h-[450px] overflow-y-auto relative custom-scrollbar`}>
+        <div className={`w-full max-h-[450px] 2xl:max-h-[600px] overflow-y-auto relative custom-scrollbar`}>
             <Table>
                 <TableHeader className="bg-[#F3F3F3]">
                     <TableRow>
                         {columns.map((col) => (
                             <TableHead 
                                 key={col.key} 
-                                className={`uppercase sticky top-0 z-20 bg-[#F3F3F3] text-[#546064] font-semibold tracking-wide h-12 ${position || ""} ${col.className || ""}`}
+                                className={`uppercase sticky top-0 z-20 bg-[#F3F3F3] text-[#546064] 2xl:text-lg font-semibold tracking-wide h-12 ${position || ""} ${col.className || ""}`}
                             >
                                 {col.header}
                             </TableHead>
@@ -33,7 +33,7 @@ const TableTemplate = <T extends Record<string, any>>({columns, data, position}:
                 <TableBody>
                     {data.length > 0 ? (
                         data.map((row, rowIndex) => (
-                            <TableRow key={rowIndex} className={`border-b border-[#e7e6e6] text-[#041942] text-[14px] h-16 ${position || ""}`}>
+                            <TableRow key={rowIndex} className={`border-b border-[#e7e6e6] text-[#041942] text-[14px] 2xl:text-base h-16 ${position || ""}`}>
                                 {columns.map((col) => (
                                     <TableCell key={col.key} className={col.className}>
                                         {col.cell ? col.cell(row[col.key], row) : row[col.key]}

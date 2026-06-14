@@ -49,7 +49,7 @@ export function ActivityLog() {
 
   return (
     <div className="relative pt-0">
-      <div className="absolute left-[117px] top-[10px] bottom-[20px] w-[2px] bg-gray-300 z-0"></div>
+      <div className="absolute left-[117px] 2xl:left-[136px] top-[10px] bottom-[20px] w-[2px] bg-gray-300 z-0"></div>
 
       <div className="space-y-8 relative z-10">
         {logs.map((log) => {
@@ -58,21 +58,21 @@ export function ActivityLog() {
           const date = formatDate(log.createdAt);
           return (
             <div key={log.id} className="flex gap-2">
-              <div className="text-right w-[80px] shrink-0">
-                <p className="text-[10px] font-bold text-gray-500">{time}</p>
-                <p className="text-[12px] font-bold text-gray-900">{date}</p>
+              <div className="text-right w-[80px] 2xl:w-25 shrink-0">
+                <p className="text-[10px] 2xl:text-xs font-bold text-gray-500">{time}</p>
+                <p className="text-[12px] 2xl:text-sm font-bold text-gray-900">{date}</p>
               </div>
 
               <div className="w-[60px] flex justify-center pt-1">
-                <div className="w-10 h-10 rounded-full border border-gray-100 bg-white flex items-center justify-center text-gray-700 shadow-md">
+                <div className="w-10 h-10 2xl:w-12 2xl:h-12 rounded-full border border-gray-100 bg-white flex items-center justify-center text-gray-700 shadow-md">
                   <Icon size={20} />
                 </div>
               </div>
 
               <div className="flex-1 pt-4">
-                <p className="text-[13px] font-bold text-gray-900">{humanizeAction(log.action)}</p>
+                <p className="text-[13px] 2xl:text-base font-bold text-gray-900">{humanizeAction(log.action)}</p>
                 {log.description && (
-                  <p className="text-[12px] text-gray-500">{log.description}</p>
+                  <p className="text-[12px] 2xl:text-sm text-gray-500">{log.description}</p>
                 )}
               </div>
             </div>

@@ -1,18 +1,19 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import Link from 'next/link'; 
-import Header from '@/components/Header'; 
+import Link from 'next/link';
+import Header from '@/components/Header';
 import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
 import EmptyState from '@/components/EmptyState';
 import SearchEmptyState from '@/components/SearchEmpty';
 import DeleteAlertModal from '@/components/DeleteModal';
 import EditTicketModal from '@/components/EditTicketModal';
-import FilterSidebar from '@/components/Filter'; 
-import ForwardTicketModal from '@/components/ForwardTicketModal'; 
+import FilterSidebar, { FilterState } from '@/components/Filter';
+import ForwardTicketModal from '@/components/ForwardTicketModal';
 import { Trash2, Edit2, Forward, CheckCircle2, Loader2 } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
-import { toast } from "sonner"; 
+import { isWithinRange } from '@/utils/dateFilter';
+import { toast } from "sonner";
 
 type TicketItem = {
   id: string;
@@ -65,7 +66,7 @@ const getStatusBadge = (status: string) => {
   };
   const display = statusLabel[status] ?? status;
   return (
-    <div className={`mx-auto inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-500"}`}>
+    <div className={`mx-auto inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-500"} w-30`}>
       <span className={`h-1.5 w-1.5 rounded-full ${dotColors[display] ?? "bg-gray-500"}`}></span>
       {display}
     </div>
@@ -80,7 +81,7 @@ const getTypeBadge = (type: string | null) => {
     Pertanyaan: "bg-blue-100/80 text-blue-700",
     Saran: "bg-green-100/80 text-green-700",
   };
-  return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-600"}`}>{display}</span>;
+  return <span className={`px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-600"}`}>{display}</span>;
 };
 
 const getUrgencyBadge = (urgency: string | null) => {
@@ -92,7 +93,7 @@ const getUrgencyBadge = (urgency: string | null) => {
     High: "bg-red-100/80 text-red-700",
     Critical: "bg-red-200/80 text-red-800",
   };
-  return <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-600"}`}>{display}</span>;
+  return <span className={`px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-600"}`}>{display}</span>;
 };
 
 type TabCategory = 'pending' | 'all' | 'aspirations'; 
@@ -101,6 +102,7 @@ export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState<TabCategory>('pending');
   const [searchQuery, setSearchQuery] = useState("");
   const { openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false); 
@@ -111,6 +113,14 @@ export default function TicketsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
+    opds: [],
+    classifications: [],
+    issues: [],
+    priorities: [],
+    rangeTime: "",
+  });
 
   const fetchTickets = useCallback(async (tab?: TabCategory) => {
     const t = tab ?? activeTab;
@@ -134,17 +144,48 @@ export default function TicketsPage() {
   }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredData = useMemo(() => {
-    if (!searchQuery) return tickets;
     const q = searchQuery.toLowerCase();
-    return tickets.filter((t) => {
-      return (
-        (t.title ?? "").toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q) ||
-        t.ticketNumber.toLowerCase().includes(q) ||
-        (t.citizenName ?? "").toLowerCase().includes(q)
-      );
+    const filtered = tickets.filter((t) => {
+      // Search query
+      if (q) {
+        const match =
+          (t.title ?? "").toLowerCase().includes(q) ||
+          t.description.toLowerCase().includes(q) ||
+          t.ticketNumber.toLowerCase().includes(q) ||
+          (t.citizenName ?? "").toLowerCase().includes(q);
+        if (!match) return false;
+      }
+
+      // Applied filters (dari FilterSidebar) — dipetakan ke field data real
+      if (appliedFilters.opds.length > 0 && t.opdName) {
+        if (!appliedFilters.opds.includes(t.opdName)) return false;
+      }
+      if (appliedFilters.classifications.length > 0) {
+        if (!appliedFilters.classifications.includes(t.status)) return false;
+      }
+      if (appliedFilters.issues.length > 0 && t.type) {
+        if (!appliedFilters.issues.includes(t.type)) return false;
+      }
+      if (appliedFilters.priorities.length > 0 && t.urgency) {
+        if (!appliedFilters.priorities.includes(t.urgency)) return false;
+      }
+      if (appliedFilters.rangeTime) {
+        if (!isWithinRange(t.startDate ?? t.createdAt, appliedFilters.rangeTime)) return false;
+      }
+
+      return true;
     });
-  }, [tickets, searchQuery]);
+
+    return [...filtered].sort((a, b) => {
+      const getTime = (item: TicketItem) => {
+        const d = new Date(item.startDate ?? item.createdAt);
+        return isNaN(d.getTime()) ? 0 : d.getTime();
+      };
+      return sortOrder === 'newest'
+        ? getTime(b) - getTime(a)
+        : getTime(a) - getTime(b);
+    });
+  }, [tickets, searchQuery, appliedFilters, sortOrder]);
 
   const handleApprove = useCallback(async (ticket: TicketItem) => {
     setApprovingId(ticket.id);
@@ -188,7 +229,7 @@ export default function TicketsPage() {
       key: "description", 
       className: "text-center", 
       cell: (val: any) => (
-        <span className="block w-full min-w-[250px] whitespace-normal break-words text-[12px] font-normal leading-relaxed text-justify text-[#1D2F58]">
+        <span className="block w-full min-w-[250px] 2xl:min-w-[300px] whitespace-normal break-words text-[12px] 2xl:text-[14px] font-normal leading-relaxed text-justify text-[#1D2F58]">
           {val}
         </span> 
       )
@@ -201,25 +242,25 @@ export default function TicketsPage() {
           key: "title", 
           className: "text-center", 
           cell: (val: any, row: any) => (
-            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[200px] line-clamp-2 inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val ?? row.ticketNumber}
             </Link>
-          ) 
+          )
         },
-        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => val ?? "-" }, 
+        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => <div className="w-[280px]">{val ?? "-"}</div> },
         { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
         { header: "Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
         { header: "Category", key: "categoryName", className: "text-center", cell: (val: any) => val ?? "-" },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
         messageColumn,
         { header: "Actions", key: "id", className: "text-center", cell: (_: any, row: any) => (
-            <div className="flex items-center justify-center gap-3">
-              <button onClick={() => { setSelectedTicket(row as TicketItem); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity" title="Edit"><Edit2 className="w-4 h-4" /></button>
-              <button onClick={() => { setSelectedTicket(row as TicketItem); setIsForwardModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity" title="Forward"><Forward className="w-4 h-4" /></button>
+            <div className="flex items-center justify-center gap-4">
+              <button onClick={() => { setSelectedTicket(row as TicketItem); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:text-blue-500 transition-colors duration-300 cursor-pointer" title="Edit"><Edit2 className="w-4 h-4" /></button>
+              <button onClick={() => { setSelectedTicket(row as TicketItem); setIsForwardModalOpen(true); }} className="text-[#1D2F58] hover:text-green-500 transition-colors duration-300 cursor-pointer" title="Forward"><Forward className="w-4 h-4" /></button>
               <button
                 onClick={() => handleApprove(row as TicketItem)}
                 disabled={approvingId === (row.id as string)}
-                className="text-green-600 hover:opacity-70 transition-opacity disabled:opacity-40"
+                className="text-green-600 hover:opacity-70 transition-opacity disabled:opacity-40 cursor-pointer"
                 title="Approve"
               >
                 {approvingId === (row.id as string) ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
@@ -235,12 +276,12 @@ export default function TicketsPage() {
           key: "title", 
           className: "text-center", 
           cell: (val: any, row: any) => (
-            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[150px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val ?? row.ticketNumber}
             </Link>
-          ) 
+          )
         },
-        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => val ?? "-" }, 
+        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => <div className="w-[180px]">{val ?? "-"}</div> },
         { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
         { header: "Issue Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
@@ -248,7 +289,7 @@ export default function TicketsPage() {
         { header: "Due date", key: "dueDate", className: "text-center", cell: (val: any) => formatDate(val) },
         messageColumn,
         { header: "Actions", key: "id", className: "text-center", cell: (_: any, row: any) => (
-            <button onClick={() => { setSelectedTicket(row as TicketItem); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:opacity-70 transition-opacity"><Edit2 className="w-4 h-4" /></button>
+            <button onClick={() => { setSelectedTicket(row as TicketItem); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:text-blue-500 transition-colors duration-300 cursor-pointer"><Edit2 className="w-4 h-4" /></button>
           )
         }
       ];
@@ -259,7 +300,7 @@ export default function TicketsPage() {
           key: "citizenName", 
           className: "text-center", 
           cell: (val: any, row: any) => (
-            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal min-w-[100px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           ) 
@@ -278,16 +319,20 @@ export default function TicketsPage() {
   }, [activeTab, approvingId, handleApprove, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-full max-w-full h-full p-4 lg:p-8">
+    <div className="flex-1 h-full px-4 py-2 w-[1020px] 2xl:w-[1300px]">
 
       {/* --- TABS & SEARCH HEADER --- */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 py-4 mb-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
+        <div className="flex gap-2">
           {['pending', 'all', 'aspirations'].map((id) => (
             <button
               key={id}
-              onClick={() => { setActiveTab(id as TabCategory); setSearchQuery(""); }}
-              className={`px-5 h-[40px] flex items-center justify-center rounded-[12px] text-sm font-semibold transition-all duration-200 ${
+              onClick={() => { 
+                setActiveTab(id as TabCategory); 
+                setSearchQuery(""); 
+                setAppliedFilters({ opds: [], classifications: [], issues: [], priorities: [], rangeTime: "" });
+              }}
+              className={`px-5 h-10 flex items-center justify-center rounded-[12px] text-sm 2xl:text-base 2xl:h-12 font-semibold transition-all duration-200 ${
                 activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
               }`}
             >
@@ -295,16 +340,19 @@ export default function TicketsPage() {
             </button>
           ))}
         </div>
-        <div className="w-full md:w-auto">
+        <div className="w-auto">
             <Header 
-            searchQuery={searchQuery} 
-            setSearchQuery={setSearchQuery} 
-            onFilterClick={() => setIsFilterOpen(true)} /> 
+              searchQuery={searchQuery} 
+              setSearchQuery={setSearchQuery} 
+              onFilterClick={() => setIsFilterOpen(true)}
+              sortOrder={sortOrder}
+              onSortChange={setSortOrder} 
+            /> 
         </div>
       </div>
 
       {/* --- AREA KONTEN --- */}
-      <div className="w-full">
+      <div className="w-full overflow-y-auto custom-scrollbar">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#1D2F58]" />
@@ -329,7 +377,10 @@ export default function TicketsPage() {
       <DeleteAlertModal 
         isOpen={isDeleteModalOpen} 
         onClose={closeDeleteModal} 
-        onConfirm={() => { closeDeleteModal(); }} 
+        onConfirm={() => { 
+          toast.success("Ticket deleted successfully"); 
+          closeDeleteModal(); 
+        }} 
         itemName={activeTab === 'aspirations' ? "aspiration message" : "task"} 
       />
 
@@ -347,8 +398,11 @@ export default function TicketsPage() {
       />
 
       <FilterSidebar 
+        admin
         isOpen={isFilterOpen} 
         onClose={() => setIsFilterOpen(false)} 
+        filterState={appliedFilters}
+        onApply={(filters) => setAppliedFilters(filters)}
       />
       
     </div>

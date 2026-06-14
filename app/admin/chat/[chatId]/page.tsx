@@ -249,7 +249,7 @@ export default function ChatDetailPage({
 
   if (isLoadingDetail && !current) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-400">
+      <div className="flex-1 flex items-center justify-center text-gray-400 h-screen">
         Loading conversation…
       </div>
     );

@@ -21,13 +21,13 @@ const FormField = ({
   type?: string
 }) => (
   <div className="space-y-1.5">
-    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+    <label className="text-[10px] 2xl:text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
     <Input
       placeholder={placeholder}
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-gray-50 border-gray-200 text-gray-900 w-full"
+      className="bg-gray-50 border-gray-200 text-gray-900 w-full 2xl:text-base 2xl:mt-2"
     />
   </div>
 )
@@ -120,18 +120,18 @@ export default function CategoryModal({ isOpen, onClose, onSaved, editData }: Ca
 
   return (
     <CustomModal isOpen={isOpen} onClose={onClose} title={editData ? "Edit Category" : "Add Category"}>
-      <div className="space-y-6">
-        <FormField 
-          label="Category Name" 
-          placeholder="Enter category name" 
-          value={name} 
-          onChange={setName} 
+      <div className="space-y-6 mt-2">
+        <FormField
+          label="Category Name"
+          placeholder="Enter category name"
+          value={name}
+          onChange={setName}
         />
 
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Default OPD</label>
+          <label className="text-[10px] 2xl:text-xs font-bold text-gray-500 uppercase tracking-wider">Default OPD</label>
           <Select value={defaultOpdId} onValueChange={setDefaultOpdId}>
-            <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
+            <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900 2xl:text-base 2xl:mt-2">
               <SelectValue placeholder="Pilih Instansi / OPD" />
             </SelectTrigger>
             <SelectContent>
@@ -142,11 +142,22 @@ export default function CategoryModal({ isOpen, onClose, onSaved, editData }: Ca
           </Select>
         </div>
       </div>
-      
+
       <div className="flex gap-3 mt-6">
-        <Button onClick={onClose} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold" disabled={isSubmitting}>CANCEL</Button>
-        <Button onClick={handleSubmit} className="flex-1 bg-[#1a233a] text-white font-bold" disabled={isSubmitting}>
-          {isSubmitting ? "SAVING..." : (editData ? "SAVE CHANGES" : "CREATE")}
+        <Button
+          onClick={onClose}
+          variant="outline"
+          className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold 2xl:h-10"
+          disabled={isSubmitting}
+        >
+          CANCEL
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="flex-1 bg-[#1a233a] text-white font-bold 2xl:h-10"
+        >
+          {isSubmitting ? (editData ? "SAVING..." : "CREATING...") : (editData ? "SAVE CHANGES" : "CREATE")}
         </Button>
       </div>
     </CustomModal>

@@ -69,9 +69,9 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
   const basePath = role === "ADMIN" ? "/admin/chat" : "/opd/inbox";
 
   return (
-    <aside className="w-97.5 border-r flex flex-col h-full z-10">
-      <div className="p-4 space-y-4 border-b">
-        <h2 className="text-2xl font-bold text-slate-900">All Inbox</h2>
+    <aside className="w-full border-r flex flex-col h-full z-10">
+      <div className="px-2 py-1 space-y-4 border-b">
+        <h2 className="text-3xl 2xl:text-4xl font-bold text-[#041942]">All Inbox</h2>
 
         <div className="relative">
           <SearchField
@@ -102,7 +102,7 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
             onChange={(v: string) => setFilters({ sort: v as typeof filters.sort })}
             prefixLabel="Sort by :"
           />
-          <TimeRange
+          {/* <TimeRange
             prefixLabel="Status :"
             options={[
               { label: "All Status", value: "all" },
@@ -112,7 +112,7 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
             ]}
             value={filterStatus}
             onChange={(v: string) => setFilterStatus(v)}
-          />
+          /> */}
         </div>
       </div>
 
