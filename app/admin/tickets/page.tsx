@@ -224,14 +224,14 @@ export default function TicketsPage() {
 
   const columns = useMemo<ColumnDefinition[]>(() => {
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    const messageColumn: ColumnDefinition = { 
-      header: "Pesan Aspirasi", 
-      key: "description", 
-      className: "text-center", 
+    const messageColumn: ColumnDefinition = {
+      header: "Pesan Aspirasi",
+      key: "description",
+      className: "text-center",
       cell: (val: any) => (
         <span className="block w-full min-w-[250px] 2xl:min-w-[300px] whitespace-normal break-words text-[12px] 2xl:text-[14px] font-normal leading-relaxed text-justify text-[#1D2F58]">
           {val}
-        </span> 
+        </span>
       )
     };
 
@@ -247,7 +247,7 @@ export default function TicketsPage() {
             </Link>
           )
         },
-        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => <div className="w-[280px]">{val ?? "-"}</div> },
+        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => <div className="w-[280px] whitespace-normal break-words">{val ?? "-"}</div> },
         { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
         { header: "Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
         { header: "Category", key: "categoryName", className: "text-center", cell: (val: any) => val ?? "-" },
@@ -281,7 +281,7 @@ export default function TicketsPage() {
             </Link>
           )
         },
-        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => <div className="w-[180px]">{val ?? "-"}</div> },
+        { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => <div className="w-[180px] whitespace-normal break-words">{val ?? "-"}</div> },
         { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
         { header: "Issue Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
@@ -303,7 +303,7 @@ export default function TicketsPage() {
             <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
-          ) 
+          )
         },
         { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
@@ -319,11 +319,11 @@ export default function TicketsPage() {
   }, [activeTab, approvingId, handleApprove, openDeleteModal]);
 
   return (
-    <div className="flex-1 h-full px-4 py-2 w-[1020px] 2xl:w-[1300px]">
+    <div className="flex flex-col min-w-0 h-screen px-4 py-2 w-full">
 
       {/* --- TABS & SEARCH HEADER --- */}
-      <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
-        <div className="flex gap-2">
+      <div className="shrink-0 flex flex-col gap-4 py-4 mb-4 lg:flex-row lg:justify-between lg:items-center">
+        <div className="flex flex-wrap gap-2">
           {['pending', 'all', 'aspirations'].map((id) => (
             <button
               key={id}
@@ -352,7 +352,7 @@ export default function TicketsPage() {
       </div>
 
       {/* --- AREA KONTEN --- */}
-      <div className="w-full overflow-y-auto custom-scrollbar">
+      <div className="flex-1 min-h-0 w-full overflow-auto scrollbar-thick pb-1">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#1D2F58]" />

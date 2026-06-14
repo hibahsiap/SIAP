@@ -11,7 +11,7 @@ import SearchEmptyState from "@/components/SearchEmpty";
 import TableTemplate, { ColumnDefinition } from "@/components/TableTemplate";
 import { Input } from "@/components/ui/input";
 import { formatNameCell, TableRowData } from "@/constants/tableFormats";
-import { MessageSquare, Pencil, PlusIcon, Search, Trash2 } from "lucide-react";
+import { Loader2, MessageSquare, Pencil, PlusIcon, Search, Trash2 } from "lucide-react";
 import { FaFacebook, FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { toast } from "sonner";
 import ButtonClick from "@/components/Button";
@@ -55,6 +55,7 @@ export default function Settings() {
     const [channels, setChannels] = useState<ChannelData[]>([]);
     const [loadingChannels, setLoadingChannels] = useState(true);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [loadingCategories, setLoadingCategories] = useState(true);
     const [categorySearch, setCategorySearch] = useState("");
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
     const [editCategory, setEditCategory] = useState<Category | null>(null);
@@ -84,6 +85,8 @@ export default function Settings() {
             setCategories(Array.isArray(data) ? data : []);
         } catch {
             toast.error("Failed to load categories");
+        } finally {
+            setLoadingCategories(false);
         }
     }, []);
 
@@ -191,7 +194,7 @@ export default function Settings() {
 
             {/* Header */}
             <div className="flex flex-col text-[#041942] gap-1.5 py-1 border-b border-black/10">
-                <h1 className="font-bold text-3xl 2xl:text-4xl ">Settings</h1>
+                <h1 className="font-bold text-2xl 2xl:text-3xl ">Settings</h1>
                 <p className="tracking-wide 2xl:text-lg">Configure your account, channels, and preferences here</p>
             </div>
 
@@ -208,9 +211,11 @@ export default function Settings() {
                     </div>
 
                     {loadingChannels ? (
-                        <div className="py-6 text-center text-gray-400 text-sm 2xl:text-base">Loading channels...</div>
+                        <div className="flex items-center justify-center py-10">
+                            <Loader2 className="w-8 h-8 animate-spin text-[#1D2F58]" />
+                        </div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
                             {channels.map((channel) => {
                                 const Icon = CHANNEL_ICONS[channel.platform] ?? FaWhatsapp;
                                 return (
@@ -229,9 +234,9 @@ export default function Settings() {
 
                 {/* Issue Categories */}
                 <div className=" flex flex-col gap-4">
-                    <div className="flex flex-row justify-between items-center">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
                         <h2 className="font-bold text-2xl 2xl:text-3xl text-[#041942]">Issue Categories</h2>
-                        <div className="grid grid-cols-2 gap-2 w-[40%]">
+                        <div className="grid grid-cols-2 gap-2 w-full sm:w-[40%] sm:min-w-[320px]">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                                 <Input
@@ -252,7 +257,11 @@ export default function Settings() {
 
                     <div className="bg-white p-4 rounded-lg shadow-sm shadow-black/40 overflow-hidden">
                         <div className="w-full">
-                            {filteredCategories.length > 0 ? (
+                            {loadingCategories ? (
+                                <div className="flex items-center justify-center py-10">
+                                    <Loader2 className="w-8 h-8 animate-spin text-[#1D2F58]" />
+                                </div>
+                            ) : filteredCategories.length > 0 ? (
                                 <TableTemplate columns={categoryColumns} data={categoryData} />
                             ) : categorySearch !== "" ? (
                                 <SearchEmptyState type="category" searchQuery={categorySearch} />

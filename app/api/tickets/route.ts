@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { logActivity, getClientIp } from "@/lib/activity";
 import { TicketUrgency, TicketType, ChannelPlatform, Prisma } from "@prisma/client";
 import { sendInstagramDM } from "@/lib/instagram";
 
@@ -175,6 +176,15 @@ export async function POST(req: NextRequest) {
       return ticket;
     });
 
+    await logActivity({
+      userId: auth.userId,
+      action: "TICKET_CREATED",
+      entityType: "Ticket",
+      entityId: result.id,
+      description: `Created ticket ${result.ticketNumber} from social interaction`,
+      ipAddress: getClientIp(req),
+    });
+
     return NextResponse.json(
       {
         id: result.id,
@@ -277,6 +287,15 @@ export async function POST(req: NextRequest) {
       }).catch((err) => console.error("[Ticket auto-reply IG]", err));
     }
   }
+
+  await logActivity({
+    userId: auth.userId,
+    action: "TICKET_CREATED",
+    entityType: "Ticket",
+    entityId: result.id,
+    description: `Created ticket ${result.ticketNumber}`,
+    ipAddress: getClientIp(req),
+  });
 
   return NextResponse.json(
     {

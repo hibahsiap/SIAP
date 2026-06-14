@@ -21,16 +21,6 @@ export async function POST(request: NextRequest) {
 
   const token = await signToken({ userId: user.id, email: user.email, role: user.role })
 
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? null
-  await prisma.activityLog.create({
-    data: {
-      userId: user.id,
-      action: 'LOGIN',
-      description: 'Signed in',
-      ipAddress: ip,
-    },
-  })
-
   const response = NextResponse.json({
     user: { id: user.id, name: user.name, email: user.email, role: user.role },
   })

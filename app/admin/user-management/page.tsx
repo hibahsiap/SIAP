@@ -155,10 +155,10 @@ export default function UserManagementPage() {
   ], [openEditModal, openDeleteModal])
 
   return (
-    <div className="p-4 bg-gray-50/50 min-h-screen max-w-255 2xl:max-w-350">
+    <div className="p-4 bg-gray-50/50 min-h-screen w-full">
 
       {/* BAGIAN HEADER */}
-      <div className="bg-white px-4 py-6 rounded-t-lg border border-gray-200 border-b-0 grid grid-cols-[1fr_400px] 2xl:grid-cols-[1fr_500px] items-center gap-4">
+      <div className="bg-white px-4 py-6 rounded-t-lg border border-gray-200 border-b-0 grid grid-cols-1 gap-4 md:grid-cols-[1fr_400px] md:items-center 2xl:grid-cols-[1fr_500px]">
         <h2 className="text-2xl 2xl:text-3xl font-bold text-[#14234b]">User Management</h2>
 
         <div className="grid grid-cols-2 gap-4">

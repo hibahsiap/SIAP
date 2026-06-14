@@ -35,18 +35,18 @@ export default function SocialInteractionsPage() {
 
   // const itemsPerPage = 5;
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  
+
   useEffect(() => {
     const handleResize = () => {
       const newItemsPerPage = window.matchMedia('(min-width: 1536px)').matches ? 8 : 5;
-      
+
       // Hanya update jika nilainya benar-benar berbeda untuk menghindari render loop
       if (newItemsPerPage !== itemsPerPage) {
         setItemsPerPage(newItemsPerPage);
-        
+
         // OPTIONAL: Reset ke halaman 1 jika terjadi perubahan ukuran layar
         // agar tidak membingungkan user
-        setCurrentPage(1); 
+        setCurrentPage(1);
       }
     };
 
@@ -77,29 +77,29 @@ export default function SocialInteractionsPage() {
   }, [activeTab, fetchData]);
 
   const filteredData = useMemo(() => {
-  if (selectedRange === 'all') return data;
+    if (selectedRange === 'all') return data;
 
-  return data.filter((item) => {
-    if (selectedRange === 'custom') {
-      // Filter custom date range
-      if (!customDateRange.from || !customDateRange.to) return true;
-      const itemDate = new Date(item.capturedAt);
-      const from = new Date(customDateRange.from);
-      const to = new Date(customDateRange.to);
-      // Set to end of day agar tanggal "to" ikut termasuk
-      to.setHours(23, 59, 59, 999);
-      return itemDate >= from && itemDate <= to;
-    }
+    return data.filter((item) => {
+      if (selectedRange === 'custom') {
+        // Filter custom date range
+        if (!customDateRange.from || !customDateRange.to) return true;
+        const itemDate = new Date(item.capturedAt);
+        const from = new Date(customDateRange.from);
+        const to = new Date(customDateRange.to);
+        // Set to end of day agar tanggal "to" ikut termasuk
+        to.setHours(23, 59, 59, 999);
+        return itemDate >= from && itemDate <= to;
+      }
 
-    // Mapping value TimeRange → label yang dikenali isWithinRange
-    const rangeMap: Record<string, string> = {
-      today: 'Today',
-      week: 'This Week',
-      month: 'This Month',
-    };
-    return isWithinRange(item.capturedAt, rangeMap[selectedRange] ?? '');
-  });
-}, [data, selectedRange, customDateRange]);
+      // Mapping value TimeRange → label yang dikenali isWithinRange
+      const rangeMap: Record<string, string> = {
+        today: 'Today',
+        week: 'This Week',
+        month: 'This Month',
+      };
+      return isWithinRange(item.capturedAt, rangeMap[selectedRange] ?? '');
+    });
+  }, [data, selectedRange, customDateRange]);
 
   const currentData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -138,25 +138,25 @@ export default function SocialInteractionsPage() {
       header: "Time",
       key: "capturedAt",
       className: "text-center",
-      cell: (value: any) => 
+      cell: (value: any) =>
         // formatTime(value),
         <div className="font-medium w-[140px]">{formatTime(value)}</div>,
     },
-    { 
-      header: "Username", 
+    {
+      header: "Username",
       key: "username",
       className: "text-center",
-      cell: (value: any) => 
+      cell: (value: any) =>
         // formatTime(value),
         <div className="font-medium w-[120px]">{value}</div>,
     },
-    { 
-      header: "Message Content", 
+    {
+      header: "Message Content",
       key: "content",
       className: "text-center",
-      cell: (value: any) => 
+      cell: (value: any) =>
         // formatTime(value),
-        <div className="text-left font-medium w-[340px] line-clamp-2 break-words whitespace-normal">{value}</div>,
+        <div className="text-center font-medium w-[340px] line-clamp-2 break-words whitespace-normal">{value}</div>,
     },
     {
       header: "Destination Account",
@@ -199,7 +199,7 @@ export default function SocialInteractionsPage() {
               )}
             </button>
           )}
-          <button 
+          <button
             onClick={() => openDeleteModal(row, activeTab as "comments" | "mentions")}
             className="p-0.5 text-[#1D2F58] hover:text-red-500 hover:bg-slate-200 rounded-sm transition-colors duration-300 cursor-pointer"
           >
@@ -211,14 +211,14 @@ export default function SocialInteractionsPage() {
   ];
 
   return (
-    <div className="px-4 py-2 w-[1000px] 2xl:w-[1300px]">
+    <div className="px-4 py-2 w-full min-w-0">
       <div className="mb-8 py-1">
-        <h1 className="text-3xl 2xl:text-4xl font-bold text-[#041942]">Sosial Interactions</h1>
+        <h1 className="text-2xl 2xl:text-3xl font-bold text-[#041942]">Sosial Interactions</h1>
         <p className="text-gray-500 text-sm 2xl:text-base ">Manage comments from social media here</p>
       </div>
 
       {/* Interaction Tabs dan Time Range */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-8">
         <InteractionTabs
           tabs={[{ id: 'comments', label: 'Comments' }, { id: 'mentions', label: 'Mentions' }]}
           activeTab={activeTab}

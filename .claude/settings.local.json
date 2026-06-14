@@ -8,7 +8,12 @@
       "Bash(grep -E \"\\(ChatBubble|useInboxStore|ListChat|admin\\\\\\\\\\\\\\\\dashboard\\\\\\\\\\\\\\\\chat|opd\\\\\\\\\\\\\\\\dashboard\\\\\\\\\\\\\\\\inbox\\)\" -A 2)",
       "Bash(rtk git *)",
       "Bash(rtk tsc *)",
-      "Bash(rtk npm *)"
+      "Bash(rtk npm *)",
+      "Bash(rtk --version)",
+      "Bash(rtk gain *)",
+      "Bash(rtk npx *)",
+      "Bash(rtk lint *)",
+      "Bash(rtk read *)"
     ]
   }
 }

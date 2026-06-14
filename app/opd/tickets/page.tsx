@@ -117,13 +117,13 @@ export default function TicketsPage() {
 
   // Kolom dibuat dinamis berdasarkan Tab yang aktif
   const columns = useMemo<ColumnDefinition[]>(() => {
-    const messageColumn = { 
-      header: "Pesan Aspirasi", 
-      key: "message", 
+    const messageColumn = {
+      header: "Pesan Aspirasi",
+      key: "message",
       cell: (val: string) => (
         <span className="block w-full min-w-[250px] 2xl:min-w-[300px] whitespace-normal break-words text-[12px] 2xl:text-[14px] font-normal leading-relaxed text-justify text-[#1D2F58]">
           {val}
-        </span> 
+        </span>
       )
     };
 
@@ -139,9 +139,9 @@ export default function TicketsPage() {
             <Link href={`/opd/tickets/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
-          ) 
+          )
         },
-        { header: "OPD", key: "opd", className: "text-center", cell: (val) => <div className="w-[180px]">{val}</div>,  },
+        { header: "OPD", key: "opd", className: "text-center", cell: (val) => <div className="w-[180px] whitespace-normal break-words">{val}</div>,  },
         { header: "Status", key: "status", cell: (val) => getStatusBadge(val) },
         { header: "Issue Type", key: "issueType", cell: (val) => getBadge(val, 'issue') },
         { header: "Priority", key: "priority", cell: (val) => getBadge(val, 'priority') },
@@ -176,11 +176,11 @@ export default function TicketsPage() {
   }, [activeTab, openEditModal, openDeleteModal]);
 
   return (
-    <div className="flex-1 w-[1020px] 2xl:w-[1300px] h-full px-4 py-2 overflow-hidden">
+    <div className="flex flex-col min-w-0 w-full h-screen px-4 py-2">
 
       {/* --- TABS & SEARCH HEADER --- */}
-      <div className="flex flex-row justify-between items-center gap-4 py-4 mb-4">
-        <div className="flex gap-2">
+      <div className="shrink-0 flex flex-col gap-4 py-4 mb-4 lg:flex-row lg:justify-between lg:items-center">
+        <div className="flex flex-wrap gap-2">
           {[{ id: 'kanban', label: 'Kanban' },
             { id: 'all', label: 'All Tickets' },
             { id: 'aspirations', label: 'Aspirations' }
@@ -208,11 +208,11 @@ export default function TicketsPage() {
       </div>
 
       {/* --- AREA KONTEN (LOGIKA SWITCH) --- */}
-      <div className="">
+      <div className="flex-1 min-h-0 overflow-auto scrollbar-thick pb-1">
         {activeTab === 'kanban' ? (
           <KanbanBoard searchQuery={searchQuery} filters={appliedFilters} sortOrder={sortOrder} />
         ) : filteredData.length > 0 ? (
-          <div className="overflow-x-auto w-full">
+          <div className="w-full">
             <TableTemplate2 columns={columns} data={filteredData as any} />
           </div>
         ) : searchQuery !== "" ? (

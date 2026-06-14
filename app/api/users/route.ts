@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth'
+import { logActivity, getClientIp } from '@/lib/activity'
 import bcrypt from 'bcryptjs'
 
 export async function GET() {
@@ -69,6 +70,15 @@ export async function POST(request: NextRequest) {
       opd: { select: { id: true, name: true } },
       createdAt: true,
     },
+  })
+
+  await logActivity({
+    userId: auth.userId,
+    action: 'USER_CREATED',
+    entityType: 'User',
+    entityId: user.id,
+    description: `Created user ${user.name} (${user.email})`,
+    ipAddress: getClientIp(request),
   })
 
   return NextResponse.json(user, { status: 201 })

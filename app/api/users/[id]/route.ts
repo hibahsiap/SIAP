@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth'
+import { logActivity, getClientIp } from '@/lib/activity'
 import bcrypt from 'bcryptjs'
 
 export async function PUT(
@@ -50,11 +51,20 @@ export async function PUT(
     },
   })
 
+  await logActivity({
+    userId: auth.userId,
+    action: 'USER_UPDATED',
+    entityType: 'User',
+    entityId: user.id,
+    description: `Updated user ${user.name} (${user.email})`,
+    ipAddress: getClientIp(request),
+  })
+
   return NextResponse.json(user)
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await getAuthUser()
@@ -62,7 +72,22 @@ export async function DELETE(
   if (auth.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
+  const target = await prisma.user.findUnique({
+    where: { id },
+    select: { name: true, email: true },
+  })
   await prisma.user.delete({ where: { id } })
+
+  await logActivity({
+    userId: auth.userId,
+    action: 'USER_DELETED',
+    entityType: 'User',
+    entityId: id,
+    description: target
+      ? `Deleted user ${target.name} (${target.email})`
+      : `Deleted user ${id}`,
+    ipAddress: getClientIp(request),
+  })
 
   return NextResponse.json({ success: true })
 }

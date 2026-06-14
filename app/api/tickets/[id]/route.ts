@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { logActivity, getClientIp } from "@/lib/activity";
 import { TicketStatus, TicketUrgency, TicketType } from "@prisma/client";
 
 export async function PATCH(
@@ -50,7 +51,23 @@ export async function PATCH(
 
   const prevStatus = existing.status;
   if (status !== undefined) {
-    data.status = status as TicketStatus;
+    const next = status as TicketStatus;
+    data.status = next;
+
+    // Track lifecycle timestamps so reports can measure solving time / refusals.
+    if (next === "DONE") {
+      // Stamp resolvedAt only on the transition into DONE (preserve original time on edits).
+      if (prevStatus !== "DONE") data.resolvedAt = new Date();
+    } else if (existing.resolvedAt) {
+      // Reopened: it is no longer resolved.
+      data.resolvedAt = null;
+    }
+
+    if (next === "CANCELLED") {
+      if (prevStatus !== "CANCELLED") data.closedAt = new Date();
+    } else if (existing.closedAt) {
+      data.closedAt = null;
+    }
   }
 
   const ticket = await prisma.ticket.update({
@@ -61,6 +78,18 @@ export async function PATCH(
       assignedOpd: { select: { name: true } },
       category: { select: { name: true } },
     },
+  });
+
+  const statusChanged = status !== undefined && ticket.status !== prevStatus;
+  await logActivity({
+    userId: auth.userId,
+    action: statusChanged ? "TICKET_STATUS_CHANGED" : "TICKET_UPDATED",
+    entityType: "Ticket",
+    entityId: ticket.id,
+    description: statusChanged
+      ? `Ticket ${ticket.ticketNumber} status changed from ${prevStatus} to ${ticket.status}`
+      : `Updated ticket ${ticket.ticketNumber}`,
+    ipAddress: getClientIp(req),
   });
 
   const isApproved = prevStatus === "ON_HOLD" && ticket.status !== "ON_HOLD";

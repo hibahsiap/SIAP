@@ -17,7 +17,7 @@ export const InteractionTabs = ({
   onChange, 
   activeColor = "bg-[#0D1B3E] text-white border-[#0D1B3E]" 
 }: InteractionTabsProps) => (
-  <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
+  <div className="flex flex-wrap gap-2 items-center pb-1">
     {tabs.map((tab) => {
       const isActive = activeTab === tab.id;
       return (

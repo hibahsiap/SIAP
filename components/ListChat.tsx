@@ -71,7 +71,7 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
   return (
     <aside className="w-full border-r flex flex-col h-full z-10">
       <div className="px-2 py-1 space-y-4 border-b">
-        <h2 className="text-3xl 2xl:text-4xl font-bold text-[#041942]">All Inbox</h2>
+        <h2 className="text-2xl 2xl:text-3xl font-bold text-[#041942]">All Inbox</h2>
 
         <div className="relative">
           <SearchField
@@ -82,7 +82,7 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
           />
         </div>
 
-        <div className="overflow-x-auto">
+        <div>
           <InteractionTabs
             tabs={inboxTabs}
             activeTab={filters.platform}

@@ -5,6 +5,8 @@ import {
   Lock,
   Phone,
   User,
+  Users,
+  Tag,
   FileText,
   LogIn,
   LogOut,
@@ -25,6 +27,8 @@ function iconForAction(action: string) {
   if (action.includes('LOGOUT')) return LogOut;
   if (action.includes('PROFILE')) return User;
   if (action.includes('TICKET')) return FileText;
+  if (action.includes('CATEGORY')) return Tag;
+  if (action.includes('USER')) return Users;
   return AlertCircle;
 }
 

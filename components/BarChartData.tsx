@@ -4,7 +4,9 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { Facebook, Instagram, TwitterX, Whatsapp } from "@boxicons/react"
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
 
-const chartData = [
+export type BarChartDatum = { channel: string; total: number }
+
+const fallbackData: BarChartDatum[] = [
     { channel: "x", total: 40 },
     { channel: "whatsapp", total: 200 },
     { channel: "facebook", total: 12 },
@@ -18,7 +20,8 @@ const chartConfig = {
     instagram: { label: "Instagram", icon: Instagram, color: "#FF0091" },
 } satisfies ChartConfig
 
-export function BarChartData() {
+export function BarChartData({ data }: { data?: BarChartDatum[] }) {
+    const chartData = data && data.length > 0 ? data : fallbackData
     return (
         <div className="bg-white flex flex-col gap-1 items-center border border-[#D2D2D2] rounded-[15px] p-3">
             <h3 className="text-[#546064] tracking-wide font-medium 2xl:text-lg">Tickets by Channel</h3>

@@ -287,8 +287,8 @@ export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'ne
         <SearchEmptyState type={"all"} />
       ) : (
 
-        <div className="w-full overflow-x-auto custom-scrollbar">
-            
+        <div className="w-full">
+
             <div className="flex gap-4 w-250 mb-2">
               {filteredColumns.map((column) => (
                 <div
