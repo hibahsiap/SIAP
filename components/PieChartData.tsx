@@ -56,7 +56,7 @@ export function PieChartData({ data }: { data?: PieChartDatum[] }) {
             ))}
           </Pie>
           <ChartTooltip content={<ChartTooltipContent />} />
-          <ChartLegend content={<ChartLegendContent />} />
+          <ChartLegend content={<ChartLegendContent className="gap-2 text-[12px] 2xl:text-xs" />} />
         </PieChart>
       </ChartContainer>
     </div>

@@ -16,7 +16,7 @@ const CardStats = ({title, number, trend, numberTrend}: CardStatsProps) => {
     return (
         <div className="bg-white px-5 py-4 rounded-[15px] border border-[#D2D2D2] flex flex-col gap-1.5">
             <h4 className="text-[#626262] uppercase font-medium text-xs 2xl:text-sm tracking-wide">{title}</h4>
-            <h3 className="text-black font-semibold text-2xl 2xl:text-3xl tracking-wide">{number}</h3>
+            <h3 className="text-black font-semibold text-3xl 2xl:text-4xl tracking-wide">{number}</h3>
 
             {/* tampilkan trend */}
             {isTrend && <>
