@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import Header from '@/components/Header'; 
+import React, { useState, useMemo, useEffect } from 'react';
+import Header from '@/components/Header';
 import TableTemplate2, { ColumnDefinition } from '@/components/TableTemplate2';
 import EmptyState from '@/components/EmptyState';
 import SearchEmptyState from '@/components/SearchEmpty';
 import DeleteAlertModal from '@/components/DeleteModal';
-import { ArrowUpRight, Loader, CircleChevronDown, Calendar, Trash2, Edit2, Forward } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
-import FilterSidebar, { FilterState } from '@/components/Filter'; 
-import { pendingTickets, allTickets, aspirationTickets} from '@/constants/ticketsDummy';
+import FilterSidebar, { FilterState } from '@/components/Filter';
 import KanbanBoard from '@/components/spectrumui/kanbanboard';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -17,33 +16,58 @@ import { isWithinRange } from '@/utils/dateFilter';
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
-    "On Hold": "bg-[#F5E6E0] text-[#B06B52]",
-    "In Progress": "bg-[#E0EBFA] text-[#4A80D4]",
-    "Done": "bg-[#E3F2E7] text-[#4C9A61]",
+    "To Do":      "bg-[#F7D9D5] text-[#6D3531]",
+    "In Progress":"bg-[#C1DEF5] text-[#264A72]",
+    "Done":       "bg-[#D7E6DD] text-[#2A533C]",
+    "On Hold":    "bg-[#E7D9CF] text-[#584437]",
+    "Canceled":   "bg-[#E1DFDC] text-[#494846]",
   };
   const dotColors: Record<string, string> = {
-    "On Hold": "bg-[#B06B52]",
-    "In Progress": "bg-[#4A80D4]",
-    "Done": "bg-[#4C9A61]",
+    "To Do":      "bg-[#E56458]",
+    "In Progress":"bg-[#2783DE]",
+    "Done":       "bg-[#46A171]",
+    "On Hold":    "bg-[#B68965]",
+    "Canceled":   "bg-[#8E8B86]",
   };
+  const style = styles[status] ?? "bg-gray-100 text-gray-600";
+  const dot   = dotColors[status] ?? "bg-gray-500";
   return (
-    <div className={`mx-auto inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[status]} w-30`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${dotColors[status]}`}></span>
+    <div className={`mx-auto inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full text-[11px] 2xl:text-[13px] font-bold tracking-wide ${style} w-30`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`}></span>
       {status}
     </div>
   );
 };
 
-const getBadge = (text: string, type: 'issue' | 'priority') => {
+const formatDate = (val: string | null) => {
+  if (!val) return "-";
+  return new Date(val).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+};
+
+const typeLabel: Record<string, string> = {
+  COMPLAINT: "Pengaduan",
+  QUESTION:  "Pertanyaan",
+  FEEDBACK:  "Saran",
+};
+
+const getTypeBadge = (type: string | null) => {
+  if (!type) return <span className="text-gray-400">-</span>;
+  const display = typeLabel[type] ?? type;
   const styles: Record<string, string> = {
-    "Social": "bg-red-100/80 text-red-700",
-    "Health": "bg-purple-100/80 text-purple-700",
-    "Traffic": "bg-[#F5E6E0] text-[#B06B52]", 
-    "Low": "bg-[#E3F2E7] text-[#4C9A61]",
-    "Medium": "bg-yellow-100/80 text-yellow-700",
-    "High": "bg-red-100/80 text-red-700",
+    Pengaduan:  "bg-red-100/80 text-red-700",
+    Pertanyaan: "bg-blue-100/80 text-blue-700",
+    Saran:      "bg-green-100/80 text-green-700",
   };
-  return <div className={`w-18 px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[text]}`}>{text}</div>;
+  return <span className={`px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-600"}`}>{display}</span>;
+};
+
+const getPriorityBadge = (priority: string) => {
+  const styles: Record<string, string> = {
+    "Low":    "bg-[#E3F2E7] text-[#4C9A61]",
+    "Medium": "bg-yellow-100/80 text-yellow-700",
+    "High":   "bg-red-100/80 text-red-700",
+  };
+  return <div className={`px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[priority] ?? "bg-gray-100 text-gray-600"}`}>{priority}</div>;
 };
 
 type TabCategory = 'kanban' | 'all' | 'aspirations';
@@ -53,8 +77,11 @@ export default function TicketsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { openEditModal, openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const [allTicketsData, setAllTicketsData] = useState<any[]>([]);
+  const [aspirationsData, setAspirationsData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [appliedFilters, setAppliedFilters] = useState<FilterState>({
     opds: [],
@@ -64,21 +91,35 @@ export default function TicketsPage() {
     rangeTime: "",
   });
 
-  const currentData = useMemo(() => {
-    if (activeTab === 'all') return allTickets;
-    return aspirationTickets;
+  useEffect(() => {
+    if (activeTab === 'kanban') return;
+
+    const tab = activeTab === 'aspirations' ? 'aspirations' : 'all';
+    setIsLoading(true);
+
+    fetch(`/api/opd/tickets?tab=${tab}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then((data) => {
+        if (tab === 'all') setAllTicketsData(data);
+        else setAspirationsData(data);
+      })
+      .catch((err) => {
+        console.error("[OPD Tickets] failed to load", err);
+        toast.error("Gagal memuat data tiket");
+      })
+      .finally(() => setIsLoading(false));
   }, [activeTab]);
+
+  const currentData = useMemo(() => {
+    if (activeTab === 'all') return allTicketsData;
+    return aspirationsData;
+  }, [activeTab, allTicketsData, aspirationsData]);
 
   const filteredData = useMemo(() => {
     const filtered = currentData.filter((item: any) => {
-      // Filter search query (tidak berubah)
       const searchStr = searchQuery.toLowerCase();
       const searchField = item.taskName || item.pengirim || "";
       if (!searchField.toLowerCase().includes(searchStr)) return false;
-
-      if (appliedFilters.opds.length > 0 && item.opd) {
-        if (!appliedFilters.opds.includes(item.opd)) return false;
-      }
 
       if (appliedFilters.classifications.length > 0) {
         if (!appliedFilters.classifications.includes(item.status)) return false;
@@ -100,22 +141,19 @@ export default function TicketsPage() {
     });
 
     return [...filtered].sort((a: any, b: any) => {
-      // Pakai startDate jika ada, fallback ke id
       const getTime = (item: any) => {
         if (item.startDate) {
           const d = new Date(item.startDate);
           return isNaN(d.getTime()) ? 0 : d.getTime();
         }
-        return item.id ?? 0;
+        return 0;
       };
       return sortOrder === 'newest'
         ? getTime(b) - getTime(a)
         : getTime(a) - getTime(b);
     });
+  }, [currentData, searchQuery, appliedFilters, sortOrder]);
 
-  }, [currentData, searchQuery, appliedFilters, sortOrder]); 
-
-  // Kolom dibuat dinamis berdasarkan Tab yang aktif
   const columns = useMemo<ColumnDefinition[]>(() => {
     const messageColumn = {
       header: "Pesan Aspirasi",
@@ -127,58 +165,59 @@ export default function TicketsPage() {
       )
     };
 
-    if (activeTab === 'kanban') {
-      return [];
-    } else if (activeTab === 'all') {
+    if (activeTab === 'kanban') return [];
+
+    if (activeTab === 'all') {
       return [
-        { 
-          header: "Task Name", 
-          key: "taskName", 
-          // cell: (val) => <span className="whitespace-normal min-w-[150px] inline-block font-bold">{val}</span> 
-          cell: (val, row: any) => (
+        {
+          header: "Task Name",
+          key: "taskName",
+          cell: (val: string, row: any) => (
             <Link href={`/opd/tickets/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
           )
         },
-        { header: "OPD", key: "opd", className: "text-center", cell: (val) => <div className="w-[180px] whitespace-normal break-words">{val}</div>,  },
-        { header: "Status", key: "status", cell: (val) => getStatusBadge(val) },
-        { header: "Issue Type", key: "issueType", cell: (val) => getBadge(val, 'issue') },
-        { header: "Priority", key: "priority", cell: (val) => getBadge(val, 'priority') },
-        { header: "Start Date", key: "startDate" },
-        { header: "Due Date", key: "dueDate" },
-        messageColumn
-      ];
-    } else {
-      return [
-        { 
-          header: "Pengirim", 
-          key: "pengirim", 
-          className: "text-center", 
-          // cell: (val) => <span className="whitespace-normal min-w-[100px] inline-block font-bold">{val}</span> 
-          cell: (val, row: any) => (
-            <Link href={`/opd/tickets/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
-              {val}
-            </Link>
-          )
-        },
-        { header: "Status", key: "status", cell: (val) => getStatusBadge(val) },
-        { header: "Priority", key: "priority", cell: (val) => getBadge(val, 'priority') },
+        { header: "OPD", key: "opd", className: "text-center", cell: (val: string) => <div className="w-[180px] whitespace-normal break-words">{val}</div> },
+        { header: "Status", key: "status", className: "text-center", cell: (val: string) => getStatusBadge(val) },
+        { header: "Type", key: "type", className: "text-center", cell: (val: string) => getTypeBadge(val) },
+        { header: "Category", key: "categoryName", className: "text-center", cell: (val: string) => val ?? "-" },
+        { header: "Priority", key: "priority", className: "text-center", cell: (val: string) => getPriorityBadge(val) },
+        { header: "Start Date", key: "startDate", className: "text-center", cell: (val: string) => formatDate(val) },
+        { header: "Due Date", key: "dueDate", className: "text-center", cell: (val: string) => formatDate(val) },
         messageColumn,
-        { header: "Action", key: "action", cell: (_, row) => (
-            <button onClick={() => openDeleteModal(row)} className="text-gray-400 hover:text-red-500 transition-colors">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )
-        }
       ];
     }
-  }, [activeTab, openEditModal, openDeleteModal]);
+
+    return [
+      {
+        header: "Pengirim",
+        key: "pengirim",
+        className: "text-center",
+        cell: (val: string, row: any) => (
+          <Link href={`/opd/tickets/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
+            {val}
+          </Link>
+        )
+      },
+      { header: "Status", key: "status", className: "text-center", cell: (val: string) => getStatusBadge(val) },
+      { header: "Priority", key: "priority", className: "text-center", cell: (val: string) => getPriorityBadge(val) },
+      messageColumn,
+      {
+        header: "Action",
+        key: "action",
+        cell: (_: any, row: any) => (
+          <button onClick={() => openDeleteModal(row)} className="text-gray-400 hover:text-red-500 transition-colors">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )
+      },
+    ];
+  }, [activeTab, openDeleteModal]);
 
   return (
     <div className="flex flex-col min-w-0 w-full h-screen px-4 py-2">
 
-      {/* --- TABS & SEARCH HEADER --- */}
       <div className="shrink-0 flex flex-col gap-4 py-4 mb-4 lg:flex-row lg:justify-between lg:items-center">
         <div className="flex flex-wrap gap-2">
           {[{ id: 'kanban', label: 'Kanban' },
@@ -192,25 +231,28 @@ export default function TicketsPage() {
                 activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
               }`}
             >
-              {tab.id.charAt(0).toUpperCase() + tab.id.slice(1)}
+              {tab.label}
             </button>
           ))}
         </div>
         <div className="w-auto">
-            <Header 
-              searchQuery={searchQuery} 
-              setSearchQuery={setSearchQuery} 
-              onFilterClick={() => setIsFilterOpen(true)}
-              sortOrder={sortOrder}
-              onSortChange={setSortOrder}
-            /> 
+          <Header
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onFilterClick={() => setIsFilterOpen(true)}
+            sortOrder={sortOrder}
+            onSortChange={setSortOrder}
+          />
         </div>
       </div>
 
-      {/* --- AREA KONTEN (LOGIKA SWITCH) --- */}
       <div className="flex-1 min-h-0 overflow-auto scrollbar-thick pb-1">
         {activeTab === 'kanban' ? (
           <KanbanBoard searchQuery={searchQuery} filters={appliedFilters} sortOrder={sortOrder} />
+        ) : isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-[#1D2F58]" />
+          </div>
         ) : filteredData.length > 0 ? (
           <div className="w-full">
             <TableTemplate2 columns={columns} data={filteredData as any} />
@@ -218,30 +260,30 @@ export default function TicketsPage() {
         ) : searchQuery !== "" ? (
           <SearchEmptyState type={activeTab} />
         ) : (
-          <EmptyState 
-            title={`There is currently no data available`} 
-            description="Please add new data to see it displayed here." 
+          <EmptyState
+            title="There is currently no data available"
+            description="Please add new data to see it displayed here."
           />
         )}
       </div>
 
-      <DeleteAlertModal 
-        isOpen={isDeleteModalOpen} 
-        onClose={closeDeleteModal} 
-        onConfirm={() => { 
-          toast.success("Ticket deleted successfully"); 
-          closeDeleteModal(); 
-        }} 
-        itemName={activeTab === 'aspirations' ? "aspiration message" : "task"} 
+      <DeleteAlertModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={() => {
+          toast.success("Ticket deleted successfully");
+          closeDeleteModal();
+        }}
+        itemName={activeTab === 'aspirations' ? "aspiration message" : "task"}
       />
 
-      <FilterSidebar 
-        isOpen={isFilterOpen} 
-        onClose={() => setIsFilterOpen(false)} 
+      <FilterSidebar
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
         filterState={appliedFilters}
         onApply={(filters) => setAppliedFilters(filters)}
       />
-      
+
     </div>
   );
 }

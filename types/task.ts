@@ -1,5 +1,4 @@
 import type { TaskStatus } from "@/components/StatusBadge"
-import type { IssueType } from "@/components/IssueBadge"
 import type { Priority } from "@/components/PriorityBadge"
 
 export type Task = {
@@ -8,10 +7,11 @@ export type Task = {
   aspirasi: string
   images: string[]
   status: TaskStatus
-  issueType: IssueType
+  categoryId: string | null
+  categoryName: string | null
   opd: string
   priority: Priority
-  startDate: string // ISO date string
-  dueDate: string // ISO date string
+  startDate: string
+  dueDate: string
   gallery: string[]
 }

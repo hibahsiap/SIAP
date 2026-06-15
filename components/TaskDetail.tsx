@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   ClipboardList,
   FileText,
@@ -26,9 +26,10 @@ import { useReturnStore } from "@/store/useReturnStore"
 import { formatDate } from "@/lib/formatdate"
 import type { Task } from "@/types/task"
 import type { TaskStatus } from "@/components/StatusBadge"
-import type { IssueType } from "@/components/IssueBadge"
 import type { Priority } from "@/components/PriorityBadge"
 import UpdateProgressModal from "./UpdateProgressModal"
+
+type CategoryItem = { id: string; name: string }
 
 type Props = {
   task: Task
@@ -37,10 +38,18 @@ type Props = {
 export default function TaskDetailContent({ task }: Props) {
   const openReturnModal = useReturnStore((state) => state.open)
 
-  // 1. State Edit Properties (Status, Issue, Priority)
+  // 1. State Edit Properties (Status, Category, Priority)
   const [status, setStatus] = useState<TaskStatus>(task.status)
-  const [issueType, setIssueType] = useState<IssueType>(task.issueType)
+  const [categoryId, setCategoryId] = useState<string>(task.categoryId ?? "")
   const [priority, setPriority] = useState<Priority>(task.priority)
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+
+  useEffect(() => {
+    fetch("/api/category")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setCategories(Array.isArray(data) ? data : data.data ?? []))
+      .catch(() => setCategories([]))
+  }, [])
   
   // 2. End Date State (Awalnya kosong kalau belum Done/Cancelled)
   const [endDate, setEndDate] = useState<string>(
@@ -60,9 +69,9 @@ export default function TaskDetailContent({ task }: Props) {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   // Tambahkan state untuk melacak perubahan (Dirty Checking)
-  const hasChanges = 
-    status !== task.status || 
-    issueType !== task.issueType || 
+  const hasChanges =
+    status !== task.status ||
+    categoryId !== (task.categoryId ?? "") ||
     priority !== task.priority ||
     galleryImages.length !== (task.gallery?.length || 0);
 
@@ -148,19 +157,16 @@ export default function TaskDetailContent({ task }: Props) {
               </Select>
             </TaskInfoRow>
 
-            {/* Edit Issue Type */}
-            <TaskInfoRow icon={CircleChevronDown} label="Issue Type">
-              <Select value={issueType} onValueChange={(val) => setIssueType(val as IssueType)}>
+            {/* Edit Category */}
+            <TaskInfoRow icon={CircleChevronDown} label="Category">
+              <Select value={categoryId} onValueChange={setCategoryId}>
                 <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
-                  <SelectValue placeholder="Pilih Issue Type" />
+                  <SelectValue placeholder="Pilih Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="health">Health</SelectItem>
-                  <SelectItem value="infrastructure">Infrastructure</SelectItem>
-                  <SelectItem value="education">Education</SelectItem>
-                  <SelectItem value="social">Social</SelectItem>
-                  <SelectItem value="environment">Environment</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </TaskInfoRow>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 // import { Badge } from '@/components/ui/badge';
 // import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import SearchEmptyState from '../SearchEmpty';
 import { FilterState } from '../Filter';
 import { isWithinRange } from '@/utils/dateFilter';
+import { Loader2 } from 'lucide-react';
 // import ToastFrame from './ToastFrame';
 
 
@@ -36,112 +37,13 @@ interface Task {
   badge?: string
 }
 
-const sampleData: Column[] = [
-  {
-    id: "todo",
-    title: "To Do",
-    bg: "#FDF6F6",
-    text: "#6D3531",
-    dot: "#E56458",
-    badge: "#F7D9D5",
-    tasks: [
-      {
-        id: "1",
-        taskName: "Laporan kemajuan dan keuangan",
-        message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        status: "todo",
-        issueType: ["Health", "Finance"],
-        startDate: "2026-06-06",
-        priority: "high",
-      },
-      {
-        id: "2",
-        taskName: "Laporan Jalan Rusak",
-        message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        status: "todo",
-        issueType: ["Infrastructure"],
-        startDate: "2026-05-27",
-        priority: "low",
-      },
-    ],
-  },
-  {
-    id: "progress",
-    title: "In Progress",
-    bg: "#F3F9FD",
-    text: "#264A72",
-    dot: "#2783DE",
-    badge: "#C1DEF5",
-    tasks: [
-      {
-        id: "3",
-        taskName: "Layanan Pembuatan Akta",
-        message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        status: "progress",
-        issueType: ["Administration"],
-        startDate: "2026-06-01",
-        priority: "high",
-      },
-    ],
-  },
-  {
-    id: "done",
-    title: "Done",
-    bg: "#F6F9F7",
-    text: "#2A533C",
-    dot: "#46A171",
-    badge: "#D7E6DD",
-    tasks: [
-      {
-        id: "4",
-        taskName: "Laporan Tukang Parkir Liar",
-        message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        status: "done",
-        issueType: ["Social"],
-        startDate: "2026-05-15",
-        priority: "medium",
-      },
-    ],
-  },
-  {
-    id: "hold",
-    title: "On Hold",
-    bg: "#FAF8F6",
-    text: "#584437",
-    dot: "#B68965",
-    badge: "#E7D9CF",
-    tasks: [
-      {
-        id: "5",
-        taskName: "Marak Kopisop",
-        message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        status: "hold",
-        issueType: ["Social"],
-        startDate: "2026-05-31",
-        priority: "medium",
-      },
-    ],
-  },
-  {
-    id: "cancel",
-    title: "Canceled",
-    bg: "#F9F8F7",
-    text: "#494846",
-    dot: "#8E8B86",
-    badge: "#E1DFDC",
-    tasks: [
-      {
-        id: "6",
-        taskName: "Marak Penipuan",
-        message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        status: "hold",
-        issueType: ["Social"],
-        startDate: "2026-06-04",
-        priority: "medium",
-      },
-    ],
-  },
-]
+const COLUMN_TEMPLATES: Omit<Column, 'tasks'>[] = [
+  { id: "todo",     title: "To Do",      bg: "#FDF6F6", text: "#6D3531", dot: "#E56458", badge: "#F7D9D5" },
+  { id: "progress", title: "In Progress",bg: "#F3F9FD", text: "#264A72", dot: "#2783DE", badge: "#C1DEF5" },
+  { id: "done",     title: "Done",       bg: "#F6F9F7", text: "#2A533C", dot: "#46A171", badge: "#D7E6DD" },
+  { id: "hold",     title: "On Hold",    bg: "#FAF8F6", text: "#584437", dot: "#B68965", badge: "#E7D9CF" },
+  { id: "cancel",   title: "Canceled",   bg: "#F9F8F7", text: "#494846", dot: "#8E8B86", badge: "#E1DFDC" },
+];
 
 const priorityColors = {
   low: "border-green-400 bg-green-50 text-green-700",
@@ -151,7 +53,25 @@ const priorityColors = {
 
 export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'newest', }: { searchQuery?: string, filters?: FilterState; sortOrder?: 'newest' | 'oldest'; }) {
 
-  const [columns, setColumns] = useState<Column[]>(sampleData);
+  const [columns, setColumns] = useState<Column[]>(
+    COLUMN_TEMPLATES.map((c) => ({ ...c, tasks: [] }))
+  );
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/opd/tickets?tab=kanban")
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then((tasks: Task[]) => {
+        setColumns(
+          COLUMN_TEMPLATES.map((col) => ({
+            ...col,
+            tasks: tasks.filter((t) => t.status === col.id),
+          }))
+        );
+      })
+      .catch((err) => console.error("[KanbanBoard] failed to load", err))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const filteredColumns = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -210,9 +130,10 @@ export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'ne
             : getTime(a) - getTime(b);
         }),
 
-    }))
-    .filter((col) => col.tasks.length > 0);
+    }));
   }, [searchQuery, columns, filters, sortOrder]);
+
+  const hasAnyTask = filteredColumns.some((col) => col.tasks.length > 0);
 
   const router = useRouter();
 
@@ -283,7 +204,11 @@ export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'ne
   return (
     <div className="mb-4 flex flex-col -mt-2 relative">
 
-      {filteredColumns.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-[#1D2F58]" />
+        </div>
+      ) : !hasAnyTask && (searchQuery || (filters && (filters.classifications.length > 0 || filters.issues.length > 0 || filters.priorities.length > 0 || filters.rangeTime))) ? (
         <SearchEmptyState type={"all"} />
       ) : (
 

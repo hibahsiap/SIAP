@@ -51,18 +51,18 @@ const typeLabel: Record<string, string> = {
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
-    "On Hold": "bg-[#F5E6E0] text-[#B06B52]",
-    "To Do": "bg-[#E0EBFA] text-[#4A80D4]",
-    "In Progress": "bg-[#E0EBFA] text-[#4A80D4]",
-    "Done": "bg-[#E3F2E7] text-[#4C9A61]",
-    "Cancelled": "bg-gray-100 text-gray-500",
+    "To Do":      "bg-[#F7D9D5] text-[#6D3531]",
+    "In Progress":"bg-[#C1DEF5] text-[#264A72]",
+    "Done":       "bg-[#D7E6DD] text-[#2A533C]",
+    "On Hold":    "bg-[#E7D9CF] text-[#584437]",
+    "Cancelled":  "bg-[#E1DFDC] text-[#494846]",
   };
   const dotColors: Record<string, string> = {
-    "On Hold": "bg-[#B06B52]",
-    "To Do": "bg-[#4A80D4]",
-    "In Progress": "bg-[#4A80D4]",
-    "Done": "bg-[#4C9A61]",
-    "Cancelled": "bg-gray-500",
+    "To Do":      "bg-[#E56458]",
+    "In Progress":"bg-[#2783DE]",
+    "Done":       "bg-[#46A171]",
+    "On Hold":    "bg-[#B68965]",
+    "Cancelled":  "bg-[#8E8B86]",
   };
   const display = statusLabel[status] ?? status;
   return (
@@ -248,7 +248,7 @@ export default function TicketsPage() {
           )
         },
         { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => <div className="w-[280px] whitespace-normal break-words">{val ?? "-"}</div> },
-        { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
+        { header: "Status", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
         { header: "Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
         { header: "Category", key: "categoryName", className: "text-center", cell: (val: any) => val ?? "-" },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
@@ -282,8 +282,8 @@ export default function TicketsPage() {
           )
         },
         { header: "OPD", key: "opdName", className: "text-center", cell: (val: any) => <div className="w-[180px] whitespace-normal break-words">{val ?? "-"}</div> },
-        { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
-        { header: "Issue Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
+        { header: "Status", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
+        { header: "Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
         { header: "Start date", key: "createdAt", className: "text-center", cell: (val: any) => formatDate(val) },
         { header: "Due date", key: "dueDate", className: "text-center", cell: (val: any) => formatDate(val) },
@@ -305,7 +305,7 @@ export default function TicketsPage() {
             </Link>
           )
         },
-        { header: "Clasification", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
+        { header: "Status", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
         messageColumn,
         { header: "Action", key: "id", className: "text-center", cell: (_: any, row: any) => (

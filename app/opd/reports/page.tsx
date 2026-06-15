@@ -81,7 +81,7 @@ export default function Reports() {
     return (
         <div className="flex flex-col gap-5 pl-4 pr-6 py-2">
             <div className="flex flex-row items-center justify-between py-1">
-                <h1 className="font-bold text-2xl 2xl:text-3xl text-[#041942]">Report</h1>
+                <h1 className="font-bold text-3xl 2xl:text-4xl text-[#041942]">Report</h1>
             </div>
 
             {isLoading ? (
@@ -90,7 +90,7 @@ export default function Reports() {
                 </div>
             ) : (
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-4 gap-4">
                         {stats.map((stat, index) => (
                             <CardStats
                                 key={index}
@@ -101,7 +101,7 @@ export default function Reports() {
                             />
                         ))}
                     </div>
-                    <div className="grid grid-cols-1 xl:grid-cols-[1fr_245px_245px] gap-4">
+                    <div className="grid grid-cols-[1fr_245px_245px] gap-4">
                         <GroupChart data={data?.responseTime} />
                         <PieChartData data={data?.messagesDistribution} />
                         <BarChartData data={data?.ticketsByChannel} />
@@ -117,7 +117,7 @@ export default function Reports() {
                             />
                         </div>
 
-                        <div className="w-full overflow-x-auto custom-scrollbar">
+                        <div className="w-full">
                             {filteredCategories.length > 0 ? (
                                 <TableTemplate columns={categoryColumns} data={filteredCategories as any} position="text-center" />
                             ) : searchQuery !== "" ? (
