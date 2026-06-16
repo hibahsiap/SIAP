@@ -37,6 +37,7 @@ type CategoryItem = { id: string; name: string }
 const STATUS_TO_ENUM: Record<TaskStatus, string> = {
   "open": "TO_DO",
   "in-progress": "IN_PROGRESS",
+  "on-hold": "ON_HOLD",
   "completed": "DONE",
   "cancelled": "CANCELLED",
 }
@@ -56,6 +57,10 @@ type Props = {
 export default function TaskDetailContent({ task, apiBase = "/api/opd/tickets" }: Props) {
   const openReturnModal = useReturnStore((state) => state.open)
   const router = useRouter()
+
+  // Admin manages the full lifecycle (incl. On Hold / pending review);
+  // OPD never sees On Hold tickets and uses "Return to Admin" instead.
+  const isAdmin = apiBase === "/api/tickets"
 
   // 1. State Edit Properties (Status, Category, Priority)
   const [status, setStatus] = useState<TaskStatus>(task.status)
@@ -117,8 +122,16 @@ export default function TaskDetailContent({ task, apiBase = "/api/opd/tickets" }
   }
 
   const handleConfirmReturn = async (ticketId: string, reason: string) => {
-    console.log("Return ticket:", { ticketId, reason })
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const res = await fetch(`/api/opd/tickets/${ticketId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "ON_HOLD", note: reason }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error ?? "Failed to return ticket")
+    }
+    router.push("/opd/tickets")
   }
 
   // Modal Add Image Logic
@@ -214,9 +227,10 @@ export default function TaskDetailContent({ task, apiBase = "/api/opd/tickets" }
                   <SelectValue placeholder="Pilih Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="open">Open</SelectItem>
+                  <SelectItem value="open">To Do</SelectItem>
                   <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed / Done</SelectItem>
+                  {isAdmin && <SelectItem value="on-hold">On Hold</SelectItem>}
+                  <SelectItem value="completed">Done</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>

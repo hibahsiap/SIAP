@@ -32,16 +32,13 @@ export async function POST(request: NextRequest) {
 
   const { name, email, password, phone, role, opdName } = await request.json()
 
-  if (!name || !email || !password) {
-    return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 })
+  if (!name || !email || !password || !phone) {
+    return NextResponse.json({ error: 'Name, email, password, and phone are required' }, { status: 400 })
   }
 
-  let normalizedPhone: string | null = null
-  if (phone) {
-    normalizedPhone = normalizePhone(phone)
-    if (!normalizedPhone) {
-      return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 })
-    }
+  const normalizedPhone = normalizePhone(phone)
+  if (!normalizedPhone) {
+    return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 })
   }
 
   const existing = await prisma.user.findUnique({ where: { email } })

@@ -466,7 +466,7 @@ Deno.serve(async (req: Request) => {
 
             const { data: newCitizen, error: citizenErr } = await supabase
               .from('Citizen')
-              .insert({ displayName, updatedAt: new Date() })
+              .insert({ id: crypto.randomUUID(), displayName, updatedAt: new Date() })
               .select('id')
               .single()
             if (citizenErr || !newCitizen) {
@@ -476,6 +476,7 @@ Deno.serve(async (req: Request) => {
             citizenId = newCitizen.id
 
             const { error: contactErr } = await supabase.from('CitizenContact').insert({
+              id: crypto.randomUUID(),
               platform: 'INSTAGRAM',
               handle: senderId,
               username: profile.username ?? null,
@@ -706,26 +707,70 @@ Deno.serve(async (req: Request) => {
           if (field !== 'comments' && field !== 'mentions') continue
 
           const val = change.value
-          const commentId: string = val.id
-          const username: string = val.from?.username ?? val.from?.id ?? 'unknown'
-          const content: string = val.text ?? '[no text]'
-          const mediaId: string = val.media?.id ?? ''
-          const capturedAt = val.timestamp ? new Date(val.timestamp * 1000) : new Date()
           const interactionType = field === 'mentions' ? 'MENTION' : 'COMMENT'
+          const capturedAt = val.timestamp ? new Date(val.timestamp * 1000) : new Date()
+
+          let externalId: string | undefined
+          let username = 'unknown'
+          let content = '[no text]'
+          let mediaId = ''
+          let permalink: string | null = null
+
+          if (field === 'comments') {
+            // Comment payload carries author + text inline.
+            externalId = val.id
+            username = val.from?.username ?? val.from?.id ?? 'unknown'
+            content = val.text ?? '[no text]'
+            mediaId = val.media?.id ?? ''
+          } else {
+            // Mention payload only carries ids (media_id, optionally comment_id) — no
+            // text/author. Resolve the real content via the Mentions API.
+            const commentIdM: string | undefined = val.comment_id
+            mediaId = val.media_id ?? ''
+            externalId = commentIdM ?? mediaId
+
+            if (channel.accessToken && channel.accountId) {
+              try {
+                const fields = commentIdM
+                  ? `mentioned_comment.comment_id(${commentIdM}){text,username,media{permalink}}`
+                  : `mentioned_media.media_id(${mediaId}){caption,username,permalink}`
+                const mentionRes = await fetch(
+                  `https://graph.instagram.com/${igGraphVersion}/${channel.accountId}` +
+                  `?fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(channel.accessToken)}`
+                )
+                if (mentionRes.ok) {
+                  const md = await mentionRes.json()
+                  const node = md.mentioned_comment ?? md.mentioned_media
+                  if (node) {
+                    content = node.text ?? node.caption ?? content
+                    username = node.username ?? username
+                    permalink = node.permalink ?? node.media?.permalink ?? null
+                  }
+                } else {
+                  console.warn(`[Webhook] Mentions API fetch failed: ${mentionRes.status} ${await mentionRes.text()}`)
+                }
+              } catch (err) {
+                console.warn('[Webhook] Error fetching mention content:', err)
+              }
+            }
+          }
+
+          if (!externalId) {
+            console.warn(`[Webhook] Skipping ${interactionType}: missing externalId`, JSON.stringify(val))
+            continue
+          }
 
           const { data: existing } = await supabase
             .from('SocialInteraction')
             .select('id')
             .eq('channelId', channel.id)
-            .eq('externalId', commentId)
+            .eq('externalId', externalId)
             .maybeSingle()
 
           if (existing) continue
 
-          // Fetch permalink dari Graph API karena media.id adalah numeric ID,
-          // bukan shortcode yang dipakai di URL publik Instagram
-          let permalink: string | null = null
-          if (mediaId && channel.accessToken) {
+          // Fallback: resolve permalink from the media id (numeric, not the public shortcode).
+          if (!permalink && mediaId && channel.accessToken) {
             try {
               const mediaRes = await fetch(
                 `https://graph.instagram.com/${igGraphVersion}/${mediaId}?fields=permalink&access_token=${encodeURIComponent(channel.accessToken)}`
@@ -744,7 +789,7 @@ Deno.serve(async (req: Request) => {
           const { error: insertError } = await supabase.from('SocialInteraction').insert({
             id: crypto.randomUUID(),
             interactionType,
-            externalId: commentId,
+            externalId,
             username,
             content,
             permalink,
@@ -758,7 +803,7 @@ Deno.serve(async (req: Request) => {
             continue
           }
 
-          console.log(`[Webhook] ${interactionType} saved: ${commentId} from @${username}`)
+          console.log(`[Webhook] ${interactionType} saved: ${externalId} from @${username}`)
         }
       }
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { ChangeEvent } from "react";
+import { ChangeEvent, ReactNode } from "react";
 
 interface FieldProps {
-    icon?: any;
+    icon?: ReactNode;
     title: string;
     placeholder: string;
     value: string; 

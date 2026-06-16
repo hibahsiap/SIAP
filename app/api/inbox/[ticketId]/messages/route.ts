@@ -232,8 +232,6 @@ export async function POST(
   );
   } catch (err) {
     console.error("[POST /api/inbox/[ticketId]/messages] Error:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    const stack = err instanceof Error ? err.stack : undefined;
-    return NextResponse.json({ error: message, stack }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

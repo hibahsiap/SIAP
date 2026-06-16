@@ -55,7 +55,7 @@ export async function GET(
               },
             },
             forwardedToTicket: {
-              select: { id: true, ticketNumber: true, assignedOpdId: true, assignedOpd: { select: { id: true, name: true } } },
+              select: { id: true, ticketNumber: true, assignedOpdId: true, status: true, assignedOpd: { select: { id: true, name: true } } },
             },
             forwardedToOpd: { select: { id: true, name: true } },
             attachments: {
@@ -84,7 +84,7 @@ export async function GET(
 
       const opdTicketIds = new Set(
         conv.tickets
-          .filter((t) => t.assignedOpd?.id === user?.opdId)
+          .filter((t) => t.assignedOpd?.id === user?.opdId && t.status !== "ON_HOLD")
           .map((t) => t.id)
       );
 
@@ -102,7 +102,10 @@ export async function GET(
         (m) =>
           (m.direction === "OUTBOUND" && m.senderUser?.opdId === user?.opdId) ||
           (m.forwardedToOpdId === user?.opdId) ||
-          (m.forwardedToTicketId !== null && (opdTicketIds.has(m.forwardedToTicketId) || m.forwardedToTicket?.assignedOpdId === user?.opdId))
+          (m.forwardedToTicketId !== null && (
+            opdTicketIds.has(m.forwardedToTicketId) ||
+            (m.forwardedToTicket?.assignedOpdId === user?.opdId && m.forwardedToTicket?.status !== "ON_HOLD")
+          ))
       );
     }
 
@@ -130,7 +133,7 @@ export async function GET(
         forwardedToOpdId: m.forwardedToOpdId,
         forwardedToTicketNumber: m.forwardedToTicket?.ticketNumber ?? null,
         forwardedToOpdName: m.forwardedToOpd?.name ?? m.forwardedToTicket?.assignedOpd?.name ?? null,
-        ticket: m.ticket
+        ticket: m.ticket && (auth.role !== "OPD" || m.ticket.status !== "ON_HOLD")
           ? {
             id: m.ticket.id,
             ticketNumber: m.ticket.ticketNumber,
@@ -162,8 +165,8 @@ export async function GET(
           : null,
       })),
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("[GET /api/inbox/[ticketId]] Error:", err);
-    return NextResponse.json({ error: err.message, stack: err.stack }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -21,7 +21,7 @@ interface Task {
   id: string
   taskName: string
   message?: string
-  status?: "todo" | "progress" | "done" | "hold"
+  status?: "todo" | "progress" | "done" | "cancel"
   priority?: "low" | "medium" | "high"
   issueType?: string[]
   startDate?: string
@@ -41,8 +41,7 @@ const COLUMN_TEMPLATES: Omit<Column, 'tasks'>[] = [
   { id: "todo",     title: "To Do",      bg: "#FDF6F6", text: "#6D3531", dot: "#E56458", badge: "#F7D9D5" },
   { id: "progress", title: "In Progress",bg: "#F3F9FD", text: "#264A72", dot: "#2783DE", badge: "#C1DEF5" },
   { id: "done",     title: "Done",       bg: "#F6F9F7", text: "#2A533C", dot: "#46A171", badge: "#D7E6DD" },
-  { id: "hold",     title: "On Hold",    bg: "#FAF8F6", text: "#584437", dot: "#B68965", badge: "#E7D9CF" },
-  { id: "cancel",   title: "Canceled",   bg: "#F9F8F7", text: "#494846", dot: "#8E8B86", badge: "#E1DFDC" },
+  { id: "cancel",   title: "Cancelled",  bg: "#F9F8F7", text: "#494846", dot: "#8E8B86", badge: "#E1DFDC" },
 ];
 
 const priorityColors = {
@@ -55,7 +54,6 @@ const COLUMN_TO_STATUS: Record<string, string> = {
   todo: "TO_DO",
   progress: "IN_PROGRESS",
   done: "DONE",
-  hold: "ON_HOLD",
   cancel: "CANCELLED",
 };
 
@@ -98,29 +96,20 @@ export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'ne
         if (!matchSearch) return false;
 
         if (filters?.priorities && filters.priorities.length > 0) {
-          const taskPriority = task.priority
-            ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) // "high" → "High"
-            : "";
+          // Kanban card priority is lowercase ("high"); filter stores enums ("HIGH").
+          const taskPriority = task.priority ? task.priority.toUpperCase() : "";
           if (!filters.priorities.includes(taskPriority)) return false;
         }
 
-        if (filters?.issues && filters.issues.length > 0) {
-          const hasMatchingIssue = task.issueType?.some((issue) =>
-            filters.issues.includes(issue)
+        if (filters?.categories && filters.categories.length > 0) {
+          const hasMatchingCategory = task.issueType?.some((cat) =>
+            filters.categories.includes(cat)
           );
-          if (!hasMatchingIssue) return false;
+          if (!hasMatchingCategory) return false;
         }
 
-        const statusMap: Record<string, string> = {
-          todo: "To Do",
-          progress: "In Progress",
-          done: "Done",
-          hold: "On Hold",
-          cancel: "Canceled",
-        };
-        if (filters?.classifications && filters.classifications.length > 0) {
-          const colLabel = statusMap[col.id] ?? "";
-          if (!filters.classifications.includes(colLabel)) return false;
+        if (filters?.statuses && filters.statuses.length > 0) {
+          if (!filters.statuses.includes(COLUMN_TO_STATUS[col.id])) return false;
         }
 
         if (filters?.rangeTime) {
@@ -252,7 +241,7 @@ export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'ne
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-[#1D2F58]" />
         </div>
-      ) : !hasAnyTask && (searchQuery || (filters && (filters.classifications.length > 0 || filters.issues.length > 0 || filters.priorities.length > 0 || filters.rangeTime))) ? (
+      ) : !hasAnyTask && (searchQuery || (filters && (filters.statuses.length > 0 || filters.types.length > 0 || filters.categories.length > 0 || filters.priorities.length > 0 || filters.rangeTime))) ? (
         <SearchEmptyState type={"all"} />
       ) : (
 

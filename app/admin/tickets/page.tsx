@@ -9,10 +9,10 @@ import SearchEmptyState from '@/components/SearchEmpty';
 import DeleteAlertModal from '@/components/DeleteModal';
 import EditTicketModal from '@/components/EditTicketModal';
 import FilterSidebar, { FilterState } from '@/components/Filter';
-import ForwardTicketModal from '@/components/ForwardTicketModal';
-import { Trash2, Edit2, Forward, CheckCircle2, Loader2 } from 'lucide-react';
+import { Trash2, Edit2, CheckCircle2, Loader2 } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
 import { isWithinRange } from '@/utils/dateFilter';
+import { toStatusEnum, toPriorityEnum } from '@/utils/ticketFilters';
 import { toast } from "sonner";
 
 type TicketItem = {
@@ -107,7 +107,6 @@ export default function TicketsPage() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<TicketItem | null>(null);
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -118,9 +117,10 @@ export default function TicketsPage() {
 
   const [appliedFilters, setAppliedFilters] = useState<FilterState>({
     opds: [],
-    classifications: [],
-    issues: [],
+    statuses: [],
+    types: [],
     priorities: [],
+    categories: [],
     rangeTime: "",
   });
 
@@ -158,18 +158,21 @@ export default function TicketsPage() {
         if (!match) return false;
       }
 
-      // Applied filters (dari FilterSidebar) — dipetakan ke field data real
-      if (appliedFilters.opds.length > 0 && t.opdName) {
-        if (!appliedFilters.opds.includes(t.opdName)) return false;
+      // Applied filters (dari FilterSidebar) — semua dibandingkan dalam bentuk enum/nama kanonis
+      if (appliedFilters.opds.length > 0) {
+        if (!t.opdName || !appliedFilters.opds.includes(t.opdName)) return false;
       }
-      if (appliedFilters.classifications.length > 0) {
-        if (!appliedFilters.classifications.includes(t.status)) return false;
+      if (appliedFilters.statuses.length > 0) {
+        if (!appliedFilters.statuses.includes(toStatusEnum(t.status))) return false;
       }
-      if (appliedFilters.issues.length > 0 && t.type) {
-        if (!appliedFilters.issues.includes(t.type)) return false;
+      if (appliedFilters.types.length > 0) {
+        if (!t.type || !appliedFilters.types.includes(t.type)) return false;
       }
-      if (appliedFilters.priorities.length > 0 && t.urgency) {
-        if (!appliedFilters.priorities.includes(t.urgency)) return false;
+      if (appliedFilters.priorities.length > 0) {
+        if (!t.urgency || !appliedFilters.priorities.includes(toPriorityEnum(t.urgency))) return false;
+      }
+      if (appliedFilters.categories.length > 0) {
+        if (!t.categoryName || !appliedFilters.categories.includes(t.categoryName)) return false;
       }
       if (appliedFilters.rangeTime) {
         if (!isWithinRange(t.startDate ?? t.createdAt, appliedFilters.rangeTime)) return false;
@@ -209,11 +212,6 @@ export default function TicketsPage() {
       setApprovingId(null);
     }
   }, [fetchTickets]);
-
-  const handleForwardConfirm = () => {
-    setIsForwardModalOpen(false);
-    toast.success("Ticket successfully forwarded to All Tickets");
-  };
 
   const formatDate = (d: string | null) => {
     if (!d) return "-";
@@ -334,7 +332,7 @@ export default function TicketsPage() {
               onClick={() => {
                 setActiveTab(id as TabCategory);
                 setSearchQuery("");
-                setAppliedFilters({ opds: [], classifications: [], issues: [], priorities: [], rangeTime: "" });
+                setAppliedFilters({ opds: [], statuses: [], types: [], priorities: [], categories: [], rangeTime: "" });
               }}
               className={`px-5 h-10 flex items-center justify-center rounded-[12px] text-sm 2xl:text-base 2xl:h-12 font-semibold transition-all duration-200 ${activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
                 }`}
@@ -392,12 +390,6 @@ export default function TicketsPage() {
         onClose={() => setIsEditModalOpen(false)}
         ticketData={selectedTicket}
         onSaved={fetchTickets}
-      />
-
-      <ForwardTicketModal
-        isOpen={isForwardModalOpen}
-        onClose={() => setIsForwardModalOpen(false)}
-        onConfirm={handleForwardConfirm}
       />
 
       <FilterSidebar

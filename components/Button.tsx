@@ -5,7 +5,7 @@ interface ButtonClickProps {
     className?: string,
     disabled?: boolean,
     onClick?: () => void,
-    icon?: any,
+    icon?: React.ReactNode,
 }
 
 const ButtonClick = ({name, type = "submit", className="", disabled, onClick, icon}: ButtonClickProps) => {

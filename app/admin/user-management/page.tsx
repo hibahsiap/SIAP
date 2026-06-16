@@ -97,21 +97,21 @@ export default function UserManagementPage() {
       key: "koko",
       className: "text-center w-[240px]",
       cell: (_, row) => (
-        <div className="flex items-center gap-2 py-2 w-[240px]">
-          <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-600 font-bold border border-gray-200">
+        <div className="flex items-center gap-2 py-2 w-[240px] min-w-0">
+          <div className="w-9 h-9 shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-600 font-bold border border-gray-200">
             {getInitials(row.name)}
           </div>
-          <span className="font-bold text-gray-800 text-left">
-            {/* {row.name} */} Nama Petugas
+          <span className="font-bold text-gray-800 text-left truncate" title={row.name}>
+            {row.name}
           </span>
         </div>
       ),
     },
     {
       header: "OPD",
-      key: "name",
+      key: "opd",
       className: "text-center",
-      cell: (val) => <div className="text-gray-500 font-medium w-[320px]">{val}</div>,
+      cell: (_, row) => <div className="text-gray-500 font-medium w-[320px]">{(row as User).opd?.name ?? "—"}</div>,
     },
     {
       header: "EMAIL",

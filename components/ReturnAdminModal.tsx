@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useReturnStore } from "@/store/useReturnStore"
 import { toast } from "sonner"
 
@@ -22,21 +23,27 @@ type Props = {
 }
 
 export default function ReturnAdminModal({ onConfirm }: Props) {
-  const { isOpen, ticketId, isLoading, close, setLoading } = useReturnStore()
+  const { isOpen, ticketId, tickets, isLoading, close, setLoading } = useReturnStore()
   const [reason, setReason] = useState("")
+  const [selectedTicketId, setSelectedTicketId] = useState("")
+
+  const hasMultiple = tickets.length > 0
+  const resolvedTicketId = hasMultiple ? selectedTicketId : (ticketId ?? "")
 
   const handleClose = () => {
     if (isLoading) return
     setReason("")
+    setSelectedTicketId("")
     close()
   }
 
   const handleConfirm = async () => {
-    if (!ticketId || !reason.trim()) return
+    if (!resolvedTicketId || !reason.trim()) return
     try {
       setLoading(true)
-      await onConfirm?.(ticketId, reason.trim())
+      await onConfirm?.(resolvedTicketId, reason.trim())
       setReason("")
+      setSelectedTicketId("")
       close()
       toast.success("Ticket returned successfully")
       setLoading(false)
@@ -49,7 +56,7 @@ export default function ReturnAdminModal({ onConfirm }: Props) {
 
   const charCount = reason.length
   const isOverLimit = charCount > MAX_CHARS
-  const canSubmit = reason.trim().length > 0 && !isOverLimit && !isLoading
+  const canSubmit = reason.trim().length > 0 && !isOverLimit && !isLoading && !!resolvedTicketId
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -64,6 +71,26 @@ export default function ReturnAdminModal({ onConfirm }: Props) {
             action.
           </DialogDescription>
         </DialogHeader>
+
+        {hasMultiple && (
+          <div className="space-y-2">
+            <Label className="text-xs 2xl:text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Ticket
+            </Label>
+            <Select value={selectedTicketId} onValueChange={setSelectedTicketId} disabled={isLoading}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a ticket to return..." />
+              </SelectTrigger>
+              <SelectContent>
+                {tickets.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.ticketNumber}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label

@@ -37,6 +37,34 @@ const FormField = ({
   </div>
 )
 
+const OpdSelect = ({
+  value,
+  onChange,
+  opds,
+}: {
+  value: string
+  onChange: (v: string) => void
+  opds: Opd[]
+}) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OPD</label>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
+        <SelectValue placeholder="Pilih Instansi / OPD" />
+      </SelectTrigger>
+      <SelectContent>
+        {opds.length === 0 ? (
+          <SelectItem value="_empty" disabled>Tidak ada data OPD</SelectItem>
+        ) : (
+          opds.map((opd) => (
+            <SelectItem key={opd.id} value={opd.id}>{opd.name}</SelectItem>
+          ))
+        )}
+      </SelectContent>
+    </Select>
+  </div>
+)
+
 export default function UserModals() {
   const {
     isAddModalOpen, closeAddModal,
@@ -150,32 +178,6 @@ export default function UserModals() {
     }
   }
 
-  const OpdSelect = ({
-    value,
-    onChange,
-  }: {
-    value: string
-    onChange: (v: string) => void
-  }) => (
-    <div className="space-y-1.5">
-      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OPD</label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
-          <SelectValue placeholder="Pilih Instansi / OPD" />
-        </SelectTrigger>
-        <SelectContent>
-          {opds.length === 0 ? (
-            <SelectItem value="_empty" disabled>Tidak ada data OPD</SelectItem>
-          ) : (
-            opds.map((opd) => (
-              <SelectItem key={opd.id} value={opd.id}>{opd.name}</SelectItem>
-            ))
-          )}
-        </SelectContent>
-      </Select>
-    </div>
-  )
-
   return (
     <>
       {/* ADD USER MODAL */}
@@ -208,7 +210,7 @@ export default function UserModals() {
           />
 
           {addForm.role === "OPD" && (
-            <OpdSelect value={addForm.opdId} onChange={(v) => setAddForm({ ...addForm, opdId: v })} />
+            <OpdSelect value={addForm.opdId} onChange={(v) => setAddForm({ ...addForm, opdId: v })} opds={opds} />
           )}
 
           <div className="space-y-1.5">
@@ -296,7 +298,7 @@ export default function UserModals() {
               />
 
               {editForm.role === "OPD" && (
-                <OpdSelect value={editForm.opdId} onChange={(v) => setEditForm({ ...editForm, opdId: v })} />
+                <OpdSelect value={editForm.opdId} onChange={(v) => setEditForm({ ...editForm, opdId: v })} opds={opds} />
               )}
 
               <div className="space-y-1.5">

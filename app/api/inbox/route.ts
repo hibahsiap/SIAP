@@ -25,12 +25,12 @@ export async function GET(req: NextRequest) {
     opdId = user.opdId;
     opdFilter = {
       OR: [
-        { tickets: { some: { assignedOpdId: user.opdId } } },
+        { tickets: { some: { assignedOpdId: user.opdId, status: { not: "ON_HOLD" } } } },
         { messages: { some: { forwardedToOpdId: user.opdId } } }
       ]
     };
     const opdTickets = await prisma.ticket.findMany({
-      where: { assignedOpdId: user.opdId },
+      where: { assignedOpdId: user.opdId, status: { not: "ON_HOLD" } },
       select: { id: true },
     });
     opdTicketIds = new Set(opdTickets.map((t) => t.id));

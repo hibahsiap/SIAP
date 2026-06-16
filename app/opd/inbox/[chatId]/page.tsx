@@ -123,6 +123,14 @@ export default function ChatDetailPage({
     ? `${current.citizen.platform} · @${current.citizen.username}`
     : current.channel.platform;
 
+  const returnableTickets = Array.from(
+    new Map(
+      current.messages
+        .filter((m) => m.ticket && !["DONE", "CANCELLED", "ON_HOLD"].includes(m.ticket.status))
+        .map((m) => [m.ticket!.id, { id: m.ticket!.id, ticketNumber: m.ticket!.ticketNumber }])
+    ).values()
+  );
+
   // Latest pinned first — first click cycles to the most recent pinned message,
   // then keeps moving backwards through older pins and wraps.
   const pinnedMessages = [...current.messages.filter((m) => m.ticket)].reverse();
@@ -168,6 +176,7 @@ export default function ChatDetailPage({
         phone={phone}
         role="OPD"
         avatarUrl={current.citizen.profilePicUrl}
+        tickets={returnableTickets}
       />
 
       {currentPin && (

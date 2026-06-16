@@ -9,7 +9,7 @@ function mapStatus(status: string): string {
     case "IN_PROGRESS": return "In Progress";
     case "ON_HOLD": return "On Hold";
     case "DONE": return "Done";
-    case "CANCELLED": return "Canceled";
+    case "CANCELLED": return "Cancelled";
     default: return "To Do";
   }
 }
@@ -58,11 +58,13 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const tab = searchParams.get("tab") ?? "all";
 
-  const where: Prisma.TicketWhereInput = { assignedOpdId: user.opdId };
+  const where: Prisma.TicketWhereInput = {
+    assignedOpdId: user.opdId,
+    status: { not: "ON_HOLD" },
+  };
   if (tab === "aspirations") {
     where.type = TicketType.FEEDBACK;
   }
-  // kanban fetches all statuses, no extra filter needed
 
   const tickets = await prisma.ticket.findMany({
     where,

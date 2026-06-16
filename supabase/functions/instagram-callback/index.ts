@@ -63,7 +63,7 @@ Deno.serve(async (req: Request) => {
     // Step 4: Subscribe account ke webhook fields
     const subscribeRes = await fetch(
       `https://graph.instagram.com/v25.0/me/subscribed_apps` +
-      `?subscribed_fields=messages,messaging_postbacks,messaging_seen,messaging_referral,message_reactions` +
+      `?subscribed_fields=messages,messaging_postbacks,messaging_seen,messaging_referral,message_reactions,comments,mentions` +
       `&access_token=${longLivedToken}`,
       { method: 'POST' }
     )
@@ -71,19 +71,37 @@ Deno.serve(async (req: Request) => {
     console.log('[Step4 subscribed_apps]', JSON.stringify(subscribeData))
     if (!subscribeData.success) throw new Error(`Subscribe failed: ${JSON.stringify(subscribeData)}`)
 
-    // Step 5: Simpan ke DB
-    const { error: upsertError } = await supabase
-      .from('Channel')
-      .upsert({
-        platform: 'INSTAGRAM',
-        isActive: true,
-        accountHandle: username ? `@${username}` : null,
-        accountId: igUserId,
-        accessToken: longLivedToken,
-        updatedAt: new Date().toISOString(),
-      }, { onConflict: 'platform' })
+    // Step 5: Simpan ke DB.
+    // `id` di Prisma pakai @default(uuid()) yang digenerate di level aplikasi, BUKAN
+    // default kolom database. Insert via supabase-js melewati Prisma, jadi id harus
+    // diisi manual saat membuat baris baru. Untuk update, id dibiarkan agar relasi
+    // FK (Ticket/Conversation → Channel) tidak putus.
+    const channelData = {
+      isActive: true,
+      accountHandle: username ? `@${username}` : null,
+      accountId: igUserId,
+      accessToken: longLivedToken,
+      updatedAt: new Date().toISOString(),
+    }
 
-    if (upsertError) throw upsertError
+    const { data: existingChannel } = await supabase
+      .from('Channel')
+      .select('id')
+      .eq('platform', 'INSTAGRAM')
+      .maybeSingle()
+
+    if (existingChannel) {
+      const { error: updateError } = await supabase
+        .from('Channel')
+        .update(channelData)
+        .eq('platform', 'INSTAGRAM')
+      if (updateError) throw updateError
+    } else {
+      const { error: insertError } = await supabase
+        .from('Channel')
+        .insert({ id: crypto.randomUUID(), platform: 'INSTAGRAM', ...channelData })
+      if (insertError) throw insertError
+    }
 
     return Response.redirect(`${settingsUrl}?success=instagram_connected`, 302)
   } catch (err) {

@@ -13,6 +13,7 @@ type Props = {
 function mapStatus(status: string): TaskStatus {
   switch (status) {
     case "IN_PROGRESS": return "in-progress";
+    case "ON_HOLD":     return "on-hold";
     case "DONE":        return "completed";
     case "CANCELLED":   return "cancelled";
     default:            return "open";

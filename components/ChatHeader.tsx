@@ -2,7 +2,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReturnAdminButton from "./ReturnAdminButton";
-import { DUMMY_TASK } from "@/constants/taskDummy";
+import type { ReturnTicketOption } from "@/store/useReturnStore";
 import Image from "next/image";
 
 interface ChatHeaderAdminProps {
@@ -17,7 +17,7 @@ interface ChatHeaderAdminProps {
 }
 
 export const ChatHeader = ({
-  name, phone, role, chatId, avatarUrl,
+  name, phone, role, chatId, avatarUrl, tickets,
   opds, selectedOpdId, onSelectOpd,
   isSelectMode, selectedCount, isForwarding,
   onToggleSelectMode, onForward,
@@ -27,8 +27,8 @@ export const ChatHeader = ({
   role: 'ADMIN' | 'OPD';
   chatId: string;
   avatarUrl?: string | null;
+  tickets?: ReturnTicketOption[];
 } & Partial<ChatHeaderAdminProps>) => {
-  const task = { ...DUMMY_TASK, chatId };
 
   return (
     <div className="p-4 border-b flex justify-between items-center gap-4">
@@ -106,7 +106,7 @@ export const ChatHeader = ({
           )}
         </div>
       ) : (
-        <ReturnAdminButton task={task} />
+        tickets && tickets.length > 0 ? <ReturnAdminButton tickets={tickets} /> : null
       )}
     </div>
   );

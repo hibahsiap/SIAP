@@ -1,30 +1,35 @@
 "use client";
 
-import { useReturnStore } from "@/store/useReturnStore"
+import { useReturnStore, ReturnTicketOption } from "@/store/useReturnStore"
 import { Button } from "@/components/ui/button"
-import { Task } from "@/types/task"
 import ReturnAdminModal from "./ReturnAdminModal"
 
-const ReturnAdminButton = ({task} : {task: Task}) => {
-
-    const openReturnModal = useReturnStore((state) => state.open)
+const ReturnAdminButton = ({ tickets }: { tickets: ReturnTicketOption[] }) => {
+    const openWithTickets = useReturnStore((state) => state.openWithTickets)
 
     const handleReturnClick = () => {
-        openReturnModal(task.id)
+        openWithTickets(tickets)
     }
 
     const handleConfirmReturn = async (ticketId: string, reason: string) => {
-        console.log("Return ticket:", { ticketId, reason })
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        const res = await fetch(`/api/opd/tickets/${ticketId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "ON_HOLD", note: reason }),
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.error ?? "Failed to return ticket")
+        }
     }
 
-    return(
+    return (
         <>
             <Button
                 variant="ghost"
                 onClick={handleReturnClick}
                 className="bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800"
-                >
+            >
                 Return to Admin
             </Button>
             <ReturnAdminModal onConfirm={handleConfirmReturn} />

@@ -13,6 +13,7 @@ import KanbanBoard from '@/components/spectrumui/kanbanboard';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { isWithinRange } from '@/utils/dateFilter';
+import { toStatusEnum, toPriorityEnum } from '@/utils/ticketFilters';
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
@@ -20,14 +21,14 @@ const getStatusBadge = (status: string) => {
     "In Progress": "bg-[#C1DEF5] text-[#264A72]",
     "Done": "bg-[#D7E6DD] text-[#2A533C]",
     "On Hold": "bg-[#E7D9CF] text-[#584437]",
-    "Canceled": "bg-[#E1DFDC] text-[#494846]",
+    "Cancelled": "bg-[#E1DFDC] text-[#494846]",
   };
   const dotColors: Record<string, string> = {
     "To Do": "bg-[#E56458]",
     "In Progress": "bg-[#2783DE]",
     "Done": "bg-[#46A171]",
     "On Hold": "bg-[#B68965]",
-    "Canceled": "bg-[#8E8B86]",
+    "Cancelled": "bg-[#8E8B86]",
   };
   const style = styles[status] ?? "bg-gray-100 text-gray-600";
   const dot = dotColors[status] ?? "bg-gray-500";
@@ -85,9 +86,10 @@ export default function TicketsPage() {
 
   const [appliedFilters, setAppliedFilters] = useState<FilterState>({
     opds: [],
-    classifications: [],
-    issues: [],
+    statuses: [],
+    types: [],
     priorities: [],
+    categories: [],
     rangeTime: "",
   });
 
@@ -121,16 +123,20 @@ export default function TicketsPage() {
       const searchField = item.taskName || item.pengirim || "";
       if (!searchField.toLowerCase().includes(searchStr)) return false;
 
-      if (appliedFilters.classifications.length > 0) {
-        if (!appliedFilters.classifications.includes(item.status)) return false;
+      if (appliedFilters.statuses.length > 0) {
+        if (!appliedFilters.statuses.includes(toStatusEnum(item.status))) return false;
       }
 
-      if (appliedFilters.issues.length > 0 && item.issueType) {
-        if (!appliedFilters.issues.includes(item.issueType)) return false;
+      if (appliedFilters.types.length > 0) {
+        if (!item.type || !appliedFilters.types.includes(item.type)) return false;
       }
 
       if (appliedFilters.priorities.length > 0) {
-        if (!appliedFilters.priorities.includes(item.priority)) return false;
+        if (!appliedFilters.priorities.includes(toPriorityEnum(item.priority))) return false;
+      }
+
+      if (appliedFilters.categories.length > 0) {
+        if (!item.categoryName || !appliedFilters.categories.includes(item.categoryName)) return false;
       }
 
       if (appliedFilters.rangeTime) {
