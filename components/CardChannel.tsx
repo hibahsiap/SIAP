@@ -78,7 +78,7 @@ const CardChannel = ({ icon, data, onDisconnect }: CardChannelProps) => {
     >
       <div className="flex flex-row gap-1.5 items-center">
         <Icon size={20} className={colorText[platform]} />
-        <p className="text-[#041942] font-bold text-sm tracking-wide capitalize">
+        <p className="text-[#041942] font-bold text-sm 2xl:text-base tracking-wide capitalize">
           {platformLabel[platform]} Integration
         </p>
       </div>
@@ -100,15 +100,15 @@ const CardChannel = ({ icon, data, onDisconnect }: CardChannelProps) => {
               className="w-full flex flex-row items-center justify-between"
             >
               <div className={`flex flex-col gap-1 ${colorText[platform]}`}>
-                <p className="font-semibold text-sm capitalize">{platformLabel[platform]} Connected</p>
-                {data.accountHandle && <p className="text-[12px]">Account: {data.accountHandle}</p>}
-                {data.accountId && <p className="text-[12px]">ID: {data.accountId}</p>}
+                <p className="font-semibold text-sm 2xl:text-base capitalize">{platformLabel[platform]} Connected</p>
+                {data.accountHandle && <p className="text-[12px] 2xl:text-sm">Account: {data.accountHandle}</p>}
+                {data.accountId && <p className="text-[12px] 2xl:text-sm">ID: {data.accountId}</p>}
               </div>
               <div className="w-24">
                 <button
                   onClick={handleDisconnect}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-1 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-md transition-colors disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-1 py-1.5 2xl:py-2 bg-red-500 hover:bg-red-600 text-white text-xs 2xl:text-sm font-semibold rounded-md transition-colors disabled:opacity-50"
                 >
                   {loading && <Loader2 size={12} className="animate-spin" />}
                   Disconnect
@@ -124,13 +124,13 @@ const CardChannel = ({ icon, data, onDisconnect }: CardChannelProps) => {
               transition={{ duration: 0.3 }}
               className="w-full flex flex-row items-center justify-between"
             >
-              <p className={`font-semibold text-sm ${colorText[platform]}`}>
+              <p className={`font-semibold text-sm 2xl:text-base ${colorText[platform]}`}>
                 Connect your channel
               </p>
               <div className="w-24">
                 <button
                   onClick={handleConnect}
-                  className="w-full py-1.5 bg-white text-[#041942] border-2 border-[#d2d2d2] text-xs font-semibold rounded-md hover:bg-gray-50 transition-colors"
+                  className="w-full py-1.5 2xl:py-2 bg-white text-[#041942] border-2 border-[#d2d2d2] text-xs 2xl:text-sm font-semibold rounded-md hover:bg-gray-50 transition-colors"
                 >
                   Connect
                 </button>

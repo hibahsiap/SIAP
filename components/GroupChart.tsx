@@ -41,7 +41,7 @@ const chartConfig = {
 export function GroupChart() {
   return (
     <div className="bg-white flex flex-col border border-[#D2D2D2] rounded-[15px] p-3">
-      <h3 className="text-[#546064] tracking-wide font-medium">Average Response Time</h3>
+      <h3 className="text-[#546064] tracking-wide font-medium 2xl:text-lg">Average Response Time</h3>
       
       <ChartContainer config={chartConfig} className="h-52 w-full [&_svg]:overflow-visible">
         <BarChart 

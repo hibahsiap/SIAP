@@ -27,14 +27,14 @@ export default function TaskHeader({
         >
           <ChevronLeft className="size-5" />
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <h1 className="text-2xl 2xl:text-3xl font-bold text-gray-900">{title}</h1>
       </div>
 
       {showReturnButton && (
         <Button
           variant="ghost"
           onClick={onReturnClick}
-          className="bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800"
+          className="bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 2xl:text-lg 2xl:h-10"
         >
           Return to Admin
         </Button>

@@ -25,7 +25,7 @@ const TableTemplate = ({columns, data}: TableTemplateProps) => {
                             {columns.map((col, idx) => (
                                 <TableHead 
                                     key={col.key} 
-                                    className={`capitalize text-[#1D2F58] text-[13px] font-bold tracking-wide h-12 align-middle ${col.className || 'text-center'} ${idx !== columns.length - 1 ? 'border-r border-[#e7e6e6]' : ''}`}
+                                    className={`capitalize text-[#1D2F58] text-[13px] 2xl:text-[15px] font-bold tracking-wide h-12 align-middle ${col.className || 'text-center'} ${idx !== columns.length - 1 ? 'border-r border-[#e7e6e6]' : ''}`}
                                 >
                                     <div className={`flex items-center gap-1.5 whitespace-nowrap ${col.className?.includes('text-left') ? 'justify-start' : 'justify-center'}`}>
                                         {col.header}
@@ -41,7 +41,7 @@ const TableTemplate = ({columns, data}: TableTemplateProps) => {
                                     {columns.map((col, idx) => (
                                         <TableCell 
                                             key={col.key}
-                                            className={`text-[#1D2F58] font-bold text-[13px] align-middle p-4 ${col.className || 'text-center'} ${idx !== columns.length - 1 ? 'border-r border-[#e7e6e6]' : ''}`}
+                                            className={`text-[#1D2F58] font-bold text-[13px] 2xl:text-[15px] align-middle p-4 ${col.className || 'text-center'} ${idx !== columns.length - 1 ? 'border-r border-[#e7e6e6]' : ''}`}
                                         >
                                             {col.cell ? col.cell(row[col.key as keyof TableRowData], row) : row[col.key as keyof TableRowData]}
                                         </TableCell>
@@ -50,7 +50,7 @@ const TableTemplate = ({columns, data}: TableTemplateProps) => {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="px-6 py-10 text-center text-gray-400 text-xs">
+                                <TableCell colSpan={columns.length} className="px-6 py-10 text-center text-gray-400 text-xs 2xl:text-sm">
                                     Data tidak ditemukan.
                                 </TableCell>
                             </TableRow>

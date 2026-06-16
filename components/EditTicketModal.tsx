@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomModal from "@/components/CustomModal";
+import { toast } from "sonner";
 
 interface EditTicketModalProps {
   isOpen: boolean;
@@ -31,6 +32,11 @@ export default function EditTicketModal({ isOpen, onClose, ticketData }: EditTic
   }, [ticketData]);
 
   if (!ticketData) return null;
+
+  const handleEditConfirm = () => {
+    onClose();
+    toast.success("Ticket Update Successfully");
+  };
 
   return (
     <CustomModal isOpen={isOpen} onClose={onClose} title="Edit Detail Ticket" size="lg">
@@ -127,12 +133,13 @@ export default function EditTicketModal({ isOpen, onClose, ticketData }: EditTic
         <Button 
           onClick={onClose} 
           variant="outline" 
-          className="flex-1 bg-[#EAECEF] hover:bg-[#DCDFE3] border-0 text-[#1a233a] font-bold h-12 rounded-xl transition-colors"
+          className="flex-1 bg-[#EAECEF] hover:bg-[#DCDFE3] border-0 text-[#1a233a] font-bold h-10 rounded-lg transition-colors"
         >
           CANCEL
         </Button>
         <Button 
-          className="flex-1 bg-[#1a233a] hover:bg-[#0f172a] text-white font-bold h-12 rounded-xl transition-colors"
+          onClick={handleEditConfirm}
+          className="flex-1 bg-[#1a233a] hover:bg-[#0f172a] text-white font-bold h-10 rounded-lg transition-colors"
         >
           EDIT TICKET
         </Button>

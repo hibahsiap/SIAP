@@ -81,8 +81,8 @@ export default function UserModals() {
   }, [isAddModalOpen])
 
   const handleAdd = async () => {
-    if (!addForm.name || !addForm.email || !addForm.password) {
-      toast.error("Name, email, and password are required")
+    if (!addForm.name || !addForm.email || !addForm.phone || !addForm.password) {
+      toast.error("Name, email, phone, and password are required")
       return
     }
     if (addForm.password !== addForm.confirmPassword) {
@@ -183,7 +183,29 @@ export default function UserModals() {
             </div>
           </div>
 
-          <FormField label="Phone Number" placeholder="0812-0000-0000" value={addForm.phone} onChange={(v) => setAddForm({ ...addForm, phone: v })} />
+          {/* <FormField label="Phone Number" placeholder="0812-0000-0000" value={addForm.phone} onChange={(v) => setAddForm({ ...addForm, phone: v })} /> */}
+
+          <FormField 
+            label="Phone Number" 
+            placeholder="+62 812-0000-0000" 
+            value={addForm.phone} 
+            onChange={(v) => {
+              // 1. Hapus semua karakter yang bukan angka
+              const numbersOnly = v.replace(/\D/g, '');
+              
+              // 2. Pastikan selalu dimulai dengan 62 (tanpa tanda + di awal agar mudah diproses)
+              // Jika user menghapus angka, pastikan prefix tetap ada
+              let formatted = numbersOnly;
+              if (!formatted.startsWith('62')) {
+                formatted = '62' + formatted;
+              }
+              
+              // 3. Batasi panjang maksimal (misal: 15 digit)
+              const finalValue = '+' + formatted.substring(0, 15);
+              
+              setAddForm({ ...addForm, phone: finalValue });
+            }} 
+          />
 
           {addForm.role === "OPD" && (
             <OpdSelect value={addForm.opdId} onChange={(v) => setAddForm({ ...addForm, opdId: v })} />
@@ -235,8 +257,8 @@ export default function UserModals() {
 
         </div>
         <div className="flex gap-3 mt-8">
-          <Button onClick={closeAddModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold" disabled={isSubmitting}>CANCEL</Button>
-          <Button onClick={handleAdd} className="flex-1 bg-[#1a233a] text-white font-bold" disabled={isSubmitting}>
+          <Button onClick={closeAddModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold 2xl:h-10" disabled={isSubmitting}>CANCEL</Button>
+          <Button onClick={handleAdd} className="flex-1 bg-[#1a233a] text-white font-bold 2xl:h-10" disabled={isSubmitting}>
             {isSubmitting ? "CREATING..." : "CREATE USER"}
           </Button>
         </div>
@@ -264,7 +286,29 @@ export default function UserModals() {
                 </div>
               </div>
 
-              <FormField label="Phone Number" placeholder="0812-0000-0000" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} />
+              {/* <FormField label="Phone Number" placeholder="0812-0000-0000" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} /> */}
+
+              <FormField 
+                label="Phone Number" 
+                placeholder="+62 812-0000-0000" 
+                value={addForm.phone} 
+                onChange={(v) => {
+                  // 1. Hapus semua karakter yang bukan angka
+                  const numbersOnly = v.replace(/\D/g, '');
+                  
+                  // 2. Pastikan selalu dimulai dengan 62 (tanpa tanda + di awal agar mudah diproses)
+                  // Jika user menghapus angka, pastikan prefix tetap ada
+                  let formatted = numbersOnly;
+                  if (!formatted.startsWith('62')) {
+                    formatted = '62' + formatted;
+                  }
+                  
+                  // 3. Batasi panjang maksimal (misal: 15 digit)
+                  const finalValue = '+' + formatted.substring(0, 15);
+                  
+                  setAddForm({ ...addForm, phone: finalValue });
+                }} 
+              />
 
               {editForm.role === "OPD" && (
                 <OpdSelect value={editForm.opdId} onChange={(v) => setEditForm({ ...editForm, opdId: v })} />
@@ -287,8 +331,8 @@ export default function UserModals() {
               </div>
             </div>
             <div className="flex gap-3 mt-8">
-              <Button onClick={closeEditModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold" disabled={isSubmitting}>CANCEL</Button>
-              <Button onClick={handleEdit} className="flex-1 bg-[#1a233a] text-white font-bold" disabled={isSubmitting}>
+              <Button onClick={closeEditModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold 2xl:h-10" disabled={isSubmitting}>CANCEL</Button>
+              <Button onClick={handleEdit} className="flex-1 bg-[#1a233a] text-white font-bold 2xl:h-10" disabled={isSubmitting}>
                 {isSubmitting ? "SAVING..." : "SAVE CHANGES"}
               </Button>
             </div>

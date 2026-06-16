@@ -35,7 +35,7 @@ export function UserAvatar() {
         <div className="flex gap-2">
           <Button 
             onClick={() => fileInputRef.current?.click()}
-            className="text-[11px] font-bold uppercase h-9 px-4 bg-[#1D2F58] hover:bg-[#041942]"
+            className="text-[11px] 2xl:text-sm font-bold uppercase h-9 2xl:h-11 px-4 bg-[#1D2F58] hover:bg-[#041942]"
           >
             UPLOAD NEW PHOTO
           </Button>
@@ -46,7 +46,7 @@ export function UserAvatar() {
             RESET
           </Button> */}
         </div>
-        <p className="text-[11px] text-gray-500">Allowed JPG or PNG. Max size 1 MB</p>
+        <p className="text-[11px] 2xl:text-sm text-gray-500">Allowed JPG or PNG. Max size 1 MB</p>
       </div>
     </div>
   );
