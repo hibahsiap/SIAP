@@ -110,8 +110,9 @@ export async function GET(req: NextRequest) {
       type: t.type ?? null,
       categoryName: t.category?.name ?? null,
       priority: mapPriority(t.urgency),
-      startDate: (t.startDate ?? t.createdAt).toISOString(),
-      dueDate: t.dueDate ? t.dueDate.toISOString() : null,
+      startDate: t.startDate ? t.startDate.toISOString().split("T")[0] : null,
+      finishDate: (t.resolvedAt ?? t.closedAt)?.toISOString().split("T")[0] ?? null,
+      createdAt: t.createdAt.toISOString(),
       message: t.description,
     }))
   );

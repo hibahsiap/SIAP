@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth'
 import { logActivity, getClientIp } from '@/lib/activity'
 import bcrypt from 'bcryptjs'
+import { normalizePhone } from '@/lib/phone'
 
 export async function PUT(
   request: NextRequest,
@@ -32,7 +33,17 @@ export async function PUT(
   const data: Record<string, unknown> = {}
   if (name !== undefined) data.name = name
   if (email !== undefined) data.email = email
-  if (phone !== undefined) data.phone = phone || null
+  if (phone !== undefined) {
+    if (phone) {
+      const np = normalizePhone(phone)
+      if (!np) {
+        return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 })
+      }
+      data.phone = np
+    } else {
+      data.phone = null
+    }
+  }
   if (role !== undefined) data.role = role
   if (opdId !== undefined) data.opdId = opdId
   if (password) data.password = await bcrypt.hash(password, 10)

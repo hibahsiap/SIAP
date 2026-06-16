@@ -171,37 +171,73 @@ export async function GET() {
   ];
 
   // --- Average response time over last 4 weeks (GroupChart) ---
-  // Metric: resolution time (createdAt -> resolvedAt) in hours, averaged per weekday/week.
+  // Metric: time between a citizen (WARGA) message and the first staff (ADMIN/OPD) reply
+  // that follows it in the same conversation, in hours, averaged per weekday/week.
   const fourWeeksStart = startOfWeek(now);
   fourWeeksStart.setDate(fourWeeksStart.getDate() - 21); // start of 4 weeks ago (Monday)
 
-  const resolvedForChart = await prisma.ticket.findMany({
+  // Conversation scope: ADMIN = all; OPD = conversations of tickets assigned to that OPD.
+  let messageScope: Prisma.MessageWhereInput = {};
+  if (opdId) {
+    const opdTickets = await prisma.ticket.findMany({
+      where: { assignedOpdId: opdId, conversationId: { not: null } },
+      select: { conversationId: true },
+    });
+    const convIds = [...new Set(opdTickets.map((t) => t.conversationId).filter((c): c is string => !!c))];
+    messageScope = { conversationId: { in: convIds.length > 0 ? convIds : ["__none__"] } };
+  }
+
+  const chatMessages = await prisma.message.findMany({
     where: {
-      ...scope,
-      status: "DONE",
-      resolvedAt: { gte: fourWeeksStart },
+      conversationId: { not: null },
+      ...messageScope,
+      OR: [
+        { sentAt: { gte: fourWeeksStart } },
+        { sentAt: null, createdAt: { gte: fourWeeksStart } },
+      ],
     },
-    select: { createdAt: true, resolvedAt: true },
+    select: { conversationId: true, senderType: true, sentAt: true, createdAt: true },
+    orderBy: [{ conversationId: "asc" }, { createdAt: "asc" }],
   });
 
   // buckets[weekIndex][weekdayIndex] = { sum, count }
   const buckets: { sum: number; count: number }[][] = WEEK_LABELS.map(() =>
     WEEKDAYS.map(() => ({ sum: 0, count: 0 }))
   );
-  for (const t of resolvedForChart) {
-    if (!t.resolvedAt) continue;
-    const resolved = new Date(t.resolvedAt);
-    const weekStart = startOfWeek(resolved);
+
+  // Bucket a single response gap by the weekday/week of the originating citizen message.
+  const addResponse = (citizenAt: Date, hours: number) => {
+    if (hours < 0) return;
+    const weekStart = startOfWeek(citizenAt);
     const weekIndex = Math.floor(
       (weekStart.getTime() - fourWeeksStart.getTime()) / (7 * 24 * 60 * 60 * 1000)
     );
-    if (weekIndex < 0 || weekIndex > 3) continue;
-    const dow = resolved.getDay(); // 1=Mon..5=Fri
-    if (dow < 1 || dow > 5) continue;
-    const dayIndex = dow - 1;
-    const hours = (resolved.getTime() - new Date(t.createdAt).getTime()) / 3600000;
-    buckets[weekIndex][dayIndex].sum += hours;
-    buckets[weekIndex][dayIndex].count += 1;
+    if (weekIndex < 0 || weekIndex > 3) return;
+    const dow = citizenAt.getDay(); // 1=Mon..5=Fri
+    if (dow < 1 || dow > 5) return;
+    buckets[weekIndex][dow - 1].sum += hours;
+    buckets[weekIndex][dow - 1].count += 1;
+  };
+
+  // Walk each conversation in chronological order; pair the first unanswered citizen
+  // message with the next staff reply, then reset for the following round.
+  let currentConv: string | null = null;
+  let pendingCitizenAt: Date | null = null;
+  for (const m of chatMessages) {
+    if (m.conversationId !== currentConv) {
+      currentConv = m.conversationId;
+      pendingCitizenAt = null;
+    }
+    const ts = m.sentAt ?? m.createdAt;
+    if (m.senderType === "WARGA") {
+      if (pendingCitizenAt === null) pendingCitizenAt = ts;
+    } else if (m.senderType === "ADMIN" || m.senderType === "OPD") {
+      if (pendingCitizenAt !== null) {
+        const hours = (ts.getTime() - pendingCitizenAt.getTime()) / 3600000;
+        addResponse(pendingCitizenAt, hours);
+        pendingCitizenAt = null;
+      }
+    }
   }
 
   const responseTime: {

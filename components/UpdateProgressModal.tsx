@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Paperclip, CheckCircle2, Loader2, File } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface Task {
   id: string;
@@ -66,12 +65,9 @@ export default function UpdateProgressModal({ isOpen, onClose, task, onSave }: U
       files: files.map((f) => f.file),
       description,
     });
-    // Reset state form setelah berhasil submit
+    // Reset state form setelah submit (hasil sukses/gagal ditangani pemanggil)
     setFiles([]);
     setDescription('');
-    toast.success("Task Updated", {
-      description: `"${task.id}-${task.taskName}" updated successfully`,
-    });
   };
 
   const formatSize = (bytes: number) => {

@@ -26,6 +26,7 @@ type TicketItem = {
   location: string | null;
   startDate: string | null;
   dueDate: string | null;
+  finishDate: string | null;
   createdAt: string;
   citizenName: string;
   opdName: string | null;
@@ -33,6 +34,7 @@ type TicketItem = {
   categoryName: string | null;
   categoryId: string | null;
   channelPlatform: string;
+  attachments?: { id: string; url: string }[];
 };
 
 const statusLabel: Record<string, string> = {
@@ -51,18 +53,18 @@ const typeLabel: Record<string, string> = {
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
-    "To Do":      "bg-[#F7D9D5] text-[#6D3531]",
-    "In Progress":"bg-[#C1DEF5] text-[#264A72]",
-    "Done":       "bg-[#D7E6DD] text-[#2A533C]",
-    "On Hold":    "bg-[#E7D9CF] text-[#584437]",
-    "Cancelled":  "bg-[#E1DFDC] text-[#494846]",
+    "To Do": "bg-[#F7D9D5] text-[#6D3531]",
+    "In Progress": "bg-[#C1DEF5] text-[#264A72]",
+    "Done": "bg-[#D7E6DD] text-[#2A533C]",
+    "On Hold": "bg-[#E7D9CF] text-[#584437]",
+    "Cancelled": "bg-[#E1DFDC] text-[#494846]",
   };
   const dotColors: Record<string, string> = {
-    "To Do":      "bg-[#E56458]",
-    "In Progress":"bg-[#2783DE]",
-    "Done":       "bg-[#46A171]",
-    "On Hold":    "bg-[#B68965]",
-    "Cancelled":  "bg-[#8E8B86]",
+    "To Do": "bg-[#E56458]",
+    "In Progress": "bg-[#2783DE]",
+    "Done": "bg-[#46A171]",
+    "On Hold": "bg-[#B68965]",
+    "Cancelled": "bg-[#8E8B86]",
   };
   const display = statusLabel[status] ?? status;
   return (
@@ -96,16 +98,16 @@ const getUrgencyBadge = (urgency: string | null) => {
   return <span className={`px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-600"}`}>{display}</span>;
 };
 
-type TabCategory = 'pending' | 'all' | 'aspirations'; 
+type TabCategory = 'pending' | 'all' | 'aspirations';
 
 export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState<TabCategory>('pending');
   const [searchQuery, setSearchQuery] = useState("");
   const { openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-  
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false); 
+  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<TicketItem | null>(null);
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -225,7 +227,7 @@ export default function TicketsPage() {
   const columns = useMemo<ColumnDefinition[]>(() => {
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const messageColumn: ColumnDefinition = {
-      header: "Pesan Aspirasi",
+      header: "Messages",
       key: "description",
       className: "text-center",
       cell: (val: any) => (
@@ -237,10 +239,10 @@ export default function TicketsPage() {
 
     if (activeTab === 'pending') {
       return [
-        { 
-          header: "Title", 
-          key: "title", 
-          className: "text-center", 
+        {
+          header: "Title",
+          key: "title",
+          className: "text-justify",
           cell: (val: any, row: any) => (
             <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[200px] line-clamp-2 inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val ?? row.ticketNumber}
@@ -253,10 +255,10 @@ export default function TicketsPage() {
         { header: "Category", key: "categoryName", className: "text-center", cell: (val: any) => val ?? "-" },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
         messageColumn,
-        { header: "Actions", key: "id", className: "text-center", cell: (_: any, row: any) => (
+        {
+          header: "Actions", key: "id", className: "text-center", cell: (_: any, row: any) => (
             <div className="flex items-center justify-center gap-4">
               <button onClick={() => { setSelectedTicket(row as TicketItem); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:text-blue-500 transition-colors duration-300 cursor-pointer" title="Edit"><Edit2 className="w-4 h-4" /></button>
-              <button onClick={() => { setSelectedTicket(row as TicketItem); setIsForwardModalOpen(true); }} className="text-[#1D2F58] hover:text-green-500 transition-colors duration-300 cursor-pointer" title="Forward"><Forward className="w-4 h-4" /></button>
               <button
                 onClick={() => handleApprove(row as TicketItem)}
                 disabled={approvingId === (row.id as string)}
@@ -271,10 +273,10 @@ export default function TicketsPage() {
       ];
     } else if (activeTab === 'all') {
       return [
-        { 
-          header: "Title", 
-          key: "title", 
-          className: "text-center", 
+        {
+          header: "Title",
+          key: "title",
+          className: "text-justified",
           cell: (val: any, row: any) => (
             <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val ?? row.ticketNumber}
@@ -285,20 +287,21 @@ export default function TicketsPage() {
         { header: "Status", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
         { header: "Type", key: "type", className: "text-center", cell: (val: any) => getTypeBadge(val) },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
-        { header: "Start date", key: "createdAt", className: "text-center", cell: (val: any) => formatDate(val) },
-        { header: "Due date", key: "dueDate", className: "text-center", cell: (val: any) => formatDate(val) },
+        { header: "Start date", key: "startDate", className: "text-center", cell: (val: any) => formatDate(val) },
+        { header: "Finish date", key: "finishDate", className: "text-center", cell: (val: any) => formatDate(val) },
         messageColumn,
-        { header: "Actions", key: "id", className: "text-center", cell: (_: any, row: any) => (
+        {
+          header: "Actions", key: "id", className: "text-center", cell: (_: any, row: any) => (
             <button onClick={() => { setSelectedTicket(row as TicketItem); setIsEditModalOpen(true); }} className="text-[#1D2F58] hover:text-blue-500 transition-colors duration-300 cursor-pointer"><Edit2 className="w-4 h-4" /></button>
           )
         }
       ];
     } else {
       return [
-        { 
-          header: "Pengirim", 
-          key: "citizenName", 
-          className: "text-center", 
+        {
+          header: "Sender",
+          key: "citizenName",
+          className: "text-center",
           cell: (val: any, row: any) => (
             <Link href={`/admin/tickets/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
@@ -308,7 +311,8 @@ export default function TicketsPage() {
         { header: "Status", key: "status", className: "text-center", cell: (val: any) => getStatusBadge(val) },
         { header: "Priority", key: "urgency", className: "text-center", cell: (val: any) => getUrgencyBadge(val) },
         messageColumn,
-        { header: "Action", key: "id", className: "text-center", cell: (_: any, row: any) => (
+        {
+          header: "Action", key: "id", className: "text-center", cell: (_: any, row: any) => (
             <button onClick={() => openDeleteModal(row)} className="text-gray-400 hover:text-red-500 transition-colors">
               <Trash2 className="w-4 h-4" />
             </button>
@@ -327,27 +331,26 @@ export default function TicketsPage() {
           {['pending', 'all', 'aspirations'].map((id) => (
             <button
               key={id}
-              onClick={() => { 
-                setActiveTab(id as TabCategory); 
-                setSearchQuery(""); 
+              onClick={() => {
+                setActiveTab(id as TabCategory);
+                setSearchQuery("");
                 setAppliedFilters({ opds: [], classifications: [], issues: [], priorities: [], rangeTime: "" });
               }}
-              className={`px-5 h-10 flex items-center justify-center rounded-[12px] text-sm 2xl:text-base 2xl:h-12 font-semibold transition-all duration-200 ${
-                activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
-              }`}
+              className={`px-5 h-10 flex items-center justify-center rounded-[12px] text-sm 2xl:text-base 2xl:h-12 font-semibold transition-all duration-200 ${activeTab === id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
+                }`}
             >
               {id === 'pending' ? 'Pending Review' : id === 'all' ? 'All Tickets' : 'Aspirations'}
             </button>
           ))}
         </div>
         <div className="w-auto">
-            <Header 
-              searchQuery={searchQuery} 
-              setSearchQuery={setSearchQuery} 
-              onFilterClick={() => setIsFilterOpen(true)}
-              sortOrder={sortOrder}
-              onSortChange={setSortOrder} 
-            /> 
+          <Header
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onFilterClick={() => setIsFilterOpen(true)}
+            sortOrder={sortOrder}
+            onSortChange={setSortOrder}
+          />
         </div>
       </div>
 
@@ -366,45 +369,45 @@ export default function TicketsPage() {
         ) : searchQuery !== "" ? (
           <SearchEmptyState type={activeTab} />
         ) : (
-          <EmptyState 
-            title="No tickets found" 
-            description="There is currently no data available. Please add new data to see it displayed here." 
+          <EmptyState
+            title="No tickets found"
+            description="There is currently no data available. Please add new data to see it displayed here."
           />
         )}
       </div>
 
       {/* Modals */}
-      <DeleteAlertModal 
-        isOpen={isDeleteModalOpen} 
-        onClose={closeDeleteModal} 
-        onConfirm={() => { 
-          toast.success("Ticket deleted successfully"); 
-          closeDeleteModal(); 
-        }} 
-        itemName={activeTab === 'aspirations' ? "aspiration message" : "task"} 
+      <DeleteAlertModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={() => {
+          toast.success("Ticket deleted successfully");
+          closeDeleteModal();
+        }}
+        itemName={activeTab === 'aspirations' ? "aspiration message" : "task"}
       />
 
-      <EditTicketModal 
+      <EditTicketModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         ticketData={selectedTicket}
         onSaved={fetchTickets}
       />
 
-      <ForwardTicketModal 
+      <ForwardTicketModal
         isOpen={isForwardModalOpen}
         onClose={() => setIsForwardModalOpen(false)}
         onConfirm={handleForwardConfirm}
       />
 
-      <FilterSidebar 
+      <FilterSidebar
         admin
-        isOpen={isFilterOpen} 
-        onClose={() => setIsFilterOpen(false)} 
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
         filterState={appliedFilters}
         onApply={(filters) => setAppliedFilters(filters)}
       />
-      
+
     </div>
   );
 }

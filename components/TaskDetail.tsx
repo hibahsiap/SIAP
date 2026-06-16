@@ -28,15 +28,34 @@ import type { Task } from "@/types/task"
 import type { TaskStatus } from "@/components/StatusBadge"
 import type { Priority } from "@/components/PriorityBadge"
 import UpdateProgressModal from "./UpdateProgressModal"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 type CategoryItem = { id: string; name: string }
 
-type Props = {
-  task: Task
+// UI status/priority → enum database
+const STATUS_TO_ENUM: Record<TaskStatus, string> = {
+  "open": "TO_DO",
+  "in-progress": "IN_PROGRESS",
+  "completed": "DONE",
+  "cancelled": "CANCELLED",
+}
+const PRIORITY_TO_ENUM: Record<Priority, string> = {
+  low: "LOW",
+  medium: "MEDIUM",
+  high: "HIGH",
+  urgent: "CRITICAL",
 }
 
-export default function TaskDetailContent({ task }: Props) {
+type Props = {
+  task: Task
+  /** Endpoint dasar untuk persist perubahan. OPD pakai default; admin meneruskan "/api/tickets". */
+  apiBase?: string
+}
+
+export default function TaskDetailContent({ task, apiBase = "/api/opd/tickets" }: Props) {
   const openReturnModal = useReturnStore((state) => state.open)
+  const router = useRouter()
 
   // 1. State Edit Properties (Status, Category, Priority)
   const [status, setStatus] = useState<TaskStatus>(task.status)
@@ -51,13 +70,17 @@ export default function TaskDetailContent({ task }: Props) {
       .catch(() => setCategories([]))
   }, [])
   
-  // 2. End Date State (Awalnya kosong kalau belum Done/Cancelled)
-  const [endDate, setEndDate] = useState<string>(
-    (task.status === "completed" || task.status === "cancelled") ? task.dueDate : ""
-  )
+  // 2. Finish Date State (terisi saat tiket Done/Cancelled — diambil dari resolvedAt/closedAt)
+  const [finishDate, setFinishDate] = useState<string>(task.finishDate ?? "")
 
-  // 3. Gallery State
+  // 3. Gallery State (bukti progress OPD — bersumber dari server)
   const [galleryImages, setGalleryImages] = useState<string[]>(task.gallery || [])
+
+  // Sinkronkan gallery dengan data server setelah router.refresh() (mis. usai simpan progress)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setGalleryImages(task.gallery || [])
+  }, [task.gallery])
 
   // 4. Modals State
   const [isAddImageOpen, setIsAddImageOpen] = useState(false)
@@ -81,10 +104,11 @@ export default function TaskDetailContent({ task }: Props) {
   const handleStatusChange = (newStatus: TaskStatus) => {
     setStatus(newStatus)
     if (newStatus === "completed" || newStatus === "cancelled") {
+      // Preview tanggal selesai = hari ini (nilai final di-stamp server saat disimpan)
       const today = new Date().toISOString().split("T")[0]
-      setEndDate(today)
+      setFinishDate(today)
     } else {
-      setEndDate("")
+      setFinishDate("")
     }
   }
 
@@ -113,6 +137,47 @@ export default function TaskDetailContent({ task }: Props) {
   // Logic membesarkan foto (Preview Lightbox)
   const handleImageClick = (src: string) => {
     setPreviewImage(src)
+  }
+
+  // Persist perubahan (status, kategori, prioritas) + bukti progress ke database
+  const handleProgressSave = async (data: { files: File[]; description: string }) => {
+    setIsUpdateModalOpen(false)
+    try {
+      const uploaded: { url: string; fileName: string; mimeType: string; sizeBytes: number }[] = []
+      for (const file of data.files) {
+        const fd = new FormData()
+        fd.append("file", file)
+        const upRes = await fetch("/api/upload", { method: "POST", body: fd })
+        const upData = await upRes.json()
+        if (!upRes.ok) throw new Error(upData.error ?? "Upload bukti progress gagal")
+        uploaded.push({
+          url: upData.url,
+          fileName: upData.fileName,
+          mimeType: upData.mimeType,
+          sizeBytes: upData.sizeBytes,
+        })
+      }
+
+      const res = await fetch(`${apiBase}/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: STATUS_TO_ENUM[status],
+          categoryId: categoryId || null,
+          urgency: PRIORITY_TO_ENUM[priority],
+          note: data.description,
+          attachments: uploaded.length > 0 ? uploaded : undefined,
+        }),
+      })
+      const resData = await res.json()
+      if (!res.ok) throw new Error(resData.error ?? "Gagal menyimpan perubahan")
+
+      toast.success("Perubahan tersimpan")
+      // Re-render server component agar Start/Finish date & data lain ter-update dari DB
+      router.refresh()
+    } catch (err) {
+      toast.error((err as Error).message)
+    }
   }
 
   return (
@@ -145,7 +210,7 @@ export default function TaskDetailContent({ task }: Props) {
             {/* Edit Status */}
             <TaskInfoRow icon={Loader} label="Status">
               <Select value={status} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
+                <SelectTrigger className="w-full bg-gray-50/50 border-gray-200">
                   <SelectValue placeholder="Pilih Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -160,7 +225,7 @@ export default function TaskDetailContent({ task }: Props) {
             {/* Edit Category */}
             <TaskInfoRow icon={CircleChevronDown} label="Category">
               <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
+                <SelectTrigger className="w-full bg-gray-50/50 border-gray-200">
                   <SelectValue placeholder="Pilih Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -179,7 +244,7 @@ export default function TaskDetailContent({ task }: Props) {
             {/* Edit Priority */}
             <TaskInfoRow icon={CircleChevronDown} label="Priority">
               <Select value={priority} onValueChange={(val) => setPriority(val as Priority)}>
-                <SelectTrigger className="w-[200px] bg-gray-50/50 border-gray-200">
+                <SelectTrigger className="w-full bg-gray-50/50 border-gray-200">
                   <SelectValue placeholder="Pilih Priority" />
                 </SelectTrigger>
                 <SelectContent>
@@ -195,10 +260,9 @@ export default function TaskDetailContent({ task }: Props) {
               <span className="text-gray-700">{formatDate(task.startDate)}</span>
             </TaskInfoRow>
 
-            {/* Sudah diubah labelnya jadi End Date dan isinya dinamis */}
-            <TaskInfoRow icon={Calendar} label="End Date">
+            <TaskInfoRow icon={Calendar} label="Finish Date">
               <span className="text-gray-700 font-medium">
-                {endDate ? formatDate(endDate) : "-"}
+                {finishDate ? formatDate(finishDate) : "-"}
               </span>
             </TaskInfoRow>
           </div>
@@ -262,11 +326,7 @@ export default function TaskDetailContent({ task }: Props) {
         isOpen={isUpdateModalOpen}
         onClose={() => setIsUpdateModalOpen(false)}
         task={{ id: task.id, taskName: task.title }} // Sesuaikan dengan interface modal
-        onSave={(data) => {
-          console.log("Data disimpan:", data);
-          // Masukkan logika API Anda di sini
-          setIsUpdateModalOpen(false);
-        }}
+        onSave={handleProgressSave}
       />
 
     </>

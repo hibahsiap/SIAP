@@ -45,20 +45,23 @@ export default async function TaskDetailPage({ params }: Props) {
     include: {
       assignedOpd: { select: { name: true } },
       category:    { select: { name: true } },
-      attachments: { select: { url: true } },
+      attachments: { select: { url: true, uploadedById: true } },
     },
   });
 
   if (!ticket || ticket.assignedOpdId !== user?.opdId) notFound();
 
-  const attachmentUrls = ticket.attachments.map((a) => a.url);
+  // "Image" = gambar dari user (intake, tanpa uploader internal).
+  // "Gallery" = bukti progress yang diunggah OPD (uploadedById terisi).
+  const userImages = ticket.attachments.filter((a) => !a.uploadedById).map((a) => a.url);
+  const galleryImages = ticket.attachments.filter((a) => a.uploadedById).map((a) => a.url);
 
   const task: Task = {
     id:        ticket.id,
     title:     ticket.title ?? ticket.description.slice(0, 80),
     aspirasi:  ticket.description,
-    images:    attachmentUrls,
-    gallery:   attachmentUrls,
+    images:    userImages,
+    gallery:   galleryImages,
     status:    mapStatus(ticket.status),
     categoryId:   ticket.categoryId,
     categoryName: ticket.category?.name ?? null,
@@ -66,6 +69,10 @@ export default async function TaskDetailPage({ params }: Props) {
     priority:  mapPriority(ticket.urgency),
     startDate: ticket.startDate ? ticket.startDate.toISOString().split("T")[0] : "",
     dueDate:   ticket.dueDate   ? ticket.dueDate.toISOString().split("T")[0]   : "",
+    finishDate: (() => {
+      const finish = ticket.resolvedAt ?? ticket.closedAt;
+      return finish ? finish.toISOString().split("T")[0] : "";
+    })(),
   };
 
   return (

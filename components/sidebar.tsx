@@ -79,7 +79,7 @@ export default function Sidebar({
   };
 
   return (
-    <aside 
+    <aside
       className={`max-w-64 w-64 2xl:max-w-74 2xl:w-74 h-screen sticky top-0 bg-[#1D2F58] text-white flex flex-col px-2 pb-4 pt-6 border-r border-slate-700`}
     >
 
@@ -102,7 +102,7 @@ export default function Sidebar({
             Sistem Informasi Aduan Publik
           </p>
         </div>
-        
+
       </div>
 
       {/* Main Navigation */}
@@ -194,7 +194,7 @@ export default function Sidebar({
                 type="button"
                 onClick={handleLogout}
                 aria-label="Logout"
-                className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer hover:text-red-500"
+                className=" p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer hover:text-red-500"
                 title="Logout"
               >
                 <LogOut size={20} />
@@ -203,25 +203,25 @@ export default function Sidebar({
 
           </>
         ) : (
-            <div className={getLinkProfileStyle('/opd/profile')}>
-              <Link
-                href="/opd/profile"
-                className="w-full flex items-center gap-3 min-w-0"
-              >
-                <User size={20} />
-                <span className="text-sm 2xl:text-base truncate">
-                  {name ?? 'OPD'}
-                </span>
-              </Link>
-              <button
-                  type="button"
-                  onClick={handleLogout}
-                  aria-label="Logout"
-                  className="hover:bg-[#E2EFF3]/50 p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer hover:text-red-500"
-                >
-                  <LogOut size={20} />
-                </button>
-            </div>
+          <div className={getLinkProfileStyle('/opd/profile')}>
+            <Link
+              href="/opd/profile"
+              className="w-full flex items-center gap-3 min-w-0"
+            >
+              <User size={20} />
+              <span className="text-sm 2xl:text-base truncate">
+                {name ?? 'OPD'}
+              </span>
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Logout"
+              className=" p-0.5 rounded-[4px] transition-all transform duration-300 cursor-pointer hover:text-red-500"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
 
         )}
       </div>

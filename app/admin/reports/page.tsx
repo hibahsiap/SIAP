@@ -82,7 +82,7 @@ export default function Reports() {
     return (
         <div className="flex flex-col gap-5 pr-6 pl-4 py-2">
             <div className="flex flex-row items-center justify-between py-1">
-                <h1 className="font-bold text-3xl 2xl:text-4xl text-[#041942]">Report</h1>
+                <h1 className="font-bold text-3xl 2xl:text-4xl text-[#041942]">Reports</h1>
             </div>
 
             {isLoading ? (
@@ -107,15 +107,18 @@ export default function Reports() {
                         <PieChartData data={data?.messagesDistribution} />
                         <BarChartData data={data?.ticketsByChannel} />
                     </div>
-                    <div className="border border-[#D2D2D2] p-4 rounded-[15px] flex flex-col items-end gap-4 bg-white">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 2xl:h-6 text-gray-500" />
-                            <Input
-                                placeholder="Search"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-9 w-full md:w-70 2xl:w-80 bg-gray-100 border-transparent focus:bg-white focus:border-[#1D2F58] rounded-md h-10 2xl:h-12 text-sm 2xl:text-base transition-all"
-                            />
+                    <div className="border border-[#D2D2D2] p-4 rounded-[15px] flex flex-col gap-4 bg-white">
+                        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <h2 className="font-bold text-xl 2xl:text-2xl text-[#041942]">OPD Performance</h2>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 2xl:h-6 text-gray-500" />
+                                <Input
+                                    placeholder="Search"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9 w-full md:w-70 2xl:w-80 bg-gray-100 border-transparent focus:bg-white focus:border-[#1D2F58] rounded-md h-10 2xl:h-12 text-sm 2xl:text-base transition-all"
+                                />
+                            </div>
                         </div>
 
                         <div className="w-full">

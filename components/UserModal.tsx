@@ -8,6 +8,7 @@ import { Eye, EyeOff } from "lucide-react"
 import { useUserStore } from "@/store/useUserStore"
 import CustomModal from "@/components/CustomModal"
 import { toast } from "sonner"
+import { normalizePhone } from "@/lib/phone"
 
 type Opd = { id: string; name: string }
 
@@ -89,6 +90,11 @@ export default function UserModals() {
       toast.error("Passwords do not match!")
       return
     }
+    const normalizedPhone = normalizePhone(addForm.phone)
+    if (!normalizedPhone) {
+      toast.error("Invalid phone number. Use Indonesian format, e.g. +62 812-3456-7890")
+      return
+    }
 
     setIsSubmitting(true)
     try {
@@ -99,7 +105,7 @@ export default function UserModals() {
         name: addForm.name,
         email: finalEmail,
         password: addForm.password,
-        phone: addForm.phone || undefined,
+        phone: normalizedPhone,
         role: addForm.role,
         opdName: selectedOpd?.name || undefined,
       })
@@ -114,6 +120,15 @@ export default function UserModals() {
 
   const handleEdit = async () => {
     if (!selectedUser) return
+    let normalizedPhone: string | undefined
+    if (editForm.phone) {
+      const np = normalizePhone(editForm.phone)
+      if (!np) {
+        toast.error("Invalid phone number. Use Indonesian format, e.g. +62 812-3456-7890")
+        return
+      }
+      normalizedPhone = np
+    }
     setIsSubmitting(true)
     try {
       const finalEmail = editForm.email.includes("@") ? editForm.email : `${editForm.email}@hibah.go.id`
@@ -122,7 +137,7 @@ export default function UserModals() {
       await updateUser(selectedUser.id, {
         name: editForm.name,
         email: finalEmail,
-        phone: editForm.phone || undefined,
+        phone: normalizedPhone,
         role: editForm.role,
         opdName: selectedOpd?.name || undefined,
       })
@@ -185,26 +200,11 @@ export default function UserModals() {
 
           {/* <FormField label="Phone Number" placeholder="0812-0000-0000" value={addForm.phone} onChange={(v) => setAddForm({ ...addForm, phone: v })} /> */}
 
-          <FormField 
-            label="Phone Number" 
-            placeholder="+62 812-0000-0000" 
-            value={addForm.phone} 
-            onChange={(v) => {
-              // 1. Hapus semua karakter yang bukan angka
-              const numbersOnly = v.replace(/\D/g, '');
-              
-              // 2. Pastikan selalu dimulai dengan 62 (tanpa tanda + di awal agar mudah diproses)
-              // Jika user menghapus angka, pastikan prefix tetap ada
-              let formatted = numbersOnly;
-              if (!formatted.startsWith('62')) {
-                formatted = '62' + formatted;
-              }
-              
-              // 3. Batasi panjang maksimal (misal: 15 digit)
-              const finalValue = '+' + formatted.substring(0, 15);
-              
-              setAddForm({ ...addForm, phone: finalValue });
-            }} 
+          <FormField
+            label="Phone Number"
+            placeholder="+62 812-3456-7890"
+            value={addForm.phone}
+            onChange={(v) => setAddForm({ ...addForm, phone: v })}
           />
 
           {addForm.role === "OPD" && (
@@ -288,26 +288,11 @@ export default function UserModals() {
 
               {/* <FormField label="Phone Number" placeholder="0812-0000-0000" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} /> */}
 
-              <FormField 
-                label="Phone Number" 
-                placeholder="+62 812-0000-0000" 
-                value={addForm.phone} 
-                onChange={(v) => {
-                  // 1. Hapus semua karakter yang bukan angka
-                  const numbersOnly = v.replace(/\D/g, '');
-                  
-                  // 2. Pastikan selalu dimulai dengan 62 (tanpa tanda + di awal agar mudah diproses)
-                  // Jika user menghapus angka, pastikan prefix tetap ada
-                  let formatted = numbersOnly;
-                  if (!formatted.startsWith('62')) {
-                    formatted = '62' + formatted;
-                  }
-                  
-                  // 3. Batasi panjang maksimal (misal: 15 digit)
-                  const finalValue = '+' + formatted.substring(0, 15);
-                  
-                  setAddForm({ ...addForm, phone: finalValue });
-                }} 
+              <FormField
+                label="Phone Number"
+                placeholder="+62 812-3456-7890"
+                value={editForm.phone}
+                onChange={(v) => setEditForm({ ...editForm, phone: v })}
               />
 
               {editForm.role === "OPD" && (

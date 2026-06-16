@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 // import { Badge } from '@/components/ui/badge';
 // import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -51,6 +51,14 @@ const priorityColors = {
   high: "border-red-400 bg-red-50 text-red-700",
 };
 
+const COLUMN_TO_STATUS: Record<string, string> = {
+  todo: "TO_DO",
+  progress: "IN_PROGRESS",
+  done: "DONE",
+  hold: "ON_HOLD",
+  cancel: "CANCELLED",
+};
+
 export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'newest', }: { searchQuery?: string, filters?: FilterState; sortOrder?: 'newest' | 'oldest'; }) {
 
   const [columns, setColumns] = useState<Column[]>(
@@ -58,8 +66,8 @@ export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'ne
   );
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/opd/tickets?tab=kanban")
+  const loadTickets = useCallback(() => {
+    return fetch("/api/opd/tickets?tab=kanban")
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((tasks: Task[]) => {
         setColumns(
@@ -72,6 +80,10 @@ export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'ne
       .catch((err) => console.error("[KanbanBoard] failed to load", err))
       .finally(() => setIsLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
 
   const filteredColumns = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -168,41 +180,73 @@ export default function KanbanBoard({ searchQuery = "", filters, sortOrder = 'ne
   };
 
   // Fungsi penanganan akhir saat tombol "Save Changes" diklik di dalam modal
-  const handleFinalProgressSave = (data: { files: File[]; description: string }) => {
+  const handleFinalProgressSave = async (data: { files: File[]; description: string }) => {
     if (!pendingMove) return;
 
     const { task, sourceColumnId, targetColumnId } = pendingMove;
 
+    // Optimistic update: pindahkan card ke kolom tujuan langsung.
     setColumns((prev) =>
       prev.map((col) => {
-        // 1. Bersihkan dari bodi kolom asal
         if (col.id === sourceColumnId) {
           return { ...col, tasks: col.tasks.filter((t) => t.id !== task.id) };
         }
-        
-        // 2. Tambah ke bodi kolom baru dan perbarui isi pesan teksnya
-        if (col.id === targetColumnId) { 
+        if (col.id === targetColumnId) {
           return {
             ...col,
-            tasks: [...col.tasks, { ...task, description: data.description, status: targetColumnId as any }]
+            tasks: [...col.tasks, { ...task, status: targetColumnId as Task["status"] }],
           };
         }
         return col;
       })
     );
 
-    // Kirim data gabungan berkas gambar bukti & deskripsi teks baru ke Backend
-    console.log("Files ready to API upload:", data.files);
-    console.log("New description updated:", data.description);
-
-    // Reset total seluruh state modal (Modal menutup dengan aman)
     setIsProgressModalOpen(false);
     setPendingMove(null);
 
+    try {
+      // 1. Upload bukti progress (jika ada) ke storage.
+      const uploadedAttachments: { url: string; fileName: string; mimeType: string; sizeBytes: number }[] = [];
+      for (const file of data.files) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const upRes = await fetch("/api/upload", { method: "POST", body: fd });
+        const upData = await upRes.json();
+        if (!upRes.ok) throw new Error(upData.error ?? "Upload bukti progress gagal");
+        uploadedAttachments.push({
+          url: upData.url,
+          fileName: upData.fileName,
+          mimeType: upData.mimeType,
+          sizeBytes: upData.sizeBytes,
+        });
+      }
+
+      // 2. Persist perubahan status + catatan progress ke database.
+      const res = await fetch(`/api/opd/tickets/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: COLUMN_TO_STATUS[targetColumnId],
+          note: data.description,
+          attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
+        }),
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error ?? "Gagal memperbarui status tiket");
+
+      toast.success("Progress tersimpan", {
+        description: `"${task.taskName}" dipindahkan ke ${COLUMN_TEMPLATES.find((c) => c.id === targetColumnId)?.title}`,
+      });
+    } catch (err) {
+      console.error("[KanbanBoard] save failed", err);
+      toast.error((err as Error).message ?? "Gagal menyimpan progress");
+      // Revert dengan menarik ulang data terbaru dari server.
+      loadTickets();
+    }
   };
  
   return (
-    <div className="mb-4 flex flex-col -mt-2 relative">
+    <div className="mb-4 flex flex-col relative">
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">

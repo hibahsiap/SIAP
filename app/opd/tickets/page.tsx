@@ -16,21 +16,21 @@ import { isWithinRange } from '@/utils/dateFilter';
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
-    "To Do":      "bg-[#F7D9D5] text-[#6D3531]",
-    "In Progress":"bg-[#C1DEF5] text-[#264A72]",
-    "Done":       "bg-[#D7E6DD] text-[#2A533C]",
-    "On Hold":    "bg-[#E7D9CF] text-[#584437]",
-    "Canceled":   "bg-[#E1DFDC] text-[#494846]",
+    "To Do": "bg-[#F7D9D5] text-[#6D3531]",
+    "In Progress": "bg-[#C1DEF5] text-[#264A72]",
+    "Done": "bg-[#D7E6DD] text-[#2A533C]",
+    "On Hold": "bg-[#E7D9CF] text-[#584437]",
+    "Canceled": "bg-[#E1DFDC] text-[#494846]",
   };
   const dotColors: Record<string, string> = {
-    "To Do":      "bg-[#E56458]",
-    "In Progress":"bg-[#2783DE]",
-    "Done":       "bg-[#46A171]",
-    "On Hold":    "bg-[#B68965]",
-    "Canceled":   "bg-[#8E8B86]",
+    "To Do": "bg-[#E56458]",
+    "In Progress": "bg-[#2783DE]",
+    "Done": "bg-[#46A171]",
+    "On Hold": "bg-[#B68965]",
+    "Canceled": "bg-[#8E8B86]",
   };
   const style = styles[status] ?? "bg-gray-100 text-gray-600";
-  const dot   = dotColors[status] ?? "bg-gray-500";
+  const dot = dotColors[status] ?? "bg-gray-500";
   return (
     <div className={`mx-auto inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full text-[11px] 2xl:text-[13px] font-bold tracking-wide ${style} w-30`}>
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`}></span>
@@ -46,26 +46,26 @@ const formatDate = (val: string | null) => {
 
 const typeLabel: Record<string, string> = {
   COMPLAINT: "Pengaduan",
-  QUESTION:  "Pertanyaan",
-  FEEDBACK:  "Saran",
+  QUESTION: "Pertanyaan",
+  FEEDBACK: "Saran",
 };
 
 const getTypeBadge = (type: string | null) => {
   if (!type) return <span className="text-gray-400">-</span>;
   const display = typeLabel[type] ?? type;
   const styles: Record<string, string> = {
-    Pengaduan:  "bg-red-100/80 text-red-700",
+    Pengaduan: "bg-red-100/80 text-red-700",
     Pertanyaan: "bg-blue-100/80 text-blue-700",
-    Saran:      "bg-green-100/80 text-green-700",
+    Saran: "bg-green-100/80 text-green-700",
   };
   return <span className={`px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[display] ?? "bg-gray-100 text-gray-600"}`}>{display}</span>;
 };
 
 const getPriorityBadge = (priority: string) => {
   const styles: Record<string, string> = {
-    "Low":    "bg-[#E3F2E7] text-[#4C9A61]",
+    "Low": "bg-[#E3F2E7] text-[#4C9A61]",
     "Medium": "bg-yellow-100/80 text-yellow-700",
-    "High":   "bg-red-100/80 text-red-700",
+    "High": "bg-red-100/80 text-red-700",
   };
   return <div className={`px-3 py-1.5 rounded-md text-[11px] 2xl:text-[13px] font-bold tracking-wide ${styles[priority] ?? "bg-gray-100 text-gray-600"}`}>{priority}</div>;
 };
@@ -134,7 +134,7 @@ export default function TicketsPage() {
       }
 
       if (appliedFilters.rangeTime) {
-        if (!isWithinRange(item.startDate, appliedFilters.rangeTime)) return false;
+        if (!isWithinRange(item.startDate ?? item.createdAt, appliedFilters.rangeTime)) return false;
       }
 
       return true;
@@ -142,8 +142,9 @@ export default function TicketsPage() {
 
     return [...filtered].sort((a: any, b: any) => {
       const getTime = (item: any) => {
-        if (item.startDate) {
-          const d = new Date(item.startDate);
+        const ref = item.startDate ?? item.createdAt;
+        if (ref) {
+          const d = new Date(ref);
           return isNaN(d.getTime()) ? 0 : d.getTime();
         }
         return 0;
@@ -170,7 +171,7 @@ export default function TicketsPage() {
     if (activeTab === 'all') {
       return [
         {
-          header: "Task Name",
+          header: "Title",
           key: "taskName",
           cell: (val: string, row: any) => (
             <Link href={`/opd/tickets/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
@@ -184,7 +185,7 @@ export default function TicketsPage() {
         { header: "Category", key: "categoryName", className: "text-center", cell: (val: string) => val ?? "-" },
         { header: "Priority", key: "priority", className: "text-center", cell: (val: string) => getPriorityBadge(val) },
         { header: "Start Date", key: "startDate", className: "text-center", cell: (val: string) => formatDate(val) },
-        { header: "Due Date", key: "dueDate", className: "text-center", cell: (val: string) => formatDate(val) },
+        { header: "Finish Date", key: "finishDate", className: "text-center", cell: (val: string) => formatDate(val) },
         messageColumn,
       ];
     }
@@ -221,15 +222,14 @@ export default function TicketsPage() {
       <div className="shrink-0 flex flex-col gap-4 py-4 mb-4 lg:flex-row lg:justify-between lg:items-center">
         <div className="flex flex-wrap gap-2">
           {[{ id: 'kanban', label: 'Kanban' },
-            { id: 'all', label: 'All Tickets' },
-            { id: 'aspirations', label: 'Aspirations' }
+          { id: 'all', label: 'All Tickets' },
+          { id: 'aspirations', label: 'Aspirations' }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id as TabCategory); setSearchQuery(""); }}
-              className={`px-5 h-10 rounded-[12px] text-sm 2xl:text-base 2xl:h-12 font-semibold transition-all duration-200 ${
-                activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
-              }`}
+              className={`px-5 h-10 rounded-[12px] text-sm 2xl:text-base 2xl:h-12 font-semibold transition-all duration-200 ${activeTab === tab.id ? "bg-[#041942] text-white shadow-md border-[#041942]" : "bg-white text-[#1B1B1B] hover:bg-gray-100 border border-[#D2D2D2]"
+                }`}
             >
               {tab.label}
             </button>
@@ -246,7 +246,7 @@ export default function TicketsPage() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-auto scrollbar-thick pb-1">
+      <div className="flex-1 min-h-0 overflow-auto scrollbar-thick pt-1 pb-1">
         {activeTab === 'kanban' ? (
           <KanbanBoard searchQuery={searchQuery} filters={appliedFilters} sortOrder={sortOrder} />
         ) : isLoading ? (

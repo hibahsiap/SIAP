@@ -8,7 +8,7 @@ import CategoryModal from "@/components/CategoryModal";
 import DeleteModal from "@/components/DeleteModal";
 import EmptyState from "@/components/EmptyState";
 import SearchEmptyState from "@/components/SearchEmpty";
-import TableTemplate, { ColumnDefinition } from "@/components/TableTemplate";
+import TableTemplate, { ColumnDefinition, SortConfig } from "@/components/TableTemplate";
 import { Input } from "@/components/ui/input";
 import { formatNameCell, TableRowData } from "@/constants/tableFormats";
 import { Loader2, MessageSquare, Pencil, PlusIcon, Search, Trash2 } from "lucide-react";
@@ -57,6 +57,7 @@ export default function Settings() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loadingCategories, setLoadingCategories] = useState(true);
     const [categorySearch, setCategorySearch] = useState("");
+    const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
     const [editCategory, setEditCategory] = useState<Category | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -146,21 +147,40 @@ export default function Settings() {
         (c.defaultOpd?.name ?? "").toLowerCase().includes(categorySearch.toLowerCase())
     );
 
+    const handleSort = (key: string) => {
+        // Siklus 3 tahap per kolom: asc → desc → default (urutan asli)
+        setSortConfig((prev) => {
+            if (!prev || prev.key !== key) return { key, direction: "asc" };
+            if (prev.direction === "asc") return { key, direction: "desc" };
+            return null; // sebelumnya desc → kembali ke default
+        });
+    };
+
+    const sortedCategories = [...filteredCategories].sort((a, b) => {
+        if (!sortConfig) return 0;
+        const av = sortConfig.key === "name" ? (a.defaultOpd?.name ?? "") : a.name;
+        const bv = sortConfig.key === "name" ? (b.defaultOpd?.name ?? "") : b.name;
+        const cmp = av.localeCompare(bv, "id", { sensitivity: "base" });
+        return sortConfig.direction === "asc" ? cmp : -cmp;
+    });
+
     const categoryColumns: ColumnDefinition[] = [
-        { 
-            header: "NO", 
+        {
+            header: "NO",
             key: "no",
-            className: "text-center w-[40px]", 
-        },
-        { 
-            header: "CATEGORIES", 
-            key: "category",
-            className: "w-[300px] 2xl:w-[400px]",
+            className: "text-center w-[40px]",
         },
         {
-            header: "NAME OPD",
+            header: "CATEGORIES",
+            key: "category",
+            className: "w-[300px] 2xl:w-[400px]",
+            sortable: true,
+        },
+        {
+            header: "Organisasi Perangkat Daerah",
             key: "name",
             cell: (_, rowData) => formatNameCell(rowData as TableRowData),
+            sortable: true,
         },
         {
             header: "ACTIONS",
@@ -179,7 +199,7 @@ export default function Settings() {
         },
     ];
 
-    const categoryData: TableRowData[] = filteredCategories.map((c, i) => ({
+    const categoryData: TableRowData[] = sortedCategories.map((c, i) => ({
         id: c.id,
         no: String(i + 1),
         category: c.name,
@@ -262,7 +282,7 @@ export default function Settings() {
                                     <Loader2 className="w-8 h-8 animate-spin text-[#1D2F58]" />
                                 </div>
                             ) : filteredCategories.length > 0 ? (
-                                <TableTemplate columns={categoryColumns} data={categoryData} />
+                                <TableTemplate columns={categoryColumns} data={categoryData} sortConfig={sortConfig} onSort={handleSort} />
                             ) : categorySearch !== "" ? (
                                 <SearchEmptyState type="category" searchQuery={categorySearch} />
                             ) : (

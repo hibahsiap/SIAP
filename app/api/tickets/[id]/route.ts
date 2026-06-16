@@ -24,6 +24,8 @@ export async function PATCH(
     categoryId,
     assignedOpdId,
     status,
+    attachments,
+    removedAttachmentIds,
   }: {
     title?: string;
     description?: string;
@@ -33,6 +35,8 @@ export async function PATCH(
     categoryId?: string | null;
     assignedOpdId?: string | null;
     status?: string;
+    attachments?: { url: string; fileName: string; mimeType: string; sizeBytes: number }[];
+    removedAttachmentIds?: string[];
   } = body;
 
   const existing = await prisma.ticket.findUnique({ where: { id } });
@@ -70,14 +74,35 @@ export async function PATCH(
     }
   }
 
-  const ticket = await prisma.ticket.update({
-    where: { id },
-    data,
-    include: {
-      citizen: { select: { displayName: true } },
-      assignedOpd: { select: { name: true } },
-      category: { select: { name: true } },
-    },
+  const ticket = await prisma.$transaction(async (tx) => {
+    if (removedAttachmentIds && removedAttachmentIds.length > 0) {
+      await tx.attachment.deleteMany({
+        where: { id: { in: removedAttachmentIds }, ticketId: id },
+      });
+    }
+
+    if (attachments && attachments.length > 0) {
+      await tx.attachment.createMany({
+        data: attachments.map((a) => ({
+          url: a.url,
+          fileName: a.fileName,
+          mimeType: a.mimeType,
+          sizeBytes: a.sizeBytes,
+          ticketId: id,
+          uploadedById: auth.userId,
+        })),
+      });
+    }
+
+    return tx.ticket.update({
+      where: { id },
+      data,
+      include: {
+        citizen: { select: { displayName: true } },
+        assignedOpd: { select: { name: true } },
+        category: { select: { name: true } },
+      },
+    });
   });
 
   const statusChanged = status !== undefined && ticket.status !== prevStatus;

@@ -13,7 +13,16 @@
       "Bash(rtk gain *)",
       "Bash(rtk npx *)",
       "Bash(rtk lint *)",
-      "Bash(rtk read *)"
+      "Bash(rtk read *)",
+      "PowerShell(npx eslint app/admin/tickets/page.tsx components/EditTicketModal.tsx \"app/api/tickets/route.ts\" \"app/api/tickets/[id]/route.ts\")",
+      "PowerShell(npx eslint \"app/api/opd/tickets/[id]/route.ts\" components/spectrumui/kanbanboard.tsx components/UpdateProgressModal.tsx app/opd/tickets/page.tsx)",
+      "PowerShell(npx eslint components/TaskDetail.tsx \"app/api/opd/tickets/[id]/route.ts\" \"app/opd/tickets/[id]/page.tsx\" \"app/admin/tickets/[id]/page.tsx\" types/task.ts)",
+      "PowerShell(npx eslint \"app/api/opd/tickets/route.ts\" \"app/api/tickets/route.ts\" \"app/admin/tickets/[id]/page.tsx\" \"app/opd/tickets/[id]/page.tsx\")",
+      "PowerShell(npx eslint components/TaskDetail.tsx \"app/opd/tickets/[id]/page.tsx\" \"app/admin/tickets/[id]/page.tsx\")",
+      "PowerShell(npx eslint app/admin/reports/page.tsx)",
+      "PowerShell(npx eslint app/api/reports/route.ts)",
+      "PowerShell(npx eslint app/admin/settings/page.tsx components/TableTemplate.tsx)",
+      "PowerShell(npx eslint components/UserModal.tsx app/api/users/route.ts \"app/api/users/[id]/route.ts\" lib/phone.ts)"
     ]
   }
 }

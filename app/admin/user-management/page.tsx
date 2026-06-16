@@ -182,7 +182,7 @@ export default function UserManagementPage() {
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading...</div>
           ) : filteredUsers.length > 0 ? (
-            <TableTemplate columns={columns} data={paginatedUsers as any} />
+            <TableTemplate columns={columns} data={paginatedUsers as any} containerClassName="h-full flex-1" />
           ) : searchQuery !== "" ? (
             <SearchEmptyState type="user" searchQuery={searchQuery} />
           ) : (

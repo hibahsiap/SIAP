@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth'
 import { logActivity, getClientIp } from '@/lib/activity'
 import bcrypt from 'bcryptjs'
+import { normalizePhone } from '@/lib/phone'
 
 export async function GET() {
   const auth = await getAuthUser()
@@ -35,6 +36,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 })
   }
 
+  let normalizedPhone: string | null = null
+  if (phone) {
+    normalizedPhone = normalizePhone(phone)
+    if (!normalizedPhone) {
+      return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 })
+    }
+  }
+
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
     return NextResponse.json({ error: 'Email already in use' }, { status: 409 })
@@ -57,7 +66,7 @@ export async function POST(request: NextRequest) {
       name,
       email,
       password: hashedPassword,
-      phone: phone || null,
+      phone: normalizedPhone,
       role: role ?? 'OPD',
       opdId: opdId ?? null,
     },

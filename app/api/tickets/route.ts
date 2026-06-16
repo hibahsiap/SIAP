@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
       assignedOpd: { select: { id: true, name: true } },
       category: { select: { id: true, name: true } },
       channel: { select: { id: true, platform: true } },
+      attachments: { select: { id: true, url: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 100,
@@ -54,8 +55,9 @@ export async function GET(req: NextRequest) {
       urgency: t.urgency,
       type: t.type,
       location: t.location,
-      startDate: t.startDate,
-      dueDate: t.dueDate,
+      startDate: t.startDate ? t.startDate.toISOString().split("T")[0] : null,
+      dueDate: t.dueDate ? t.dueDate.toISOString().split("T")[0] : null,
+      finishDate: (t.resolvedAt ?? t.closedAt)?.toISOString().split("T")[0] ?? null,
       createdAt: t.createdAt,
       citizenName: t.citizen.displayName,
       opdName: t.assignedOpd?.name ?? null,
@@ -63,6 +65,7 @@ export async function GET(req: NextRequest) {
       categoryName: t.category?.name ?? null,
       categoryId: t.category?.id ?? null,
       channelPlatform: t.channel.platform,
+      attachments: t.attachments,
     }))
   );
 }

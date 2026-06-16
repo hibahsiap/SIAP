@@ -13,5 +13,6 @@ export type Task = {
   priority: Priority
   startDate: string
   dueDate: string
+  finishDate: string
   gallery: string[]
 }
