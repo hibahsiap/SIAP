@@ -76,7 +76,7 @@ const Login = () => {
                 <div className="flex flex-col gap-2">
                     <Image src={"/images/logo-siap.png"} alt={"logo_siap"} width={52} height={50}></Image>
                     <h1 className="capitalize font-bold text-xl 2xl:text-2xl tracking-wide text-white">Sistem Informasi Aduan Publik</h1>
-                    <p className="text-[#8697C7] text-xs 2xl:text-base font-light tracking-wide">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Rem, id?</p>
+                    <p className="text-[#8697C7] text-xs 2xl:text-base font-light tracking-wide">Platform terintegrasi untuk menerima, mengelola, dan memantau aduan masyarakat secara cepat, transparan, dan akuntabel.</p>
                 </div>
                 <div className="py-5 uppercase border-t border-white/20 text-[10px] 2xl:text-xs tracking-wider text-white/60">Authorized Access Only</div>
             </div>
