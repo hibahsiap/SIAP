@@ -113,28 +113,28 @@ export default function ProfileForm() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Account Information</h1>
+    <div className="px-4 py-3 max-w-6xl 2xl:max-w-7xl mx-auto">
+      <h1 className="text-2xl 2xl:text-3xl font-bold text-[#041942] mb-6">Account Information</h1>
 
-      <div className="bg-white p-10 rounded-lg border border-gray-200 grid grid-cols-12 gap-12">
+      <div className="bg-white p-6 md:p-10 rounded-lg border border-gray-200 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         {/* Kolom Kiri */}
-        <div className="col-span-6 flex flex-col gap-10">
+        <div className="lg:col-span-6 flex flex-col gap-10">
           <UserAvatar />
 
           <div className="flex flex-col gap-4">
-            <h3 className="font-bold text-[11px] uppercase text-gray-400 tracking-wider">
+            <h3 className="font-bold text-[11px] 2xl:text-sm uppercase text-gray-400 tracking-wider">
               User Activity Log
             </h3>
             <div className="h-[2px] w-full bg-[#1D2F58] mb-6"></div>
-            <ScrollArea className="h-[480px] pr-3 [&_[data-slot=scroll-area-thumb]]:bg-[#1D2F58]/40 hover:[&_[data-slot=scroll-area-thumb]]:bg-[#1D2F58]/70">
+            <ScrollArea className="h-[480px] 2xl:h-[500px] pr-3 [&_[data-slot=scroll-area-thumb]]:bg-[#1D2F58]/40 hover:[&_[data-slot=scroll-area-thumb]]:bg-[#1D2F58]/70">
               <ActivityLog />
             </ScrollArea>
           </div>
         </div>
 
         {/* Kolom Kanan: Form */}
-        <div className="col-span-6">
-          <div className="max-w-xl space-y-4 [&_h1]:text-[13px] [&_label]:text-[13px] [&_input]:text-sm [&_input]:py-3.5">
+        <div className="lg:col-span-6">
+          <div className="max-w-xl space-y-4 [&_h1]:text-[13px] [&_label]:text-[13px] [&_input]:text-sm [&_input]:py-3.5 2xl:[&_h1]:text-[15px] 2xl:[&_label]:text-[15px] 2xl:[&_input]:text-base 2xl:[&_input]:py-4">
             <Field
               title="Full Name"
               placeholder="Your name"
@@ -205,7 +205,7 @@ export default function ProfileForm() {
               <Button
                 variant="secondary"
                 size="lg"
-                className="w-32 h-10"
+                className="w-32 h-10 2xl:w-40 2xl:h-12 2xl:font-semibold"
                 onClick={handleCancel}
                 disabled={saving}
               >
@@ -213,7 +213,7 @@ export default function ProfileForm() {
               </Button>
               <Button
                 size="lg"
-                className="w-32 h-10 bg-[#1D2F58] hover:bg-[#041942]"
+                className="w-32 h-10 2xl:w-40 2xl:h-12 2xl:font-semibold bg-[#1D2F58] hover:bg-[#041942]"
                 onClick={handleSave}
                 disabled={saving || !loaded}
               >

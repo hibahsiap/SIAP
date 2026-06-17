@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/chart";
 import { Cell, Pie, PieChart } from "recharts";
 
-const chartData = [
+export type PieChartDatum = { category: string; total: number };
+
+const fallbackData: PieChartDatum[] = [
   { category: "question", total: 16 },
   { category: "feedback", total: 24 },
   { category: "complaint", total: 80 },
@@ -33,10 +35,11 @@ const chartConfig = {
 
 const COLORS = ["#5998FE", "#7BADFF", "#C9DDFF"];
 
-export function PieChartData() {
+export function PieChartData({ data }: { data?: PieChartDatum[] }) {
+  const chartData = data && data.length > 0 ? data : fallbackData;
   return (
     <div className="bg-white flex flex-col items-center border border-[#D2D2D2] rounded-[15px] p-3">
-      <h3 className="text-[#546064] tracking-wide font-medium">
+      <h3 className="text-[#546064] tracking-wide font-medium 2xl:text-lg">
         Messages Distribution
       </h3>
       <ChartContainer config={chartConfig} className="w-full h-52">
@@ -53,7 +56,7 @@ export function PieChartData() {
             ))}
           </Pie>
           <ChartTooltip content={<ChartTooltipContent />} />
-          <ChartLegend content={<ChartLegendContent />} />
+          <ChartLegend content={<ChartLegendContent className="gap-2 text-[12px] 2xl:text-xs" />} />
         </PieChart>
       </ChartContainer>
     </div>

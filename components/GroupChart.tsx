@@ -4,7 +4,9 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { Clock1 } from "@boxicons/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 
-const chartData = [
+export type GroupChartDatum = { day: string; week: string; avg: number | null; color?: string };
+
+const fallbackData: GroupChartDatum[] = [
   // First Week
   { day: "Mon", week: "First Week", avg: 3, color: "#F4D254" },
   { day: "Tue", week: "First Week", avg: 5, color: "#F4D254" },
@@ -38,10 +40,11 @@ const chartConfig = {
   avg: { label: "avg response", color: "#F4D75D"},
 } satisfies ChartConfig;
 
-export function GroupChart() {
+export function GroupChart({ data }: { data?: GroupChartDatum[] }) {
+  const chartData = data && data.length > 0 ? data : fallbackData;
   return (
     <div className="bg-white flex flex-col border border-[#D2D2D2] rounded-[15px] p-3">
-      <h3 className="text-[#546064] tracking-wide font-medium">Average Response Time</h3>
+      <h3 className="text-[#546064] tracking-wide font-medium 2xl:text-lg">Average Response Time</h3>
       
       <ChartContainer config={chartConfig} className="h-52 w-full [&_svg]:overflow-visible">
         <BarChart 

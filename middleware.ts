@@ -11,7 +11,19 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    await jwtVerify(token, secret)
+    const { payload } = await jwtVerify(token, secret)
+    const role = payload.role as string;
+    const pathname = request.nextUrl.pathname;
+
+    // Role-based path protection
+    if (pathname.startsWith('/admin') && role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/opd/inbox', request.url));
+    }
+
+    if (pathname.startsWith('/opd') && role !== 'OPD') {
+      return NextResponse.redirect(new URL('/admin/chat', request.url));
+    }
+
     return NextResponse.next()
   } catch {
     const response = NextResponse.redirect(new URL('/login', request.url))
@@ -21,5 +33,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/admin/:path*', '/opd/:path*'],
 }

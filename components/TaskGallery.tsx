@@ -26,15 +26,15 @@ export default function TaskGallery({
           <span className="text-sm font-medium text-gray-900">Gallery</span>
         </div>
 
-        {canAddImage && (
+        {/* {canAddImage && (
           <Button
             onClick={onAddImage}
-            className="bg-slate-900 text-white hover:bg-slate-800"
+            className="bg-slate-900 text-white hover:bg-slate-800 w-32 h-8"
           >
             <Plus className="mr-1 size-4" />
-            ADD IMAGE
+            Add Image
           </Button>
-        )}
+        )} */}
       </div>
 
       {/* Grid gallery */}

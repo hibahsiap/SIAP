@@ -49,17 +49,19 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
 
   const inboxTabs = useMemo(
     () => [
-      { id: "all", label: "All Chat" },
-      { id: "unread", label: "Unread" },
+      { id: "all", label: "All Chat", className: "w-[20%]" },
+      { id: "unread", label: "Unread", className: "w-[20%]" },
       {
         id: "whatsapp",
         label: "WhatsApp",
         icon: <Image src="/images/whatsapp-icon.png" width={16} height={16} alt="wa" />,
+        className: "flex-1"
       },
       {
         id: "instagram",
         label: "Instagram",
         icon: <Image src="/images/instagram-icon.png" width={16} height={16} alt="ig" />,
+        className: "flex-1"
       },
     ],
     []
@@ -69,9 +71,9 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
   const basePath = role === "ADMIN" ? "/admin/chat" : "/opd/inbox";
 
   return (
-    <aside className="w-97.5 border-r flex flex-col h-full z-10">
-      <div className="p-4 space-y-4 border-b">
-        <h2 className="text-2xl font-bold text-slate-900">All Inbox</h2>
+    <aside className="w-full border-r flex flex-col h-full z-10">
+      <div className="px-2 py-1 space-y-4 border-b">
+        <h2 className="text-2xl 2xl:text-3xl font-bold text-[#041942]">All Inbox</h2>
 
         <div className="relative">
           <SearchField
@@ -82,37 +84,18 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
           />
         </div>
 
-        <div className="overflow-x-auto">
-          <InteractionTabs
-            tabs={inboxTabs}
-            activeTab={filters.platform}
-            onChange={(id) =>
-              setFilters({ platform: id as typeof filters.platform })
-            }
-          />
-        </div>
-
-        <div className="flex gap-2">
-          <TimeRange
-            options={[
-              { label: "Newest", value: "newest" },
-              { label: "Oldest", value: "oldest" },
-            ]}
-            value={filters.sort}
-            onChange={(v: string) => setFilters({ sort: v as typeof filters.sort })}
-            prefixLabel="Sort by :"
-          />
-          <TimeRange
-            prefixLabel="Status :"
-            options={[
-              { label: "All Status", value: "all" },
-              { label: "To Do", value: "to_do" },
-              { label: "In Progress", value: "in_progress" },
-              { label: "Done", value: "done" },
-            ]}
-            value={filterStatus}
-            onChange={(v: string) => setFilterStatus(v)}
-          />
+        <div>
+          <div className="w-full">
+            <InteractionTabs
+              tabs={inboxTabs}
+              activeTab={filters.platform}
+              onChange={(id) =>
+                setFilters({ platform: id as typeof filters.platform })
+              }
+              containerClassName="flex w-full gap-1 items-center pb-1"
+              tabClassName="flex-1"
+            />
+          </div>
         </div>
       </div>
 
@@ -128,7 +111,7 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
             const platform = platformOf(c);
             const href = `${basePath}/${c.id}`;
 
-              return (
+            return (
               <Link href={href} key={c.id}>
                 <ChatItem
                   name={c.citizen.name}
@@ -137,15 +120,15 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
                     c.lastMessage?.content
                       ? c.lastMessage.content
                       : c.lastMessage?.hasAttachment
-                      ? "[Image]"
-                      : "(no message)"
+                        ? "[Image]"
+                        : "(no message)"
                   }
                   time={timeAgo(c.lastMessage?.at ?? c.lastMessageAt)}
                   ticketCount={c.ticketCount}
                   platform={platform}
                   flagColor="text-green-500"
                   isActive={pathname === href}
-                  unread={c.unread}
+                  unreadCount={c.unreadCount}
                 />
               </Link>
             );

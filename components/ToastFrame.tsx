@@ -39,7 +39,7 @@ const ToastFrame = ({isSuccess, id, name,  process}: ToastFrameProps) => {
                     <div className="px-4 py-8 flex flex-col gap-6 justify-center items-center h-full">
                         <XCircle strokeWidth={0.5} size={144} className="text-[#C41825] font-light"/>
                         <h4 className="text-[#041942] font-bold text-xl">An error has occured</h4>
-                        <p className="text-[#AEAEAE] text-center text-sm">We couldn't process your request right now.<br />Please try again or contact support if the issue persists.</p>
+                        <p className="text-[#AEAEAE] text-center text-sm">We couldn&apos;t process your request right now.<br />Please try again or contact support if the issue persists.</p>
                         {/* <div className="w-50">
                             <ButtonClick name="try again" type="button"/>
                         </div> */}

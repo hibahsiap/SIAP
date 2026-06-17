@@ -67,11 +67,9 @@ Kembalikan HANYA objek JSON valid, tanpa markdown, tanpa komentar, tanpa teks la
     });
 
     const raw = completion.choices[0]?.message?.content ?? "{}";
-    console.log("[AI Classify] Raw LLM output:", raw);
 
     const cleaned = raw.replace(/```json\n?|\n?```/g, "").trim();
     const result = JSON.parse(cleaned);
-    console.log("[AI Classify] Parsed result:", JSON.stringify(result, null, 2));
 
     return NextResponse.json({
       title: result.title ?? null,

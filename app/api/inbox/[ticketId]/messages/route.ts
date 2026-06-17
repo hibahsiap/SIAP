@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { sendInstagramDM, sendInstagramAttachment } from "@/lib/instagram";
+import { sendWhatsappText, sendWhatsappMedia, waMediaTypeFromMime } from "@/lib/whatsapp";
 
 // Route param is `ticketId` historically; it identifies a Conversation.
 export async function POST(
@@ -12,7 +13,8 @@ export async function POST(
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { ticketId: conversationId } = await params;
-  const body = await req.json().catch(() => ({}));
+  try {
+    const body = await req.json().catch(() => ({}));
   const content: string = (body?.content ?? "").toString().trim();
   const isInternal: boolean = Boolean(body?.isInternal);
   const attachment: {
@@ -97,6 +99,7 @@ export async function POST(
   }
 
   let deliveryError: string | null = null;
+  let externalId: string | null = null;
 
   if (conv.channel.platform === "INSTAGRAM") {
     const recipient = conv.citizen.contacts.find((c) => c.platform === "INSTAGRAM");
@@ -132,14 +135,70 @@ export async function POST(
         });
       }
       if (content) {
-        await sendInstagramDM({
+        const res = await sendInstagramDM({
           accessToken: conv.channel.accessToken,
           recipientPsid: recipient.handle,
           text: content,
         });
+        if (res.message_id) {
+          externalId = res.message_id;
+        }
       }
     } catch (err) {
       console.error("[Instagram DM send]", err);
+      deliveryError = err instanceof Error ? err.message : "Unknown error";
+    }
+  } else if (conv.channel.platform === "WHATSAPP") {
+    const recipient = conv.citizen.contacts.find((c) => c.platform === "WHATSAPP");
+    if (!conv.channel.accessToken || !conv.channel.accountId) {
+      return NextResponse.json(
+        { error: "WhatsApp channel is not connected (missing access token or phone number ID)" },
+        { status: 400 }
+      );
+    }
+    if (!recipient) {
+      return NextResponse.json(
+        { error: "Citizen has no WhatsApp number on record" },
+        { status: 400 }
+      );
+    }
+
+    try {
+      if (attachment?.url) {
+        // WhatsApp media (image/video/document) can carry the text as a caption,
+        // so we avoid a second message. Audio has no caption → send text after.
+        const waType = waMediaTypeFromMime(attachment.mimeType);
+        const captionSupported = waType !== "audio";
+        const mediaRes = await sendWhatsappMedia({
+          phoneNumberId: conv.channel.accountId,
+          accessToken: conv.channel.accessToken,
+          recipientWaId: recipient.handle,
+          type: waType,
+          url: attachment.url,
+          caption: captionSupported && content ? content : undefined,
+          fileName: attachment.fileName,
+        });
+        externalId = mediaRes.message_id ?? null;
+        if (content && !captionSupported) {
+          const textRes = await sendWhatsappText({
+            phoneNumberId: conv.channel.accountId,
+            accessToken: conv.channel.accessToken,
+            recipientWaId: recipient.handle,
+            text: content,
+          });
+          externalId = textRes.message_id ?? externalId;
+        }
+      } else if (content) {
+        const textRes = await sendWhatsappText({
+          phoneNumberId: conv.channel.accountId,
+          accessToken: conv.channel.accessToken,
+          recipientWaId: recipient.handle,
+          text: content,
+        });
+        externalId = textRes.message_id ?? null;
+      }
+    } catch (err) {
+      console.error("[WhatsApp send]", err);
       deliveryError = err instanceof Error ? err.message : "Unknown error";
     }
   } else {
@@ -156,6 +215,7 @@ export async function POST(
       conversationId: conv.id,
       senderUserId: auth.userId,
       sentAt: now,
+      externalId,
     },
   });
 
@@ -170,4 +230,8 @@ export async function POST(
     { ...msg, deliveryError },
     { status: deliveryError ? 207 : 201 }
   );
+  } catch (err) {
+    console.error("[POST /api/inbox/[ticketId]/messages] Error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

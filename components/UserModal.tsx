@@ -8,6 +8,7 @@ import { Eye, EyeOff } from "lucide-react"
 import { useUserStore } from "@/store/useUserStore"
 import CustomModal from "@/components/CustomModal"
 import { toast } from "sonner"
+import { normalizePhone } from "@/lib/phone"
 
 type Opd = { id: string; name: string }
 
@@ -33,6 +34,34 @@ const FormField = ({
       onChange={(e) => onChange(e.target.value)}
       className="bg-gray-50 border-gray-200 text-gray-900 w-full"
     />
+  </div>
+)
+
+const OpdSelect = ({
+  value,
+  onChange,
+  opds,
+}: {
+  value: string
+  onChange: (v: string) => void
+  opds: Opd[]
+}) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OPD</label>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
+        <SelectValue placeholder="Pilih Instansi / OPD" />
+      </SelectTrigger>
+      <SelectContent>
+        {opds.length === 0 ? (
+          <SelectItem value="_empty" disabled>Tidak ada data OPD</SelectItem>
+        ) : (
+          opds.map((opd) => (
+            <SelectItem key={opd.id} value={opd.id}>{opd.name}</SelectItem>
+          ))
+        )}
+      </SelectContent>
+    </Select>
   </div>
 )
 
@@ -81,12 +110,17 @@ export default function UserModals() {
   }, [isAddModalOpen])
 
   const handleAdd = async () => {
-    if (!addForm.name || !addForm.email || !addForm.password) {
-      toast.error("Name, email, and password are required")
+    if (!addForm.name || !addForm.email || !addForm.phone || !addForm.password) {
+      toast.error("Name, email, phone, and password are required")
       return
     }
     if (addForm.password !== addForm.confirmPassword) {
       toast.error("Passwords do not match!")
+      return
+    }
+    const normalizedPhone = normalizePhone(addForm.phone)
+    if (!normalizedPhone) {
+      toast.error("Invalid phone number. Use Indonesian format, e.g. +62 812-3456-7890")
       return
     }
 
@@ -99,7 +133,7 @@ export default function UserModals() {
         name: addForm.name,
         email: finalEmail,
         password: addForm.password,
-        phone: addForm.phone || undefined,
+        phone: normalizedPhone,
         role: addForm.role,
         opdName: selectedOpd?.name || undefined,
       })
@@ -114,6 +148,15 @@ export default function UserModals() {
 
   const handleEdit = async () => {
     if (!selectedUser) return
+    let normalizedPhone: string | undefined
+    if (editForm.phone) {
+      const np = normalizePhone(editForm.phone)
+      if (!np) {
+        toast.error("Invalid phone number. Use Indonesian format, e.g. +62 812-3456-7890")
+        return
+      }
+      normalizedPhone = np
+    }
     setIsSubmitting(true)
     try {
       const finalEmail = editForm.email.includes("@") ? editForm.email : `${editForm.email}@hibah.go.id`
@@ -122,7 +165,7 @@ export default function UserModals() {
       await updateUser(selectedUser.id, {
         name: editForm.name,
         email: finalEmail,
-        phone: editForm.phone || undefined,
+        phone: normalizedPhone,
         role: editForm.role,
         opdName: selectedOpd?.name || undefined,
       })
@@ -134,32 +177,6 @@ export default function UserModals() {
       setIsSubmitting(false)
     }
   }
-
-  const OpdSelect = ({
-    value,
-    onChange,
-  }: {
-    value: string
-    onChange: (v: string) => void
-  }) => (
-    <div className="space-y-1.5">
-      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OPD</label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
-          <SelectValue placeholder="Pilih Instansi / OPD" />
-        </SelectTrigger>
-        <SelectContent>
-          {opds.length === 0 ? (
-            <SelectItem value="_empty" disabled>Tidak ada data OPD</SelectItem>
-          ) : (
-            opds.map((opd) => (
-              <SelectItem key={opd.id} value={opd.id}>{opd.name}</SelectItem>
-            ))
-          )}
-        </SelectContent>
-      </Select>
-    </div>
-  )
 
   return (
     <>
@@ -183,10 +200,17 @@ export default function UserModals() {
             </div>
           </div>
 
-          <FormField label="Phone Number" placeholder="0812-0000-0000" value={addForm.phone} onChange={(v) => setAddForm({ ...addForm, phone: v })} />
+          {/* <FormField label="Phone Number" placeholder="0812-0000-0000" value={addForm.phone} onChange={(v) => setAddForm({ ...addForm, phone: v })} /> */}
+
+          <FormField
+            label="Phone Number"
+            placeholder="+62 812-3456-7890"
+            value={addForm.phone}
+            onChange={(v) => setAddForm({ ...addForm, phone: v })}
+          />
 
           {addForm.role === "OPD" && (
-            <OpdSelect value={addForm.opdId} onChange={(v) => setAddForm({ ...addForm, opdId: v })} />
+            <OpdSelect value={addForm.opdId} onChange={(v) => setAddForm({ ...addForm, opdId: v })} opds={opds} />
           )}
 
           <div className="space-y-1.5">
@@ -235,8 +259,8 @@ export default function UserModals() {
 
         </div>
         <div className="flex gap-3 mt-8">
-          <Button onClick={closeAddModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold" disabled={isSubmitting}>CANCEL</Button>
-          <Button onClick={handleAdd} className="flex-1 bg-[#1a233a] text-white font-bold" disabled={isSubmitting}>
+          <Button onClick={closeAddModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold 2xl:h-10" disabled={isSubmitting}>CANCEL</Button>
+          <Button onClick={handleAdd} className="flex-1 bg-[#1a233a] text-white font-bold 2xl:h-10" disabled={isSubmitting}>
             {isSubmitting ? "CREATING..." : "CREATE USER"}
           </Button>
         </div>
@@ -264,10 +288,17 @@ export default function UserModals() {
                 </div>
               </div>
 
-              <FormField label="Phone Number" placeholder="0812-0000-0000" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} />
+              {/* <FormField label="Phone Number" placeholder="0812-0000-0000" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} /> */}
+
+              <FormField
+                label="Phone Number"
+                placeholder="+62 812-3456-7890"
+                value={editForm.phone}
+                onChange={(v) => setEditForm({ ...editForm, phone: v })}
+              />
 
               {editForm.role === "OPD" && (
-                <OpdSelect value={editForm.opdId} onChange={(v) => setEditForm({ ...editForm, opdId: v })} />
+                <OpdSelect value={editForm.opdId} onChange={(v) => setEditForm({ ...editForm, opdId: v })} opds={opds} />
               )}
 
               <div className="space-y-1.5">
@@ -287,8 +318,8 @@ export default function UserModals() {
               </div>
             </div>
             <div className="flex gap-3 mt-8">
-              <Button onClick={closeEditModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold" disabled={isSubmitting}>CANCEL</Button>
-              <Button onClick={handleEdit} className="flex-1 bg-[#1a233a] text-white font-bold" disabled={isSubmitting}>
+              <Button onClick={closeEditModal} variant="outline" className="flex-1 bg-gray-100 border-0 text-[#1a233a] font-bold 2xl:h-10" disabled={isSubmitting}>CANCEL</Button>
+              <Button onClick={handleEdit} className="flex-1 bg-[#1a233a] text-white font-bold 2xl:h-10" disabled={isSubmitting}>
                 {isSubmitting ? "SAVING..." : "SAVE CHANGES"}
               </Button>
             </div>

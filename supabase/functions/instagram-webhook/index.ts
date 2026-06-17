@@ -121,6 +121,16 @@ async function sendAutoReply(opts: {
     return
   }
 
+  let externalId: string | null = null
+  try {
+    const sendData = await sendRes.json()
+    if (sendData.message_id) {
+      externalId = sendData.message_id
+    }
+  } catch (err) {
+    console.warn('[AutoReply] Failed to parse send response:', err)
+  }
+
   // Simpan auto-reply ke DB sebagai OUTBOUND agar terhitung di 24h check berikutnya
   const { error: replyErr } = await supabase.from('Message').insert({
     id: crypto.randomUUID(),
@@ -132,6 +142,7 @@ async function sendAutoReply(opts: {
     isInternal: false,
     isApproved: true,
     updatedAt: now,
+    externalId,
   })
 
   if (replyErr) {
@@ -139,6 +150,182 @@ async function sendAutoReply(opts: {
   } else {
     console.log(`[AutoReply] Sent ${isFirst24h ? 'welcome' : messageText.trim()} to ${senderId}`)
   }
+}
+
+function detectTemplateType(text: string): "COMPLAINT" | "QUESTION" | "FEEDBACK" | null {
+  const t = text.trim();
+  if (t.includes("[FORM PENGADUAN]")) return "COMPLAINT";
+  if (t.includes("[FORM PERTANYAAN]")) return "QUESTION";
+  if (t.includes("[FORM SARAN]")) return "FEEDBACK";
+  return null;
+}
+
+async function classifyViaGroq(content: string, apiKey: string, categoryList: string) {
+  const systemPrompt = `Kamu adalah asisten klasifikasi pengaduan publik untuk pemerintah daerah Indonesia.
+Tugasmu: analisis pesan warga dan kembalikan klasifikasi dalam format JSON.
+
+=== ATURAN TYPE ===
+- COMPLAINT: keluhan, laporan masalah, pengaduan
+- QUESTION: pertanyaan, permintaan informasi atau prosedur
+- FEEDBACK: saran, masukan, apresiasi
+
+=== ATURAN URGENCY ===
+- CRITICAL: mengancam keselamatan jiwa, bencana aktif, darurat
+- HIGH: masalah serius yang mengganggu banyak orang atau perlu ditangani segera
+- MEDIUM: masalah umum yang perlu ditangani dalam waktu normal
+- LOW: pertanyaan, saran ringan, informasi
+
+=== KATEGORI YANG TERSEDIA ===
+Pilih SATU nama kategori yang PALING SESUAI dari daftar berikut. Jangan mengarang nama kategori baru.
+WAJIB diisi — selalu pilih yang paling mendekati, jangan pernah null.
+
+${categoryList}
+
+Panduan pemilihan kategori:
+- Jalan berlubang, drainase, jembatan, trotoar → "Jalan dan Infrastruktur"
+- Sampah, kebersihan lingkungan, TPS → "Sampah dan Kebersihan"
+- Banjir, longsor, gempa, bencana alam → "Banjir dan Bencana"
+- Sekolah, guru, kurikulum, beasiswa → "Pendidikan"
+- Puskesmas, rumah sakit, obat, vaksin → "Kesehatan"
+- KTP, KK, akta, dukcapil, dokumen kependudukan → "Kependudukan"
+- Bansos, PKH, sembako, BPNT, subsidi → "Bantuan Sosial"
+- Angkutan umum, parkir, kemacetan, terminal → "Transportasi"
+- Internet, wifi, aplikasi pemerintah, TIK → "Teknologi dan Internet"
+- Pasar, UMKM, izin usaha, PKL → "Perdagangan dan UMKM"
+
+=== FORMAT OUTPUT ===
+Kembalikan HANYA objek JSON valid, tanpa markdown, tanpa komentar, tanpa teks lain:
+{"title":"judul singkat maksimal 80 karakter","description":"ringkasan 1-2 kalimat isi pesan","type":"COMPLAINT|FEEDBACK|QUESTION","urgency":"LOW|MEDIUM|HIGH|CRITICAL","location":"nama lokasi jika disebutkan, atau null","category":"nama kategori persis seperti di daftar (WAJIB diisi)"}`;
+
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Pesan warga: ${content}` },
+      ],
+      temperature: 0.2,
+      max_tokens: 512,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`Groq API error ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const raw = data.choices?.[0]?.message?.content ?? "{}";
+  const cleaned = raw.replace(/```json\n?|\n?```/g, "").trim();
+  const result = JSON.parse(cleaned);
+
+  return {
+    title: (result.title as string) ?? null,
+    description: (result.description as string) ?? null,
+    type: (result.type as string) ?? null,
+    urgency: (result.urgency as string) ?? null,
+    location: (result.location as string) ?? null,
+    category: (result.category as string) ?? null,
+  };
+}
+
+async function handleAutoTicket(opts: {
+  supabase: ReturnType<typeof createClient>;
+  messageId: string;
+  conversationId: string;
+  messageText: string;
+  citizenId: string;
+  channelId: string;
+  groqApiKey: string;
+  now: Date;
+}) {
+  const { supabase, messageId, conversationId, messageText, citizenId, channelId, groqApiKey, now } = opts;
+
+  const templateType = detectTemplateType(messageText);
+  if (!templateType) return;
+
+  console.log(`[AutoTicket] Template detected: ${templateType}`);
+
+  const { data: dbCategories } = await supabase
+    .from("Category")
+    .select("id, name, defaultOpdId");
+
+  const catMap = new Map<string, { id: string; defaultOpdId: string | null }>();
+  for (const c of dbCategories ?? []) {
+    catMap.set(c.name.toLowerCase(), { id: c.id, defaultOpdId: c.defaultOpdId });
+  }
+  const categoryList = dbCategories?.length
+    ? dbCategories.map((c) => c.name).join(", ")
+    : "Jalan dan Infrastruktur, Sampah dan Kebersihan, Banjir dan Bencana, Pendidikan, Kesehatan, Kependudukan, Bantuan Sosial, Transportasi, Teknologi dan Internet, Perdagangan dan UMKM";
+
+  let aiResult: { title?: string | null; description?: string | null; type?: string | null; urgency?: string | null; location?: string | null; category?: string | null } = {};
+  try {
+    aiResult = await classifyViaGroq(messageText, groqApiKey, categoryList);
+    console.log(`[AutoTicket] AI classified: type=${aiResult.type} category=${aiResult.category}`);
+  } catch (err) {
+    console.warn(`[AutoTicket] AI classification failed, using defaults:`, err);
+  }
+
+  let categoryId: string | null = null;
+  let opdId: string | null = null;
+  if (aiResult.category) {
+    const lower = aiResult.category.toLowerCase();
+    const match = catMap.get(lower);
+    if (match) {
+      categoryId = match.id;
+      opdId = match.defaultOpdId ?? null;
+    } else {
+      for (const [key, val] of catMap) {
+        if (key.includes(lower) || lower.includes(key)) {
+          categoryId = val.id;
+          opdId = val.defaultOpdId ?? null;
+          break;
+        }
+      }
+    }
+  }
+
+  const { count } = await supabase
+    .from("Ticket")
+    .select("id", { count: "exact", head: true });
+  const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const ticketNumber = `TKT-${datePart}-${String((count ?? 0) + 1).padStart(5, "0")}`;
+
+  const ticketId = crypto.randomUUID();
+  const { error: ticketErr } = await supabase.from("Ticket").insert({
+    id: ticketId,
+    ticketNumber,
+    title: aiResult.title ?? messageText.slice(0, 80),
+    description: aiResult.description ?? messageText,
+    status: "ON_HOLD",
+    urgency: aiResult.urgency ?? null,
+    type: templateType,
+    citizenId,
+    channelId,
+    conversationId,
+    categoryId,
+    assignedOpdId: opdId,
+    location: aiResult.location ?? null,
+    updatedAt: now,
+  });
+
+  if (ticketErr) {
+    console.error(`[AutoTicket] Failed to create ticket:`, JSON.stringify(ticketErr));
+    return;
+  }
+
+  const { error: msgErr } = await supabase
+    .from("Message")
+    .update({ ticketId, forwardedToTicketId: ticketId })
+    .eq("id", messageId);
+
+  if (msgErr) {
+    console.error(`[AutoTicket] Failed to link message to ticket:`, JSON.stringify(msgErr));
+  }
+
+  console.log(`[AutoTicket] Created ON_HOLD ticket ${ticketNumber} linked to message ${messageId}`);
 }
 
 Deno.serve(async (req: Request) => {
@@ -223,18 +410,16 @@ Deno.serve(async (req: Request) => {
             console.log('[Webhook] Skip: no message in event')
             continue
           }
-          if (event.message.is_echo) {
-            console.log('[Webhook] Skip: echo')
-            continue
-          }
+          
+          const isEcho = event.message.is_echo === true
 
-          const senderId: string = event.sender?.id ?? ''
+          const senderId: string = isEcho ? (event.recipient?.id ?? '') : (event.sender?.id ?? '')
           if (!senderId) {
-            console.log('[Webhook] Skip: no sender.id')
+            console.log(`[Webhook] Skip: no ${isEcho ? 'recipient' : 'sender'}.id`)
             continue
           }
           const messageText: string = event.message.text ?? ''
-          console.log(`[Webhook] DM from ${senderId}: ${messageText.slice(0, 80)}`)
+          console.log(`[Webhook] ${isEcho ? 'Echo' : 'DM'} from ${senderId}: ${messageText.slice(0, 80)}`)
 
           // Cari CitizenContact berdasarkan PSID. maybeSingle = null saat 0 row, tanpa error palsu.
           const { data: contact, error: contactSelErr } = await supabase
@@ -281,7 +466,7 @@ Deno.serve(async (req: Request) => {
 
             const { data: newCitizen, error: citizenErr } = await supabase
               .from('Citizen')
-              .insert({ displayName, updatedAt: new Date() })
+              .insert({ id: crypto.randomUUID(), displayName, updatedAt: new Date() })
               .select('id')
               .single()
             if (citizenErr || !newCitizen) {
@@ -291,6 +476,7 @@ Deno.serve(async (req: Request) => {
             citizenId = newCitizen.id
 
             const { error: contactErr } = await supabase.from('CitizenContact').insert({
+              id: crypto.randomUUID(),
               platform: 'INSTAGRAM',
               handle: senderId,
               username: profile.username ?? null,
@@ -344,6 +530,43 @@ Deno.serve(async (req: Request) => {
               continue
             }
             conversationId = newConv.id
+          }
+
+          const externalId: string | null = event.message.mid ?? null
+
+          // Handle echo deduplication and ID format mismatch (Project API vs Webhook)
+          if (isEcho && externalId) {
+            const timeLimit = new Date(sentAt.getTime() - 60000) // Within 60 seconds
+            const { data: recentMsg } = await supabase
+              .from('Message')
+              .select('id, externalId')
+              .eq('conversationId', conversationId)
+              .eq('direction', 'OUTBOUND')
+              .eq('content', messageText)
+              .gte('sentAt', timeLimit.toISOString())
+              .order('sentAt', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+
+            if (recentMsg) {
+              if (recentMsg.externalId !== externalId) {
+                // Update to Webhook format so future reply_to.mid matches
+                await supabase.from('Message').update({ externalId }).eq('id', recentMsg.id)
+                console.log(`[Webhook] Updated existing OUTBOUND message externalId to match webhook format`)
+              }
+              console.log('[Webhook] Skip: echo message already handled by project')
+              continue
+            }
+          } else if (externalId) {
+            const { data: existingMsg } = await supabase
+              .from('Message')
+              .select('id')
+              .eq('externalId', externalId)
+              .maybeSingle()
+            if (existingMsg) {
+              console.log('[Webhook] Skip: inbound message already exists', externalId)
+              continue
+            }
           }
 
           // PROSES ATTACHMENT DULU sebelum insert Message, supaya begitu realtime
@@ -404,18 +627,34 @@ Deno.serve(async (req: Request) => {
             }
           }
 
+          // Extract reply_to context
+          const replyToMid: string | null = event.message.reply_to?.mid ?? null
+          let replyToMessageId: string | null = null
+
+          if (replyToMid) {
+            const { data: replyMsg } = await supabase
+              .from('Message')
+              .select('id')
+              .eq('externalId', replyToMid)
+              .maybeSingle()
+            if (replyMsg) replyToMessageId = replyMsg.id
+          }
+
           // Setelah semua attachment ter-upload ke Storage, insert Message
           // (yang memicu realtime), lalu langsung insert semua Attachment row.
           const { error: msgErr } = await supabase.from('Message').insert({
             id: messageId,
             content: messageText,
-            senderType: 'WARGA',
-            direction: 'INBOUND',
+            senderType: isEcho ? 'ADMIN' : 'WARGA',
+            direction: isEcho ? 'OUTBOUND' : 'INBOUND',
             conversationId,
             sentAt,
             isInternal: false,
             isApproved: true,
+            isRead: isEcho ? true : false,
             updatedAt: now,
+            externalId,
+            replyToMessageId,
           })
           if (msgErr) {
             console.error('[Webhook] Failed to insert Message:', JSON.stringify(msgErr))
@@ -433,15 +672,33 @@ Deno.serve(async (req: Request) => {
             }
           }
 
-          await sendAutoReply({
-            supabase,
-            channel,
-            conversationId,
-            senderId,
-            messageText: messageText || '',
-            igGraphVersion,
-            now,
-          })
+          if (!isEcho) {
+            const groqApiKey = Deno.env.get("GROQ_API_KEY") ?? "";
+            if (groqApiKey) {
+              handleAutoTicket({
+                supabase,
+                messageId,
+                conversationId,
+                messageText: messageText || "",
+                citizenId,
+                channelId: channel.id,
+                groqApiKey,
+                now,
+              }).catch((err) =>
+                console.error("[Webhook] Auto ticket creation error:", err)
+              );
+            }
+
+            await sendAutoReply({
+              supabase,
+              channel,
+              conversationId,
+              senderId,
+              messageText: messageText || '',
+              igGraphVersion,
+              now,
+            })
+          }
         }
 
         // --- Comment & Mention ---
@@ -450,26 +707,70 @@ Deno.serve(async (req: Request) => {
           if (field !== 'comments' && field !== 'mentions') continue
 
           const val = change.value
-          const commentId: string = val.id
-          const username: string = val.from?.username ?? val.from?.id ?? 'unknown'
-          const content: string = val.text ?? '[no text]'
-          const mediaId: string = val.media?.id ?? ''
-          const capturedAt = val.timestamp ? new Date(val.timestamp * 1000) : new Date()
           const interactionType = field === 'mentions' ? 'MENTION' : 'COMMENT'
+          const capturedAt = val.timestamp ? new Date(val.timestamp * 1000) : new Date()
+
+          let externalId: string | undefined
+          let username = 'unknown'
+          let content = '[no text]'
+          let mediaId = ''
+          let permalink: string | null = null
+
+          if (field === 'comments') {
+            // Comment payload carries author + text inline.
+            externalId = val.id
+            username = val.from?.username ?? val.from?.id ?? 'unknown'
+            content = val.text ?? '[no text]'
+            mediaId = val.media?.id ?? ''
+          } else {
+            // Mention payload only carries ids (media_id, optionally comment_id) — no
+            // text/author. Resolve the real content via the Mentions API.
+            const commentIdM: string | undefined = val.comment_id
+            mediaId = val.media_id ?? ''
+            externalId = commentIdM ?? mediaId
+
+            if (channel.accessToken && channel.accountId) {
+              try {
+                const fields = commentIdM
+                  ? `mentioned_comment.comment_id(${commentIdM}){text,username,media{permalink}}`
+                  : `mentioned_media.media_id(${mediaId}){caption,username,permalink}`
+                const mentionRes = await fetch(
+                  `https://graph.instagram.com/${igGraphVersion}/${channel.accountId}` +
+                  `?fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(channel.accessToken)}`
+                )
+                if (mentionRes.ok) {
+                  const md = await mentionRes.json()
+                  const node = md.mentioned_comment ?? md.mentioned_media
+                  if (node) {
+                    content = node.text ?? node.caption ?? content
+                    username = node.username ?? username
+                    permalink = node.permalink ?? node.media?.permalink ?? null
+                  }
+                } else {
+                  console.warn(`[Webhook] Mentions API fetch failed: ${mentionRes.status} ${await mentionRes.text()}`)
+                }
+              } catch (err) {
+                console.warn('[Webhook] Error fetching mention content:', err)
+              }
+            }
+          }
+
+          if (!externalId) {
+            console.warn(`[Webhook] Skipping ${interactionType}: missing externalId`, JSON.stringify(val))
+            continue
+          }
 
           const { data: existing } = await supabase
             .from('SocialInteraction')
             .select('id')
             .eq('channelId', channel.id)
-            .eq('externalId', commentId)
+            .eq('externalId', externalId)
             .maybeSingle()
 
           if (existing) continue
 
-          // Fetch permalink dari Graph API karena media.id adalah numeric ID,
-          // bukan shortcode yang dipakai di URL publik Instagram
-          let permalink: string | null = null
-          if (mediaId && channel.accessToken) {
+          // Fallback: resolve permalink from the media id (numeric, not the public shortcode).
+          if (!permalink && mediaId && channel.accessToken) {
             try {
               const mediaRes = await fetch(
                 `https://graph.instagram.com/${igGraphVersion}/${mediaId}?fields=permalink&access_token=${encodeURIComponent(channel.accessToken)}`
@@ -488,7 +789,7 @@ Deno.serve(async (req: Request) => {
           const { error: insertError } = await supabase.from('SocialInteraction').insert({
             id: crypto.randomUUID(),
             interactionType,
-            externalId: commentId,
+            externalId,
             username,
             content,
             permalink,
@@ -502,7 +803,7 @@ Deno.serve(async (req: Request) => {
             continue
           }
 
-          console.log(`[Webhook] ${interactionType} saved: ${commentId} from @${username}`)
+          console.log(`[Webhook] ${interactionType} saved: ${externalId} from @${username}`)
         }
       }
 

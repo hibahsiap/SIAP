@@ -5,7 +5,7 @@ interface ButtonClickProps {
     className?: string,
     disabled?: boolean,
     onClick?: () => void,
-    icon?: any,
+    icon?: React.ReactNode,
 }
 
 const ButtonClick = ({name, type = "submit", className="", disabled, onClick, icon}: ButtonClickProps) => {
@@ -16,7 +16,7 @@ const ButtonClick = ({name, type = "submit", className="", disabled, onClick, ic
             type={type}
             disabled={disabled} 
             onClick={onClick}
-            className={` rounded-lg w-full text-[10px] tracking-widest uppercase py-3 disabled:bg-gray-400 disabled:cursor-not-allowed ${buttonStyle} flex items-center justify-center gap-1`}
+            className={` rounded-lg w-full text-[10px] 2xl:text-xs tracking-widest uppercase py-3 2xl:py-4 disabled:bg-gray-400 disabled:cursor-not-allowed ${buttonStyle} flex items-center justify-center gap-1`}
         >
             {icon && icon}
             {name}

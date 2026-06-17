@@ -17,13 +17,11 @@ export const ChatMessageList = ({ initialMessages }: { initialMessages: ChatMess
       {messages.map((msg) => (
         <ChatBubble
           key={msg.id}
-          id={msg.id}
           message={msg.message}
           time={msg.time}
           isSender={msg.isSender}
           isOPD={msg.isOPD}
           senderName={msg.senderName}
-          isAdminPage
         />
       ))}
     </>

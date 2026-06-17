@@ -34,7 +34,7 @@ export default function ImagePreview({
           style={{ width: thumbnailSize, height: thumbnailSize }}
         >
           {errored[i] ? (
-            <div className="flex size-full items-center justify-center bg-gray-100 text-xs text-gray-400">
+            <div className="flex size-full items-center justify-center bg-gray-100 text-xs 2xl:text-sm text-gray-400">
               Failed
             </div>
           ) : (

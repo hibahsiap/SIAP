@@ -25,10 +25,13 @@ export default function ChatDetailPage({
     sendMessage,
     isSending,
     sendError,
+    markAsRead,
   } = useInboxStore();
 
   const [draft, setDraft] = useState("");
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [firstUnreadId, setFirstUnreadId] = useState<string | null>(null);
+  const initializedChatId = useRef<string | null>(null);
 
   // Outbound attachment composer state. We upload immediately on file pick so the
   // user gets a preview thumbnail; the URL is held until Send fires.
@@ -68,16 +71,39 @@ export default function ChatDetailPage({
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(new Set());
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
-  const [selectedTicketId, setSelectedTicketId] = useState("");
+  const [opds, setOpds] = useState<{ id: string; name: string }[]>([]);
+  const [selectedOpdId, setSelectedOpdId] = useState("");
   const [isForwarding, setIsForwarding] = useState(false);
   const [forwardError, setForwardError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchConversation(chatId);
     setReadTicketIds(new Set());
-    setSelectedTicketId("");
+    setSelectedOpdId("");
     setPinIndex(0);
+    initializedChatId.current = null;
+    setFirstUnreadId(null);
   }, [chatId, fetchConversation]);
+
+  useEffect(() => {
+    fetch("/api/opd")
+      .then((res) => res.json())
+      .then((data) => setOpds(data))
+      .catch((err) => console.error("Failed to load OPDs", err));
+  }, []);
+
+  useEffect(() => {
+    if (current && current.id === chatId && initializedChatId.current !== chatId) {
+      initializedChatId.current = chatId;
+      const unreadMsg = current.messages.find(m => m.direction === "INBOUND" && !m.isRead);
+      if (unreadMsg) {
+        setFirstUnreadId(unreadMsg.id);
+      }
+      // Always call markAsRead so that we clear any lingering unread states 
+      // (even if no messages matched the query, the API will just run a no-op update)
+      markAsRead(chatId);
+    }
+  }, [current, chatId, markAsRead]);
 
   useEffect(() => {
     if (scrollerRef.current) {
@@ -91,11 +117,11 @@ export default function ChatDetailPage({
     if (!text && !pendingAttachment) return;
     const snapshotAttachment = pendingAttachment
       ? {
-          url: pendingAttachment.url,
-          mimeType: pendingAttachment.mimeType,
-          fileName: pendingAttachment.fileName,
-          sizeBytes: pendingAttachment.sizeBytes,
-        }
+        url: pendingAttachment.url,
+        mimeType: pendingAttachment.mimeType,
+        fileName: pendingAttachment.fileName,
+        sizeBytes: pendingAttachment.sizeBytes,
+      }
       : undefined;
     setDraft("");
     setPendingAttachment(null);
@@ -152,6 +178,7 @@ export default function ChatDetailPage({
   const selectableMessages = (current?.messages ?? []).filter(
     (m) =>
       !m.forwardedToTicketId &&
+      !m.forwardedToOpdId &&
       (m.direction === "INBOUND" || m.senderType === "ADMIN")
   );
 
@@ -187,7 +214,7 @@ export default function ChatDetailPage({
   };
 
   const handleForward = async () => {
-    if (selectedMessageIds.size === 0 || !selectedTicketId) return;
+    if (selectedMessageIds.size === 0 || !selectedOpdId) return;
     setIsForwarding(true);
     setForwardError(null);
     try {
@@ -196,7 +223,7 @@ export default function ChatDetailPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messageIds: Array.from(selectedMessageIds),
-          ticketId: selectedTicketId,
+          opdId: selectedOpdId,
         }),
       });
       const data = await res.json();
@@ -222,8 +249,8 @@ export default function ChatDetailPage({
 
   if (isLoadingDetail && !current) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-400">
-        Loading conversation…
+      <div className="flex items-center justify-center h-full">
+        <Spinner className="w-8 h-8 animate-spin text-[#1D2F58]" />
       </div>
     );
   }
@@ -276,7 +303,6 @@ export default function ChatDetailPage({
     if (pinnedMessages.length === 0) return;
     const target = pinnedMessages[safePinIndex];
     if (target?.ticket) {
-      setSelectedTicketId(target.ticket.id);
       setReadTicketIds((prev) => {
         if (prev.has(target.ticket!.id)) return prev;
         const next = new Set(prev);
@@ -290,16 +316,16 @@ export default function ChatDetailPage({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full relative min-w-0 max-w-full overflow-x-hidden">
+    <div className="flex-1 flex flex-col h-full min-h-0 relative min-w-0 max-w-full overflow-x-hidden">
       <ChatHeader
         chatId={current.id}
         name={current.citizen.name}
         phone={phone}
         role="ADMIN"
         avatarUrl={current.citizen.profilePicUrl}
-        tickets={current.tickets}
-        selectedTicketId={selectedTicketId}
-        onSelectTicket={setSelectedTicketId}
+        opds={opds}
+        selectedOpdId={selectedOpdId}
+        onSelectOpd={setSelectedOpdId}
         isSelectMode={isSelectMode}
         selectedCount={selectedMessageIds.size}
         isForwarding={isForwarding}
@@ -312,10 +338,7 @@ export default function ChatDetailPage({
           <button
             type="button"
             onClick={handleCyclePin}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg border-l-4 text-left transition-colors w-full min-w-0 max-w-full ${currentPin.ticket && selectedTicketId === currentPin.ticket.id
-              ? "bg-amber-100 border-amber-500 ring-1 ring-amber-300"
-              : "bg-amber-50 border-amber-400 hover:bg-amber-100"
-              }`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border-l-4 text-left transition-colors w-full min-w-0 max-w-full bg-amber-50 border-amber-400 hover:bg-amber-100`}
             title={
               pinnedMessages.length > 1
                 ? `Pinned (${safePinIndex + 1}/${pinnedMessages.length}) — click to jump, click again for the next pin`
@@ -349,7 +372,7 @@ export default function ChatDetailPage({
         </div>
       )}
 
-      <div ref={scrollerRef} className="flex-1 overflow-y-auto overflow-x-hidden min-w-0 px-6 pt-6 pb-24 custom-scrollbar">
+      <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden min-w-0 px-6 pt-6 pb-4 custom-scrollbar">
         {forwardError && (
           <div className="py-2 text-xs text-red-500">{forwardError}</div>
         )}
@@ -371,8 +394,18 @@ export default function ChatDetailPage({
             ) : null;
 
             if (m.direction === "INBOUND") {
+              const showUnreadDivider = firstUnreadId === m.id;
               return (
                 <div key={m.id} id={`msg-${m.id}`}>
+                  {showUnreadDivider && (
+                    <div className="flex items-center gap-3 my-6">
+                      <div className="flex-1 h-px bg-[#5B6F9C]/30" />
+                      <span className="text-[11px] text-[#2962C0] font-bold px-3 py-1 bg-[#2962C0]/10 rounded-md uppercase tracking-wider">
+                        Unread messages
+                      </span>
+                      <div className="flex-1 h-px bg-[#5B6F9C]/30" />
+                    </div>
+                  )}
                   {dateSep}
                   <ChatBubble
                     message={m.content}
@@ -392,6 +425,7 @@ export default function ChatDetailPage({
                     isSelected={selectedMessageIds.has(m.id)}
                     onToggleSelect={(opts) => handleToggleMessageSelect(m.id, opts)}
                     attachments={m.attachments}
+                    replyTo={m.replyTo}
                   />
                 </div>
               );
@@ -400,31 +434,32 @@ export default function ChatDetailPage({
               return (
                 <div key={m.id} id={`msg-${m.id}`}>
                   {dateSep}
-                    <ChatBubble
-                      message={m.content}
-                      time={time}
-                      isOPD
-                      senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
-                      isApproved={m.isApproved}
-                      approval={m.approval}
-                      onEditApprove={!m.isApproved ? async (content) => {
-                        await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ content, approve: true }),
-                        });
-                        fetchConversation(chatId);
-                      } : undefined}
-                      onReject={!m.isApproved ? async (reason: string) => {
-                        await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ reject: true, reason }),
-                        });
-                        fetchConversation(chatId);
-                      } : undefined}
-                      attachments={m.attachments}
-                    />
+                  <ChatBubble
+                    message={m.content}
+                    time={time}
+                    isOPD
+                    senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
+                    isApproved={m.isApproved}
+                    approval={m.approval}
+                    onEditApprove={!m.isApproved ? async (content) => {
+                      await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ content, approve: true }),
+                      });
+                      fetchConversation(chatId);
+                    } : undefined}
+                    onReject={!m.isApproved ? async (reason: string) => {
+                      await fetch(`/api/inbox/${chatId}/messages/${m.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ reject: true, reason }),
+                      });
+                      fetchConversation(chatId);
+                    } : undefined}
+                    attachments={m.attachments}
+                    replyTo={m.replyTo}
+                  />
                 </div>
               );
             }
@@ -440,6 +475,7 @@ export default function ChatDetailPage({
                   isSelected={selectedMessageIds.has(m.id)}
                   onToggleSelect={(opts) => handleToggleMessageSelect(m.id, opts)}
                   attachments={m.attachments}
+                  replyTo={m.replyTo}
                 />
               </div>
             );
@@ -447,7 +483,7 @@ export default function ChatDetailPage({
         )}
       </div>
 
-      <div className="absolute bottom-0 left-0 w-full p-4 bg-[#F9F9F9]">
+      <div className="shrink-0 w-full p-4 bg-[#F9F9F9]">
         {(sendError || uploadError) && (
           <div className="text-xs text-red-500 mb-2 px-2">{sendError ?? uploadError}</div>
         )}

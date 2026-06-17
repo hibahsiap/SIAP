@@ -23,9 +23,14 @@ export async function GET(req: NextRequest) {
     });
     if (!user?.opdId) return NextResponse.json([], { status: 200 });
     opdId = user.opdId;
-    opdFilter = { tickets: { some: { assignedOpdId: user.opdId } } };
+    opdFilter = {
+      OR: [
+        { tickets: { some: { assignedOpdId: user.opdId, status: { not: "ON_HOLD" } } } },
+        { messages: { some: { forwardedToOpdId: user.opdId } } }
+      ]
+    };
     const opdTickets = await prisma.ticket.findMany({
-      where: { assignedOpdId: user.opdId },
+      where: { assignedOpdId: user.opdId, status: { not: "ON_HOLD" } },
       select: { id: true },
     });
     opdTicketIds = new Set(opdTickets.map((t) => t.id));
@@ -73,8 +78,10 @@ export async function GET(req: NextRequest) {
           createdAt: true,
           sentAt: true,
           forwardedToTicketId: true,
+          forwardedToOpdId: true,
           senderUser: { select: { opdId: true } },
           attachments: { select: { mimeType: true } },
+          isRead: true,
         },
       },
     },
@@ -86,10 +93,11 @@ export async function GET(req: NextRequest) {
     .map((c) => {
       const visibleMessages = opdTicketIds
         ? c.messages.filter(
-            (m) =>
-              (m.forwardedToTicketId !== null && opdTicketIds!.has(m.forwardedToTicketId)) ||
-              (m.direction === "OUTBOUND" && m.senderUser?.opdId === opdId)
-          )
+          (m) =>
+            (m.forwardedToTicketId !== null && opdTicketIds!.has(m.forwardedToTicketId)) ||
+            (m.forwardedToOpdId === opdId) ||
+            (m.direction === "OUTBOUND" && m.senderUser?.opdId === opdId)
+        )
         : c.messages;
       const last = visibleMessages[0];
       // For OPD, the conversation's effective recency is the latest message THEY are
@@ -98,6 +106,10 @@ export async function GET(req: NextRequest) {
       const effectiveLastAt = last
         ? (last.sentAt ?? last.createdAt)
         : c.lastMessageAt;
+
+      // Unread count is exactly the number of unread inbound messages they can see
+      const unreadCount = visibleMessages.filter((m) => m.direction === "INBOUND" && !m.isRead).length;
+
       return {
         id: c.id,
         citizen: {
@@ -112,21 +124,21 @@ export async function GET(req: NextRequest) {
         ticketCount: c._count.tickets,
         lastMessage: last
           ? {
-              content: last.content,
-              direction: last.direction,
-              senderType: last.senderType,
-              at: last.sentAt ?? last.createdAt,
-              hasAttachment: last.attachments.length > 0,
-            }
+            content: last.content,
+            direction: last.direction,
+            senderType: last.senderType,
+            at: last.sentAt ?? last.createdAt,
+            hasAttachment: last.attachments.length > 0,
+          }
           : null,
-        unread: last?.direction === "INBOUND",
+        unreadCount,
         lastMessageAt: opdTicketIds ? effectiveLastAt : c.lastMessageAt,
       };
     })
     .filter((c) => {
       // OPD: drop conversations with nothing they're allowed to see.
       if (opdTicketIds && !c.lastMessage) return false;
-      return unreadOnly ? c.unread : true;
+      return unreadOnly ? c.unreadCount > 0 : true;
     })
     .sort((a, b) => {
       if (!opdTicketIds) return 0; // Prisma already sorted for admin

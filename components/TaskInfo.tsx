@@ -26,14 +26,14 @@ export default function TaskInfo({
     >
       <div
         className={cn(
-          "flex w-40 shrink-0 items-center gap-2 text-sm text-gray-600",
+          "flex w-40 shrink-0 items-center gap-2 text-sm 2xl:text-base text-gray-600",
           alignTop && "pt-0.5"
         )}
       >
         <Icon className="size-4" />
         <span>{label}</span>
       </div>
-      <div className="flex-1 text-sm text-gray-900">{children}</div>
+      <div className="flex-1 text-sm 2xl:text-base text-gray-900">{children}</div>
     </div>
   )
 }

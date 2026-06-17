@@ -61,11 +61,11 @@ export default function ChatDetailPage({
     if (!text && !pendingAttachment) return;
     const snapshotAttachment = pendingAttachment
       ? {
-          url: pendingAttachment.url,
-          mimeType: pendingAttachment.mimeType,
-          fileName: pendingAttachment.fileName,
-          sizeBytes: pendingAttachment.sizeBytes,
-        }
+        url: pendingAttachment.url,
+        mimeType: pendingAttachment.mimeType,
+        fileName: pendingAttachment.fileName,
+        sizeBytes: pendingAttachment.sizeBytes,
+      }
       : undefined;
     setDraft("");
     setPendingAttachment(null);
@@ -97,8 +97,8 @@ export default function ChatDetailPage({
 
   if (isLoadingDetail && !current) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-400">
-        Loading conversation…
+      <div className="flex items-center justify-center h-full">
+        <Spinner className="w-8 h-8 animate-spin text-[#1D2F58]" />
       </div>
     );
   }
@@ -122,6 +122,14 @@ export default function ChatDetailPage({
   const phone = current.citizen.username
     ? `${current.citizen.platform} · @${current.citizen.username}`
     : current.channel.platform;
+
+  const returnableTickets = Array.from(
+    new Map(
+      current.messages
+        .filter((m) => m.ticket && !["DONE", "CANCELLED", "ON_HOLD"].includes(m.ticket.status))
+        .map((m) => [m.ticket!.id, { id: m.ticket!.id, ticketNumber: m.ticket!.ticketNumber }])
+    ).values()
+  );
 
   // Latest pinned first — first click cycles to the most recent pinned message,
   // then keeps moving backwards through older pins and wraps.
@@ -161,13 +169,14 @@ export default function ChatDetailPage({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#F9F9F9] relative min-w-0 max-w-full overflow-x-hidden">
+    <div className="flex-1 flex flex-col h-full min-h-0 bg-[#F9F9F9] relative min-w-0 max-w-full overflow-x-hidden">
       <ChatHeader
         chatId={current.id}
         name={current.citizen.name}
         phone={phone}
         role="OPD"
         avatarUrl={current.citizen.profilePicUrl}
+        tickets={returnableTickets}
       />
 
       {currentPin && (
@@ -207,7 +216,7 @@ export default function ChatDetailPage({
         </div>
       )}
 
-      <div ref={scrollerRef} className="flex-1 overflow-y-auto overflow-x-hidden min-w-0 px-6 pb-24 pt-4 custom-scrollbar">
+      <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden min-w-0 px-6 pb-4 pt-4 custom-scrollbar">
         {current.messages.length === 0 ? (
           <div className="text-center text-gray-400 text-sm py-10">
             Belum ada pesan.
@@ -225,6 +234,7 @@ export default function ChatDetailPage({
                     avatar={current.citizen.profilePicUrl}
                     ticket={m.ticket}
                     attachments={m.attachments}
+                    replyTo={m.replyTo}
                   />
                 </div>
               );
@@ -232,14 +242,15 @@ export default function ChatDetailPage({
             if (m.senderType === "OPD") {
               return (
                 <div key={m.id} id={`msg-${m.id}`}>
-                    <ChatBubble
-                      message={m.content}
-                      time={time}
-                      isOPD
-                      senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
-                      isApproved={m.isApproved}
-                      approval={m.approval}
-                      attachments={m.attachments}
+                  <ChatBubble
+                    message={m.content}
+                    time={time}
+                    isOPD
+                    senderName={m.sender?.opdName ?? m.sender?.name ?? "OPD"}
+                    isApproved={m.isApproved}
+                    approval={m.approval}
+                    attachments={m.attachments}
+                    replyTo={m.replyTo}
                   />
                 </div>
               );
@@ -252,6 +263,7 @@ export default function ChatDetailPage({
                   isSender
                   senderName={m.sender?.name ?? "Admin"}
                   attachments={m.attachments}
+                  replyTo={m.replyTo}
                 />
               </div>
             );
@@ -259,7 +271,7 @@ export default function ChatDetailPage({
         )}
       </div>
 
-      <div className="absolute bottom-0 left-0 w-full p-4 bg-[#F9F9F9]">
+      <div className="shrink-0 w-full p-4 bg-[#F9F9F9]">
         {(sendError || uploadError) && (
           <div className="text-xs text-red-500 mb-2 px-2">{sendError ?? uploadError}</div>
         )}

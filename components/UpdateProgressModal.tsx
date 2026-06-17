@@ -65,7 +65,7 @@ export default function UpdateProgressModal({ isOpen, onClose, task, onSave }: U
       files: files.map((f) => f.file),
       description,
     });
-    // Reset state form setelah berhasil submit
+    // Reset state form setelah submit (hasil sukses/gagal ditangani pemanggil)
     setFiles([]);
     setDescription('');
   };

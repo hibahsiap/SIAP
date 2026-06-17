@@ -41,7 +41,7 @@ export type InboxConversation = {
     at: string;
     hasAttachment: boolean;
   } | null;
-  unread: boolean;
+  unreadCount: number;
   lastMessageAt: string;
 };
 
@@ -68,7 +68,10 @@ export type InboxMessage = {
   senderType: SenderType;
   isInternal: boolean;
   isApproved: boolean;
+  isRead: boolean;
   forwardedToTicketId: string | null;
+  forwardedToOpdId: string | null;
+  forwardedToTicketNumber: string | null;
   forwardedToOpdName: string | null;
   ticket: InboxMessageTicket | null;
   at: string;
@@ -80,6 +83,7 @@ export type InboxMessage = {
   } | null;
   attachments: InboxAttachment[];
   approval: { verdict: string; reason: string | null } | null;
+  replyTo: { id: string; content: string; senderName: string } | null;
 };
 
 export type InboxTicketSummaryDetail = {
@@ -94,7 +98,7 @@ export type InboxTicketSummaryDetail = {
 
 export type InboxConversationDetail = Omit<
   InboxConversation,
-  "lastMessage" | "unread" | "lastMessageAt" | "ticketCount"
+  "lastMessage" | "unreadCount" | "lastMessageAt" | "ticketCount"
 > & {
   tickets: InboxTicketSummaryDetail[];
   messages: InboxMessage[];
@@ -136,6 +140,7 @@ interface InboxState {
       };
     }
   ) => Promise<void>;
+  markAsRead: (conversationId: string) => Promise<void>;
 
   subscribeRealtime: (role?: "ADMIN" | "OPD") => () => void;
 }
@@ -223,6 +228,15 @@ export const useInboxStore = create<InboxState>((set, get) => ({
     }
   },
 
+  markAsRead: async (conversationId) => {
+    try {
+      await fetch(`/api/inbox/${conversationId}/read`, { method: "POST" });
+      get().fetchConversations();
+    } catch (err) {
+      console.error("Failed to mark as read:", err);
+    }
+  },
+
   subscribeRealtime: (role) => {
     let channel: RealtimeChannel | null = null;
     try {
@@ -248,39 +262,9 @@ export const useInboxStore = create<InboxState>((set, get) => ({
             const cur = get().current;
             if (cur && row.conversationId === cur.id) {
               if (cur.messages.some((m) => m.id === row.id)) return;
-              // INBOUND messages can carry attachments yang baru di-insert ke DB
-              // sesaat setelah Message row-nya. Kalau kita append optimistic dengan
-              // attachments: [], bubble muncul kosong dulu. Refetch saja agar
-              // payload yang sampai ke UI selalu lengkap (Message + Attachments
-              // sudah ter-join oleh server). OPD tetap refetch untuk filter
-              // role-based di server.
-              if (role === "OPD" || row.direction === "INBOUND") {
-                get().fetchConversation(cur.id);
-              } else {
-                set({
-                  current: {
-                    ...cur,
-                    messages: [
-                      ...cur.messages,
-                      {
-                        id: row.id,
-                        content: row.content,
-                        direction: row.direction,
-                        senderType: row.senderType,
-                        isInternal: row.isInternal,
-                        isApproved: row.isApproved,
-                        forwardedToTicketId: null,
-                        forwardedToOpdName: null,
-                        ticket: null,
-                        at: row.sentAt ?? row.createdAt,
-                        sender: null,
-                        attachments: [],
-                        approval: null,
-                      },
-                    ],
-                  },
-                });
-              }
+              // Refetch always to ensure we get joined relations (attachments, replyTo, etc.)
+              // rather than optimistically appending with nulls.
+              get().fetchConversation(cur.id);
             }
 
             get().fetchConversations();

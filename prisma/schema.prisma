@@ -15,6 +15,7 @@ model Opd {
   tickets             Ticket[]
   ticketVerifications TicketVerification[]
   users               User[]
+  forwardedMessages   Message[]            @relation("ForwardedOpd")
 }
 
 model User {
@@ -192,12 +193,16 @@ model Message {
   direction      MessageDirection
   isInternal     Boolean          @default(false)
   isApproved     Boolean          @default(true)
+  isRead         Boolean          @default(false)
   sentAt              DateTime?
   ticketId            String?
   conversationId      String?
   forwardedToTicketId String?
+  forwardedToOpdId    String?
   senderUserId        String?
   approvalId          String?
+  externalId          String?          @unique
+  replyToMessageId    String?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   attachments         Attachment[]
@@ -206,10 +211,15 @@ model Message {
   ticket              Ticket?          @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   conversation        Conversation?    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   forwardedToTicket   Ticket?          @relation("ForwardedMessages", fields: [forwardedToTicketId], references: [id])
+  forwardedToOpd      Opd?             @relation("ForwardedOpd", fields: [forwardedToOpdId], references: [id])
+  replyTo             Message?         @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+  replies             Message[]        @relation("MessageReplies")
 
   @@index([ticketId])
   @@index([conversationId])
   @@index([forwardedToTicketId])
+  @@index([forwardedToOpdId])
+  @@index([replyToMessageId])
   @@index([createdAt])
 }
 

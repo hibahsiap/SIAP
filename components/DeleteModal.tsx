@@ -19,13 +19,13 @@ export default function DeleteModal({ isOpen, onClose, onConfirm, itemName }: De
         <Button 
           onClick={onClose} 
           variant="outline" 
-          className="flex-1 h-[45px] bg-[#F1F3F5] hover:bg-[#E5E7EB] border-0 text-[#1a233a] font-bold rounded-lg"
+          className="flex-1 h-[40px] bg-[#F1F3F5] hover:bg-[#E5E7EB] border-0 text-[#1a233a] font-bold rounded-lg"
         >
           CANCEL
         </Button>
         <Button 
           onClick={onConfirm} 
-          className="flex-1 h-[45px] bg-[#1a233a] hover:bg-[#0f172a] text-white font-bold rounded-lg"
+          className="flex-1 h-[40px] bg-[#1a233a] hover:bg-[#0f172a] text-white font-bold rounded-lg"
         >
           DELETE
         </Button>

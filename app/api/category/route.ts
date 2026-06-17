@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { logActivity, getClientIp } from "@/lib/activity";
 
 const STOPWORDS = new Set(["dan", "atau", "yang", "di", "ke", "dari", "untuk", "dengan", "pada", "oleh", "dalam"]);
 
@@ -28,12 +29,23 @@ export async function POST(req: NextRequest) {
 
   const { name, defaultOpdId } = await req.json();
   if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  if (!defaultOpdId) return NextResponse.json({ error: "Default OPD is required" }, { status: 400 });
 
   const slug = generateSlug(name);
 
   const category = await prisma.category.create({
-    data: { name, slug, defaultOpdId: defaultOpdId || null },
+    data: { name, slug, defaultOpdId },
     include: { defaultOpd: { select: { id: true, name: true } } },
   });
+
+  await logActivity({
+    userId: auth.userId,
+    action: "CATEGORY_CREATED",
+    entityType: "Category",
+    entityId: category.id,
+    description: `Created category "${category.name}"`,
+    ipAddress: getClientIp(req),
+  });
+
   return NextResponse.json(category, { status: 201 });
 }

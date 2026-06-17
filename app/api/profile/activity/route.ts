@@ -7,7 +7,8 @@ export async function GET() {
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const logs = await prisma.activityLog.findMany({
-    where: { userId: auth.userId },
+    // Login/logout are no longer recorded; exclude any legacy rows from the feed too.
+    where: { userId: auth.userId, action: { notIn: ['LOGIN', 'LOGOUT'] } },
     orderBy: { createdAt: 'desc' },
     take: 50,
     select: {

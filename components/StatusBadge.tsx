@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 
-export type TaskStatus = "open" | "in-progress" | "completed" | "cancelled"
+export type TaskStatus = "open" | "in-progress" | "on-hold" | "completed" | "cancelled"
 
 type Props = {
   status: TaskStatus
@@ -9,15 +9,19 @@ type Props = {
 
 const STATUS_CONFIG: Record<TaskStatus, { label: string; className: string }> = {
   open: {
-    label: "Open",
+    label: "To Do",
     className: "bg-gray-100 text-gray-700",
   },
   "in-progress": {
     label: "In Progress",
     className: "bg-blue-100 text-blue-700",
   },
+  "on-hold": {
+    label: "On Hold",
+    className: "bg-amber-100 text-amber-700",
+  },
   completed: {
-    label: "Completed",
+    label: "Done",
     className: "bg-green-100 text-green-700",
   },
   cancelled: {

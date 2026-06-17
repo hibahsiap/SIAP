@@ -53,7 +53,7 @@ export default function NotFound() {
           </h2>
           <p className="text-gray-600 mb-8 text-sm md:text-base leading-relaxed">
             Uh oh! Our little cartoon friends might have accidentally scribbled
-            out this address. We can't seem to find the page you're looking for.
+            out this address. We can&apos;t seem to find the page you&apos;re looking for.
           </p>
 
           <Button

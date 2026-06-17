@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth'
+import { logActivity, getClientIp } from '@/lib/activity'
 import bcrypt from 'bcryptjs'
+import { normalizePhone } from '@/lib/phone'
 
 export async function GET() {
   const auth = await getAuthUser()
@@ -30,8 +32,13 @@ export async function POST(request: NextRequest) {
 
   const { name, email, password, phone, role, opdName } = await request.json()
 
-  if (!name || !email || !password) {
-    return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 })
+  if (!name || !email || !password || !phone) {
+    return NextResponse.json({ error: 'Name, email, password, and phone are required' }, { status: 400 })
+  }
+
+  const normalizedPhone = normalizePhone(phone)
+  if (!normalizedPhone) {
+    return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 })
   }
 
   const existing = await prisma.user.findUnique({ where: { email } })
@@ -56,7 +63,7 @@ export async function POST(request: NextRequest) {
       name,
       email,
       password: hashedPassword,
-      phone: phone || null,
+      phone: normalizedPhone,
       role: role ?? 'OPD',
       opdId: opdId ?? null,
     },
@@ -69,6 +76,15 @@ export async function POST(request: NextRequest) {
       opd: { select: { id: true, name: true } },
       createdAt: true,
     },
+  })
+
+  await logActivity({
+    userId: auth.userId,
+    action: 'USER_CREATED',
+    entityType: 'User',
+    entityId: user.id,
+    description: `Created user ${user.name} (${user.email})`,
+    ipAddress: getClientIp(request),
   })
 
   return NextResponse.json(user, { status: 201 })
