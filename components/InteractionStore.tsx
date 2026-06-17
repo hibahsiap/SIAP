@@ -9,17 +9,23 @@ interface AiResult {
   category?: string | null;
 }
 
+export interface InteractionItem {
+  id: string;
+  content?: string;
+  [key: string]: unknown;
+}
+
 interface InteractionStore {
   isCreateTicketModalOpen: boolean;
   isDeleteModalOpen: boolean;
-  selectedItem: any | null;
+  selectedItem: InteractionItem | null;
   context: 'comments' | 'mentions' | 'message' | null;
   aiResult: AiResult | null;
   classifyingItemId: string | null;
-  openCreateTicketModal: (item: any, context: 'comments' | 'mentions' | 'message') => void;
-  classifyAndOpenModal: (item: any, context: 'comments' | 'mentions' | 'message') => Promise<void>;
+  openCreateTicketModal: (item: InteractionItem, context: 'comments' | 'mentions' | 'message') => void;
+  classifyAndOpenModal: (item: InteractionItem, context: 'comments' | 'mentions' | 'message') => Promise<void>;
   closeCreateTicketModal: () => void;
-  openDeleteModal: (item: any, context: 'comments' | 'mentions') => void;
+  openDeleteModal: (item: InteractionItem, context: 'comments' | 'mentions') => void;
   closeDeleteModal: () => void;
 }
 

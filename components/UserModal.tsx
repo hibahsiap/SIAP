@@ -88,7 +88,11 @@ export default function UserModals() {
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
+  // Sync the edit form with the selected user during render (instead of an effect)
+  // so we don't trigger an extra render pass on every selection change.
+  const [prevSelectedUser, setPrevSelectedUser] = useState(selectedUser)
+  if (selectedUser !== prevSelectedUser) {
+    setPrevSelectedUser(selectedUser)
     if (selectedUser) {
       setEditForm({
         name: selectedUser.name || "",
@@ -98,16 +102,18 @@ export default function UserModals() {
         opdId: selectedUser.opd?.id ?? "",
       })
     }
-  }, [selectedUser])
+  }
 
-  useEffect(() => {
+  // Reset the add form whenever the add modal closes.
+  const [prevAddModalOpen, setPrevAddModalOpen] = useState(isAddModalOpen)
+  if (isAddModalOpen !== prevAddModalOpen) {
+    setPrevAddModalOpen(isAddModalOpen)
     if (!isAddModalOpen) {
       setAddForm(emptyAdd)
       setShowPassword(false)
       setShowConfirmPassword(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAddModalOpen])
+  }
 
   const handleAdd = async () => {
     if (!addForm.name || !addForm.email || !addForm.phone || !addForm.password) {

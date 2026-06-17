@@ -73,15 +73,31 @@ const getPriorityBadge = (priority: string) => {
 
 type TabCategory = 'kanban' | 'all' | 'aspirations';
 
+interface TicketRow {
+  id: string;
+  taskName?: string;
+  pengirim?: string;
+  opd?: string;
+  status?: string;
+  type?: string | null;
+  categoryName?: string | null;
+  priority?: string;
+  startDate?: string | null;
+  finishDate?: string | null;
+  createdAt?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
 export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState<TabCategory>('kanban');
   const [searchQuery, setSearchQuery] = useState("");
-  const { openEditModal, openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
+  const { openDeleteModal, isDeleteModalOpen, closeDeleteModal } = useTaskStore();
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [allTicketsData, setAllTicketsData] = useState<any[]>([]);
-  const [aspirationsData, setAspirationsData] = useState<any[]>([]);
+  const [allTicketsData, setAllTicketsData] = useState<TicketRow[]>([]);
+  const [aspirationsData, setAspirationsData] = useState<TicketRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const [appliedFilters, setAppliedFilters] = useState<FilterState>({
@@ -97,19 +113,28 @@ export default function TicketsPage() {
     if (activeTab === 'kanban') return;
 
     const tab = activeTab === 'aspirations' ? 'aspirations' : 'all';
-    setIsLoading(true);
+    let cancelled = false;
 
-    fetch(`/api/opd/tickets?tab=${tab}`)
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/opd/tickets?tab=${tab}`);
+        if (!res.ok) throw res;
+        const data: TicketRow[] = await res.json();
+        if (cancelled) return;
         if (tab === 'all') setAllTicketsData(data);
         else setAspirationsData(data);
-      })
-      .catch((err) => {
-        console.error("[OPD Tickets] failed to load", err);
-        toast.error("Gagal memuat data tiket");
-      })
-      .finally(() => setIsLoading(false));
+      } catch (err) {
+        if (!cancelled) {
+          console.error("[OPD Tickets] failed to load", err);
+          toast.error("Gagal memuat data tiket");
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [activeTab]);
 
   const currentData = useMemo(() => {
@@ -118,7 +143,7 @@ export default function TicketsPage() {
   }, [activeTab, allTicketsData, aspirationsData]);
 
   const filteredData = useMemo(() => {
-    const filtered = currentData.filter((item: any) => {
+    const filtered = currentData.filter((item: TicketRow) => {
       const searchStr = searchQuery.toLowerCase();
       const searchField = item.taskName || item.pengirim || "";
       if (!searchField.toLowerCase().includes(searchStr)) return false;
@@ -146,8 +171,8 @@ export default function TicketsPage() {
       return true;
     });
 
-    return [...filtered].sort((a: any, b: any) => {
-      const getTime = (item: any) => {
+    return [...filtered].sort((a: TicketRow, b: TicketRow) => {
+      const getTime = (item: TicketRow) => {
         const ref = item.startDate ?? item.createdAt;
         if (ref) {
           const d = new Date(ref);
@@ -161,8 +186,8 @@ export default function TicketsPage() {
     });
   }, [currentData, searchQuery, appliedFilters, sortOrder]);
 
-  const columns = useMemo<ColumnDefinition[]>(() => {
-    const messageColumn = {
+  const columns = useMemo<ColumnDefinition<TicketRow>[]>(() => {
+    const messageColumn: ColumnDefinition<TicketRow> = {
       header: "Pesan Aspirasi",
       key: "message",
       cell: (val: string) => (
@@ -179,7 +204,7 @@ export default function TicketsPage() {
         {
           header: "Title",
           key: "taskName",
-          cell: (val: string, row: any) => (
+          cell: (val: string, row: TicketRow) => (
             <Link href={`/opd/tickets/${row.id}`} className="whitespace-normal w-[180px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
               {val}
             </Link>
@@ -201,7 +226,7 @@ export default function TicketsPage() {
         header: "Pengirim",
         key: "pengirim",
         className: "text-center",
-        cell: (val: string, row: any) => (
+        cell: (val: string, row: TicketRow) => (
           <Link href={`/opd/tickets/${row.id}`} className="whitespace-normal w-[140px] inline-block font-bold text-[#1D2F58] hover:text-blue-600 hover:underline transition-all">
             {val}
           </Link>
@@ -213,7 +238,7 @@ export default function TicketsPage() {
       {
         header: "Action",
         key: "action",
-        cell: (_: any, row: any) => (
+        cell: (_value: unknown, row: TicketRow) => (
           <button onClick={() => openDeleteModal(row)} className="text-gray-400 hover:text-red-500 transition-colors">
             <Trash2 className="w-4 h-4" />
           </button>
@@ -261,7 +286,7 @@ export default function TicketsPage() {
           </div>
         ) : filteredData.length > 0 ? (
           <div className="w-full">
-            <TableTemplate2 columns={columns} data={filteredData as any} />
+            <TableTemplate2 columns={columns} data={filteredData} />
           </div>
         ) : searchQuery !== "" ? (
           <SearchEmptyState type={activeTab} />

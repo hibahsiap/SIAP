@@ -42,11 +42,18 @@ export default function ChatDetailPage({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchConversation(chatId);
+  // Reset per-conversation UI state when the route param changes, computed during
+  // render to avoid a synchronous setState inside an effect.
+  const [prevChatId, setPrevChatId] = useState(chatId);
+  if (chatId !== prevChatId) {
+    setPrevChatId(chatId);
     setActiveTicketId("");
     setReadTicketIds(new Set());
     setPinIndex(0);
+  }
+
+  useEffect(() => {
+    fetchConversation(chatId);
   }, [chatId, fetchConversation]);
 
   useEffect(() => {

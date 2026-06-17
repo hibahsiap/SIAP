@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Task = any; 
+export type Task = Record<string, unknown>;
 
 interface TaskState {
   // State Edit

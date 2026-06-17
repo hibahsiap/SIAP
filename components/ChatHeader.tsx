@@ -3,7 +3,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReturnAdminButton from "./ReturnAdminButton";
 import type { ReturnTicketOption } from "@/store/useReturnStore";
-import Image from "next/image";
 
 interface ChatHeaderAdminProps {
   opds: { id: string; name: string }[];
@@ -17,7 +16,7 @@ interface ChatHeaderAdminProps {
 }
 
 export const ChatHeader = ({
-  name, phone, role, chatId, avatarUrl, tickets,
+  name, phone, role, avatarUrl, tickets,
   opds, selectedOpdId, onSelectOpd,
   isSelectMode, selectedCount, isForwarding,
   onToggleSelectMode, onForward,

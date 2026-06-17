@@ -3,7 +3,6 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import ButtonClick from "./Button";
 
 interface ToastFrameProps {
     isSuccess: boolean,
@@ -16,7 +15,7 @@ const ToastFrame = ({isSuccess, id, name,  process}: ToastFrameProps) => {
     useEffect(() => {
         toast.dismiss();
         if (isSuccess) {
-            toast.custom((t) => (
+            toast.custom(() => (
                 <div className="bg-white flex flex-col w-100 shadow-2xl shadow-black/40 rounded-[16px] overflow-hidden">
                     <div className="bg-[#14BD89] w-full h-2"></div>
                     <div className="px-4 py-8 flex flex-col gap-6 justify-center items-center h-full">
@@ -33,7 +32,7 @@ const ToastFrame = ({isSuccess, id, name,  process}: ToastFrameProps) => {
                 position: 'top-center',
             });
         } else {
-            toast.custom((t) => (
+            toast.custom(() => (
                 <div className="bg-white flex flex-col w-100 shadow-2xl shadow-black/40 rounded-[16px] overflow-hidden">
                     <div className="bg-[#C41825] w-full h-2"></div>
                     <div className="px-4 py-8 flex flex-col gap-6 justify-center items-center h-full">

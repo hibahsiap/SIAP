@@ -72,8 +72,12 @@ export default function SocialInteractionsPage() {
   }, []);
 
   useEffect(() => {
-    fetchData(activeTab);
-    setCurrentPage(1);
+    // Wrapped in an async IIFE so the loading-state updates inside fetchData run
+    // outside this effect's synchronous body. Page reset on tab change is handled
+    // in the tab `onChange` handler.
+    void (async () => {
+      await fetchData(activeTab);
+    })();
   }, [activeTab, fetchData]);
 
   const filteredData = useMemo(() => {
@@ -133,42 +137,39 @@ export default function SocialInteractionsPage() {
     setCurrentPage(1);
   };
 
-  const columns: ColumnDefinition[] = [
+  const columns: ColumnDefinition<SocialInteraction>[] = [
     {
       header: "Time",
       key: "capturedAt",
       className: "text-center",
-      cell: (value: any) =>
-        // formatTime(value),
+      cell: (value: string) =>
         <div className="font-medium w-[140px]">{formatTime(value)}</div>,
     },
     {
       header: "Username",
       key: "username",
       className: "text-center",
-      cell: (value: any) =>
-        // formatTime(value),
+      cell: (value: string) =>
         <div className="font-medium w-[120px]">{value}</div>,
     },
     {
       header: "Message Content",
       key: "content",
       className: "text-center",
-      cell: (value: any) =>
-        // formatTime(value),
+      cell: (value: string) =>
         <div className="text-center font-medium w-[340px] line-clamp-2 break-words whitespace-normal">{value}</div>,
     },
     {
       header: "Destination Account",
       key: "channel",
       className: "text-center",
-      cell: (value: any) => value?.accountHandle ?? value?.platform ?? "-",
+      cell: (value: SocialInteraction["channel"]) => value?.accountHandle ?? value?.platform ?? "-",
     },
     {
       header: "Permalink",
       key: "permalink",
       className: "text-center",
-      cell: (value: any) =>
+      cell: (value: string | null) =>
         value ? (
           <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs 2xl:text-sm">
             View Post
@@ -181,7 +182,7 @@ export default function SocialInteractionsPage() {
       header: "Actions",
       key: "id",
       className: "text-center",
-      cell: (_value: any, row: any) => (
+      cell: (_value: unknown, row: SocialInteraction) => (
         <div className="flex justify-center gap-2">
           {!row.isTicketCreated && (
             <button

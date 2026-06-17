@@ -237,7 +237,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
     }
   },
 
-  subscribeRealtime: (role) => {
+  subscribeRealtime: () => {
     let channel: RealtimeChannel | null = null;
     try {
       const supabase = getSupabaseBrowser();

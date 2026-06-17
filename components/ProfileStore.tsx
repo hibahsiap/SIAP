@@ -73,7 +73,7 @@ export const ProfileStore = create<ProfileState>((set, get) => ({
                 loaded: true,
                 loading: false,
             });
-        } catch (e) {
+        } catch {
             set({ loading: false, error: 'Failed to load profile' });
         }
     },

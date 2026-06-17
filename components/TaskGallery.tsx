@@ -1,8 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { LayoutGrid, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { LayoutGrid } from "lucide-react"
 
 type Props = {
   images: string[]
@@ -13,9 +12,7 @@ type Props = {
 
 export default function TaskGallery({
   images,
-  onAddImage,
   onImageClick,
-  canAddImage = true,
 }: Props) {
   return (
     <div className="space-y-4">

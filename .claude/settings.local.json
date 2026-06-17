@@ -22,7 +22,8 @@
       "PowerShell(npx eslint app/admin/reports/page.tsx)",
       "PowerShell(npx eslint app/api/reports/route.ts)",
       "PowerShell(npx eslint app/admin/settings/page.tsx components/TableTemplate.tsx)",
-      "PowerShell(npx eslint components/UserModal.tsx app/api/users/route.ts \"app/api/users/[id]/route.ts\" lib/phone.ts)"
+      "PowerShell(npx eslint components/UserModal.tsx app/api/users/route.ts \"app/api/users/[id]/route.ts\" lib/phone.ts)",
+      "PowerShell(npm run *)"
     ]
   }
 }

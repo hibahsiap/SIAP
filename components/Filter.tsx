@@ -44,9 +44,13 @@ export default function FilterSidebar({ admin, isOpen, onClose, filterState, onA
 
   const [localFilters, setLocalFilters] = useState<FilterState>(filterState);
 
-  useEffect(() => {
+  // Re-sync local filter state from props when the panel opens (or props change
+  // while open), computed during render to avoid a setState-in-effect.
+  const [prevSync, setPrevSync] = useState({ isOpen, filterState });
+  if (prevSync.isOpen !== isOpen || prevSync.filterState !== filterState) {
+    setPrevSync({ isOpen, filterState });
     if (isOpen) setLocalFilters(filterState);
-  }, [isOpen, filterState]);
+  }
 
   // Load category options (and OPD options for admin) once.
   useEffect(() => {

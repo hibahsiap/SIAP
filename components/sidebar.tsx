@@ -14,7 +14,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function Sidebar({
   role,
@@ -28,7 +28,16 @@ export default function Sidebar({
   const menuItems = SIDEBAR_MENU[role];
 
   const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+
+  // Keep the inbox submenu open while on an inbox-related route. Derived from the
+  // pathname during render (instead of an effect) so it stays toggleable by the user.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setIsSubMenuOpen(
+      pathname.includes('/admin/chat') || pathname.includes('/admin/comments')
+    );
+  }
 
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -44,14 +53,6 @@ export default function Sidebar({
     router.push('/login');
     router.refresh();
   };
-
-  useEffect(() => {
-    const isInboxRoute =
-      pathname.includes('/admin/chat') ||
-      pathname.includes('/admin/comments');
-
-    setIsSubMenuOpen(isInboxRoute)
-  }, [pathname]);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 

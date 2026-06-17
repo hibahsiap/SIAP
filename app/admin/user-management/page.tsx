@@ -75,10 +75,6 @@ export default function UserManagementPage() {
     return filteredUsers.slice(startIndex, endIndex);
   }, [filteredUsers, currentPage, itemsPerPage]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
-
   const handleDelete = async () => {
     if (!selectedUser) return
     try {
@@ -91,12 +87,12 @@ export default function UserManagementPage() {
     }
   }
 
-  const columns: ColumnDefinition[] = useMemo(() => [
+  const columns: ColumnDefinition<User>[] = useMemo(() => [
     {
       header: "NAME",
       key: "koko",
       className: "text-center w-[240px]",
-      cell: (_, row) => (
+      cell: (_value, row) => (
         <div className="flex items-center gap-2 py-2 w-[240px] min-w-0">
           <div className="w-9 h-9 shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-600 font-bold border border-gray-200">
             {getInitials(row.name)}
@@ -111,25 +107,25 @@ export default function UserManagementPage() {
       header: "OPD",
       key: "opd",
       className: "text-center",
-      cell: (_, row) => <div className="text-gray-500 font-medium w-[320px]">{(row as User).opd?.name ?? "—"}</div>,
+      cell: (_value, row) => <div className="text-gray-500 font-medium w-[320px]">{row.opd?.name ?? "—"}</div>,
     },
     {
       header: "EMAIL",
       key: "email",
       className: "text-center",
-      cell: (val) => <div className="w-[200px] text-gray-500 font-medium lowercase">{val}</div>,
+      cell: (val: string) => <div className="w-[200px] text-gray-500 font-medium lowercase">{val}</div>,
     },
     {
       header: "PHONE NUMBER",
       key: "phone",
       className: "text-center",
-      cell: (val) => <div className="text-gray-500 font-medium w-[160px]">{val ?? "—"}</div>,
+      cell: (val: string | null) => <div className="text-gray-500 font-medium w-[160px]">{val ?? "—"}</div>,
     },
     {
       header: "ROLE",
       key: "role",
       className: "text-center",
-      cell: (val) => (
+      cell: (val: string) => (
         <div className="flex justify-center w-[100px]">
           <span className={`px-5 py-1.5 border border-gray-200 text-[#21335A] rounded-md text-[11px] font-bold tracking-widest uppercase ${val === "ADMIN" ? "bg-[#21335A] text-white" : "bg-[#f8f9fa] text-[#21335A]"}`}>
             {val}
@@ -141,12 +137,12 @@ export default function UserManagementPage() {
       header: "ACTIONS",
       key: "actions",
       className: "text-center",
-      cell: (_, row) => (
+      cell: (_value, row) => (
         <div className="flex justify-center gap-2 text-gray-400 w-[80px]">
-          <button onClick={() => openEditModal(row as User)} className="p-2 hover:bg-gray-100 rounded-md hover:text-[#14234b] transition-all">
+          <button onClick={() => openEditModal(row)} className="p-2 hover:bg-gray-100 rounded-md hover:text-[#14234b] transition-all">
             <Pencil className="w-4 h-4" />
           </button>
-          <button onClick={() => openDeleteModal(row as User)} className="p-2 hover:bg-red-50 rounded-md hover:text-red-600 transition-all">
+          <button onClick={() => openDeleteModal(row)} className="p-2 hover:bg-red-50 rounded-md hover:text-red-600 transition-all">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -167,7 +163,7 @@ export default function UserManagementPage() {
             <Input
               placeholder="Search users..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
               className="pl-9 w-full bg-gray-100 border-transparent focus:bg-white focus:border-[#1D2F58] rounded-md h-10 2xl:h-12 text-sm 2xl:text-base transition-all"
             />
           </div>
@@ -182,7 +178,7 @@ export default function UserManagementPage() {
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading...</div>
           ) : filteredUsers.length > 0 ? (
-            <TableTemplate columns={columns} data={paginatedUsers as any} containerClassName="h-full flex-1" />
+            <TableTemplate columns={columns} data={paginatedUsers} containerClassName="h-full flex-1" />
           ) : searchQuery !== "" ? (
             <SearchEmptyState type="user" searchQuery={searchQuery} />
           ) : (

@@ -164,7 +164,7 @@ export default function Settings() {
         return sortConfig.direction === "asc" ? cmp : -cmp;
     });
 
-    const categoryColumns: ColumnDefinition[] = [
+    const categoryColumns: ColumnDefinition<TableRowData>[] = [
         {
             header: "NO",
             key: "no",
@@ -179,19 +179,19 @@ export default function Settings() {
         {
             header: "Organisasi Perangkat Daerah",
             key: "name",
-            cell: (_, rowData) => formatNameCell(rowData as TableRowData),
+            cell: (_value, rowData) => formatNameCell(rowData),
             sortable: true,
         },
         {
             header: "ACTIONS",
             key: "actions",
             className: "text-center w-[150px]",
-            cell: (_, rowData) => (
+            cell: (_value, rowData) => (
                 <div className="flex justify-center gap-2 text-gray-400">
-                    <button onClick={() => handleEditCategory((rowData as TableRowData).id)} className="p-2 hover:bg-gray-100 rounded-md hover:text-[#14234b] transition-all">
+                    <button onClick={() => handleEditCategory(rowData.id)} className="p-2 hover:bg-gray-100 rounded-md hover:text-[#14234b] transition-all">
                         <Pencil className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDeleteCategory((rowData as TableRowData).id)} className="p-2 hover:bg-red-50 rounded-md hover:text-red-600 transition-all">
+                    <button onClick={() => handleDeleteCategory(rowData.id)} className="p-2 hover:bg-red-50 rounded-md hover:text-red-600 transition-all">
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>

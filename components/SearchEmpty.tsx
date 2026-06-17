@@ -5,7 +5,7 @@ interface SearchEmptyStateProps {
   type?: 'kanban' | 'pending' | 'all' | 'aspirations' | 'user' | 'opd' | 'category';
 }
 
-export default function SearchEmptyState({ searchQuery, type = 'pending' }: SearchEmptyStateProps) {
+export default function SearchEmptyState({ type = 'pending' }: SearchEmptyStateProps) {
   let IconComponent = ClipboardX;
   let title = "No Task Found";
   let description = "Try different keywords or clear filters.";

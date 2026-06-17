@@ -1,4 +1,3 @@
-import { Flag } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Badge } from "./Badge";
@@ -16,7 +15,7 @@ interface ChatItemProps {
 }
 
 export const ChatItem = ({
-  name, message, time, ticketCount, platform, flagColor, avatarUrl, isActive, unreadCount
+  name, message, time, ticketCount, platform, avatarUrl, isActive, unreadCount
 }: ChatItemProps) => {
   const [imgError, setImgError] = useState(false);
   const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D3B66&color=fff`;

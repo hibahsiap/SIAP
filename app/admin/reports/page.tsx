@@ -60,11 +60,11 @@ export default function Reports() {
         ];
     }, [data]);
 
-    const userColumns: ColumnDefinition[] = [
+    const userColumns: ColumnDefinition<TableRowData>[] = [
         {
             header: "NAME OPD",
             key: "name",
-            cell: (_, rowData) => formatNameCell(rowData as TableRowData),
+            cell: (_value, rowData) => formatNameCell(rowData),
             className: "text-left pl-4 w-[400px] 2xl:w-[500px]"
         },
         { header: "TOTAL TICKETS", key: "totalTickets" },
@@ -123,7 +123,7 @@ export default function Reports() {
 
                         <div className="w-full">
                             {filteredUsers.length > 0 ? (
-                                <TableTemplate columns={userColumns} data={filteredUsers as any} position="text-center" />
+                                <TableTemplate columns={userColumns} data={filteredUsers} position="text-center" />
                             ) : searchQuery !== "" ? (
                                 <SearchEmptyState type="opd" searchQuery={searchQuery} />
                             ) : (

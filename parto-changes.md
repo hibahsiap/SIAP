@@ -60,6 +60,31 @@ Best practice: simpan kanonik E.164 `+62…`, terima input fleksibel, normalisas
 - `components/UserModal.tsx` — hapus live-mask buggy → input bebas; **perbaiki bug** field Phone modal Edit yang salah bind ke `addForm`; `handleAdd`/`handleEdit` normalisasi + validasi sebelum kirim.
 - `app/api/users/route.ts` & `app/api/users/[id]/route.ts` — normalisasi + validasi server-side (tolak 400 bila format salah), simpan kanonik.
 
+## 11. Audit menyeluruh — perbaikan `npm run build` & lint errors
+Memastikan build lulus tanpa error lalu membersihkan lint errors (set-state-in-effect & no-explicit-any). **Build error awal bukan bug kode** — hanya cache `.next` stale; cukup hapus folder `.next` lalu build ulang. Hasil: `npm run build` ✅, lint **45 error → 0** (warning 43 → 8).
+
+### 11a. Hapus `@typescript-eslint/no-explicit-any` (31 → 0)
+- `components/TableTemplate.tsx` & `components/TableTemplate2.tsx` — dibuat **generic** `<T>`; `cell` jadi method-signature `cell?(value: unknown, rowData: T)` (bivariant) supaya call-site bisa mengetik nilai sel konkret; indexing internal pakai cast `(row as Record<string, unknown>)[col.key]`.
+- `store/useTaskStore.ts` — `Task = any` → `Record<string, unknown>`.
+- `components/InteractionStore.tsx` — tambah interface `InteractionItem`; `selectedItem` & param `item` ditipekan.
+- `app/opd/tickets/page.tsx` — tambah interface `TicketRow`; state, callback filter/sort, kolom & param sel ditipekan (hapus ~12 `any` + cast `as any`).
+- Call-site tabel diketik `ColumnDefinition<...>[]` (hapus cast `as any`/`as User`/`as TableRowData`): `app/admin/comments/page.tsx` (`SocialInteraction`), `app/admin/reports/page.tsx` & `app/opd/reports/page.tsx` & `app/admin/settings/page.tsx` (`TableRowData`), `app/admin/user-management/page.tsx` (`User`).
+
+### 11b. Hapus `react-hooks/set-state-in-effect` (14 → 0)
+- **Pola "sync state saat render"** (rekomendasi React, ganti useEffect penyetel state turunan): `components/sidebar.tsx`, `components/UserModal.tsx`, `components/CategoryModal.tsx`, `components/Filter.tsx`, `components/ProfileForm.tsx`, serta reset per-percakapan saat `chatId` berubah di `app/admin/chat/[chatId]/page.tsx` & `app/opd/inbox/[chatId]/page.tsx` (fetch tetap di useEffect).
+- **Pindah `setState` ke event handler**: reset halaman di `app/admin/user-management/page.tsx` (onChange search) & `app/admin/comments/page.tsx` (handler tab).
+- **Async IIFE wrapper** untuk efek fetch: `app/opd/tickets/page.tsx` & `app/admin/comments/page.tsx`.
+- **`eslint-disable` terdokumentasi** (efek yang sah bereaksi ke data async store / lifecycle modal — sengaja tidak di-refactor demi hindari regresi di area chat aktif): `app/admin/chat/[chatId]/page.tsx`, `components/SocialModal.tsx`, `components/CreateTicketFromChatModal.tsx`.
+
+### 11c. Cleanup warning tak terpakai (43 → 8)
+Hapus import/variabel/param tak terpakai (aman, tanpa perubahan perilaku): `components/GroupChart.tsx`, `components/Login.tsx` (+ const `field`), `components/ChatHeader.tsx`, `components/ChatItem.tsx`, `components/ListChat.tsx`, `components/TaskGallery.tsx`, `components/TaskDetail.tsx`, `components/ToastFrame.tsx`, `components/spectrumui/kanbanboard.tsx`, `constants/sidebar-menu.tsx`, `components/SearchEmpty.tsx`, `components/ProfileStore.tsx`, `store/useInboxStore.ts`, `app/opd/tickets/page.tsx`.
+
+### 11d. Warning sisa yang sengaja dibiarkan (8)
+- ⚠️ `app/api/inbox/[ticketId]/forward/route.ts:13` — `conversationId` diambil tapi tak dipakai (**potensi bug**: forward tidak men-scope per-percakapan) — dibiarkan agar tidak menutupi.
+- `<img>` vs `next/image` (`components/ChatItem.tsx`, `components/user-avatar.tsx`) — perlu `width/height`.
+- `exhaustive-deps` (`components/ChatMessageList.tsx`, `components/ToastFrame.tsx`) — sensitif perilaku.
+- WIP galeri gambar (`components/TaskDetail.tsx`: `isAddImageOpen`, `submitNewImage`) & `components/UpdateProgressModal.tsx` (prop `onSave` belum diwire).
+
 ---
 
 ## Perubahan di luar 10 task

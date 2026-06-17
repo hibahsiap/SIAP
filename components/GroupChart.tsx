@@ -1,7 +1,6 @@
 "use client";
 
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { Clock1 } from "@boxicons/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 
 export type GroupChartDatum = { day: string; week: string; avg: number | null; color?: string };

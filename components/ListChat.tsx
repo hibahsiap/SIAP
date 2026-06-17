@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import SearchField from "./SearchField";
 import Image from "next/image";
 import { InteractionTabs } from "./InteractionTabs";
-import { TimeRange } from "./TimeRange";
 import { ChatItem } from "./ChatItem";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -38,8 +37,6 @@ const ListChat = ({ role }: { role: "ADMIN" | "OPD" }) => {
     fetchConversations,
     subscribeRealtime,
   } = useInboxStore();
-
-  const [filterStatus, setFilterStatus] = useState("all");
 
   useEffect(() => {
     fetchConversations();

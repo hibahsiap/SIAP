@@ -54,8 +54,11 @@ export default function CreateTicketFromChatModal({
   const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Initialize the form when the modal opens. The synchronous resets are an
+  // intentional one-time initialization tied to the modal lifecycle.
   useEffect(() => {
     if (!isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTitle(aiResult?.title ?? messagePreview.slice(0, 80));
     setDescription(aiResult?.description ?? messagePreview);
     setOpdId("");

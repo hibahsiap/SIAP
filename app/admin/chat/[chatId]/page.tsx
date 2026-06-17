@@ -76,13 +76,20 @@ export default function ChatDetailPage({
   const [isForwarding, setIsForwarding] = useState(false);
   const [forwardError, setForwardError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchConversation(chatId);
+  // Reset per-conversation UI state when the route param changes, computed during
+  // render to avoid a synchronous setState inside an effect.
+  const [prevChatId, setPrevChatId] = useState(chatId);
+  if (chatId !== prevChatId) {
+    setPrevChatId(chatId);
     setReadTicketIds(new Set());
     setSelectedOpdId("");
     setPinIndex(0);
-    initializedChatId.current = null;
     setFirstUnreadId(null);
+  }
+
+  useEffect(() => {
+    fetchConversation(chatId);
+    initializedChatId.current = null;
   }, [chatId, fetchConversation]);
 
   useEffect(() => {
@@ -97,6 +104,9 @@ export default function ChatDetailPage({
       initializedChatId.current = chatId;
       const unreadMsg = current.messages.find(m => m.direction === "INBOUND" && !m.isRead);
       if (unreadMsg) {
+        // Reacting to async conversation data arriving from the store (run once per
+        // chat via the initialized guard); a one-shot setState here is intentional.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFirstUnreadId(unreadMsg.id);
       }
       // Always call markAsRead so that we clear any lingering unread states 

@@ -60,7 +60,7 @@ export default function Reports() {
         ];
     }, [data]);
 
-    const categoryColumns: ColumnDefinition[] = [
+    const categoryColumns: ColumnDefinition<TableRowData>[] = [
         {
             header: "CATEGORIES",
             key: "category",
@@ -122,7 +122,7 @@ export default function Reports() {
 
                         <div className="w-full">
                             {filteredCategories.length > 0 ? (
-                                <TableTemplate columns={categoryColumns} data={filteredCategories as any} position="text-center" />
+                                <TableTemplate columns={categoryColumns} data={filteredCategories} position="text-center" />
                             ) : searchQuery !== "" ? (
                                 <SearchEmptyState type="category" searchQuery={searchQuery} />
                             ) : (

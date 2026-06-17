@@ -5,17 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IoPersonCircleOutline } from "react-icons/io5";
-import { toast } from "sonner";
 import ButtonClick from "./Button";
 import Field from "./Field";
 import FieldPassword from "./FieldPassword";
-
-const field =
-{
-    title: 'Email',
-    placeholder: "Enter your email"
-
-}
 
 const Login = () => {
 

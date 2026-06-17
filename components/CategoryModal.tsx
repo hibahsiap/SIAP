@@ -66,7 +66,11 @@ export default function CategoryModal({ isOpen, onClose, onSaved, editData }: Ca
       .catch((err) => console.error("Failed to fetch opds:", err))
   }, [])
 
-  useEffect(() => {
+  // Populate the form when the modal opens or the edited row changes, computed
+  // during render to avoid a synchronous setState inside an effect.
+  const [prevSync, setPrevSync] = useState<{ isOpen: boolean; editData: typeof editData }>({ isOpen, editData })
+  if (prevSync.isOpen !== isOpen || prevSync.editData !== editData) {
+    setPrevSync({ isOpen, editData })
     if (isOpen) {
       if (editData) {
         setName(editData.name)
@@ -76,7 +80,7 @@ export default function CategoryModal({ isOpen, onClose, onSaved, editData }: Ca
         setDefaultOpdId("")
       }
     }
-  }, [isOpen, editData])
+  }
 
   const handleSubmit = async () => {
     if (!name) {

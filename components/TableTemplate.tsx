@@ -2,17 +2,19 @@ import { ReactNode } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
-export interface ColumnDefinition<T = Record<string, any>> {
+export interface ColumnDefinition<T = Record<string, unknown>> {
     header: string;
     key: string;
-    cell?: (value: any, rowData: T) => ReactNode;
+    // Method-signature (bivariant) so call sites can type `value` to the concrete
+    // cell type without TypeScript rejecting the assignment.
+    cell?(value: unknown, rowData: T): ReactNode;
     className?: string;
     sortable?: boolean;
 }
 
 export type SortConfig = { key: string; direction: "asc" | "desc" } | null;
 
-interface TableTemplateProps<T = Record<string, any>> {
+interface TableTemplateProps<T> {
     columns: ColumnDefinition<T>[],
     data: T[];
     position?: string;
@@ -21,7 +23,7 @@ interface TableTemplateProps<T = Record<string, any>> {
     onSort?: (key: string) => void;
 }
 
-const TableTemplate = <T extends Record<string, any>>({columns, data, position, containerClassName, sortConfig, onSort}: TableTemplateProps<T>) => {
+const TableTemplate = <T,>({columns, data, position, containerClassName, sortConfig, onSort}: TableTemplateProps<T>) => {
     return (
         <div className={`w-full overflow-y-auto relative custom-scrollbar ${containerClassName ?? "max-h-[450px] 2xl:max-h-[600px]"}`}>
             <Table>
@@ -58,11 +60,14 @@ const TableTemplate = <T extends Record<string, any>>({columns, data, position, 
                     {data.length > 0 ? (
                         data.map((row, rowIndex) => (
                             <TableRow key={rowIndex} className={`border-b border-[#e7e6e6] text-[#041942] text-[14px] 2xl:text-base h-16 ${position || ""}`}>
-                                {columns.map((col) => (
-                                    <TableCell key={col.key} className={col.className}>
-                                        {col.cell ? col.cell(row[col.key], row) : row[col.key]}
-                                    </TableCell>
-                                ))}
+                                {columns.map((col) => {
+                                    const value = (row as Record<string, unknown>)[col.key];
+                                    return (
+                                        <TableCell key={col.key} className={col.className}>
+                                            {col.cell ? col.cell(value, row) : (value as ReactNode)}
+                                        </TableCell>
+                                    );
+                                })}
                             </TableRow>
                         ))
                     ) : (

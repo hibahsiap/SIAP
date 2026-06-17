@@ -41,17 +41,26 @@ export default function ProfileForm() {
     loadLogs();
   }, [loadProfile, loadLogs]);
 
-  useEffect(() => {
-    if (loaded) {
-      setFormData((prev) => ({
-        ...prev,
-        name,
-        email,
-        phone,
-        opd,
-      }));
-    }
-  }, [loaded, name, email, phone, opd]);
+  // Populate the editable form from the loaded profile, computed during render so
+  // we avoid a synchronous setState inside an effect.
+  const [prevProfile, setPrevProfile] = useState({ loaded, name, email, phone, opd });
+  if (
+    loaded &&
+    (!prevProfile.loaded ||
+      prevProfile.name !== name ||
+      prevProfile.email !== email ||
+      prevProfile.phone !== phone ||
+      prevProfile.opd !== opd)
+  ) {
+    setPrevProfile({ loaded, name, email, phone, opd });
+    setFormData((prev) => ({
+      ...prev,
+      name,
+      email,
+      phone,
+      opd,
+    }));
+  }
 
   const handleSave = async () => {
     setValidationError(null);

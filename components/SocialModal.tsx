@@ -28,12 +28,16 @@ export default function SocialTicketModal({ onSuccess }: { onSuccess?: () => voi
   const [opds, setOpds] = useState<Opd[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
+  // Initialize the form fields when the modal opens / its source data changes, then
+  // fetch the reference lists. The synchronous resets are an intentional one-time
+  // initialization tied to the modal lifecycle.
   useEffect(() => {
     if (!isCreateTicketModalOpen || !selectedItem) return;
 
     const content = selectedItem.content || "";
 
     if (aiResult) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(aiResult.title ?? content.slice(0, 80));
       setDescription(aiResult.description ?? content);
       setLocation(aiResult.location ?? "");

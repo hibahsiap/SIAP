@@ -1,4 +1,4 @@
-import { Inbox, Kanban, FileText, Ticket, MessageSquare, Share2, Users, FileChartColumn, UserRoundCog } from 'lucide-react';
+import { Ticket, MessageSquare, FileChartColumn, UserRoundCog } from 'lucide-react';
 
 export const SIDEBAR_MENU = {
   ADMIN: [
