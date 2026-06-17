@@ -54,8 +54,8 @@ export default async function TaskDetailPage({ params }: Props) {
 
   // "Image" = gambar dari user (intake, tanpa uploader internal).
   // "Gallery" = bukti progress yang diunggah OPD (uploadedById terisi).
-  const userImages = ticket.attachments.filter((a) => !a.uploadedById).map((a) => a.url);
-  const galleryImages = ticket.attachments.filter((a) => a.uploadedById).map((a) => a.url);
+  const userImages = ticket.attachments.filter((a: any) => !a.uploadedById).map((a: any) => a.url);
+  const galleryImages = ticket.attachments.filter((a: any) => a.uploadedById).map((a: any) => a.url);
 
   const task: Task = {
     id:        ticket.id,
