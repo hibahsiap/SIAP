@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   const dbCategories = await prisma.category.findMany({ select: { name: true } });
   const categoryList = dbCategories.length > 0
-    ? dbCategories.map((c) => c.name).join(", ")
+    ? dbCategories.map((c: { name: string }) => c.name).join(", ")
     : "Jalan dan Infrastruktur, Sampah dan Kebersihan, Banjir dan Bencana, Pendidikan, Kesehatan, Kependudukan, Bantuan Sosial, Transportasi, Teknologi dan Internet, Perdagangan dan UMKM";
 
   const systemPrompt = `Kamu adalah asisten klasifikasi pengaduan publik untuk pemerintah daerah Indonesia.
